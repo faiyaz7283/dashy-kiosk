@@ -5,49 +5,51 @@ It contains **hard behavior rules**, not project background. For project knowled
 
 ## 1. pnpm Only (NON-NEGOTIABLE)
 
-Use **pnpm** as the sole package manager for this project. Never use npm, yarn, or any other package manager.
+Use **pnpm** as the sole package manager. Never use npm, yarn, or any other package manager. All pnpm commands run inside Docker containers via the orchestrator's Makefile targets (see section 2).
 
-### Forbidden
+## 2. Docker-first development (NON-NEGOTIABLE)
 
-- `npm install`, `npm run`, `npx`
-- `yarn`, `yarn install`
-- Any package manager other than pnpm
+**Never run development tools directly on the host machine.** All commands must run inside Docker containers via the orchestrator's Makefile targets.
 
-### Approved
+### How it works
 
-- `pnpm install`, `pnpm run`, `pnpm add`, `pnpm remove`
-- `make` targets (which use pnpm internally)
+- The orchestrator repo (`dashy/`) has Makefile targets that run `docker compose exec` to execute commands inside the kiosk container
+- This kiosk repo's local Makefile is executed **inside the container** by the orchestrator
+- Always use the orchestrator's Makefile targets (e.g., `make lint-kiosk` from the `dashy/` directory)
 
-## 2. Docker-first development (for orchestrated environments)
+### Forbidden on the host
 
-When running as part of the Dashy orchestrator, all commands run through docker compose. For standalone development, use pnpm directly.
+Never run these directly on the local machine:
+
+- `pnpm`, `npm`, `yarn`, `node`, `npx`
+- This repo's local `make` targets (they're designed to run inside the container)
 
 ### Approved commands
 
-Use these `make` targets:
+Use the orchestrator's `make` targets (from the `dashy/` directory):
 
 | Task | Command |
 |------|---------|
-| Install deps | `make install` |
-| Add package | `make add PACKAGE=<name>` |
-| Remove package | `make remove PACKAGE=<name>` |
-| Lint | `make lint` |
-| Format | `make format` |
-| Type check | `make typecheck` |
-| Run tests | `make test` |
-| Build | `make build` |
-| Dev server | `make dev` |
+| Install deps | `make install-kiosk` |
+| Add package | `make add-kiosk PACKAGE=<name>` |
+| Add dev package | `make add-kiosk-dev PACKAGE=<name>` |
+| Remove package | `make remove-kiosk PACKAGE=<name>` |
+| Lint | `make lint-kiosk` |
+| Format | `make format-kiosk` |
+| Type check | `make typecheck-kiosk` |
+| Run tests | `make test-kiosk` |
+| Build | `make build-kiosk` |
 
-If a command you want is missing from the Makefile, add a target there — do not bypass it.
+If a command you want is missing from the orchestrator's Makefile, add a target there — do not bypass Docker.
 
 ## 3. Verify before declaring done
 
-For any frontend change:
+For any frontend change (run from the orchestrator `dashy/` directory):
 
-1. `make lint`
-2. `make typecheck`
-3. `make test`
-4. `make build`
+1. `make lint-kiosk`
+2. `make typecheck-kiosk`
+3. `make test-kiosk`
+4. `make build-kiosk`
 
 All four must pass before you tell the user the task is complete.
 
@@ -57,7 +59,7 @@ All four must pass before you tell the user the task is complete.
 - Do not run `git commit`, `git push`, `git reset`, `git rebase`, or other git mutations unless the user explicitly asks.
 - Ask for confirmation before each git mutation, even if confirmed earlier in the conversation.
 - Keep commits atomic and write messages that describe "why," not just "what."
-- Include `Co-Authored-By: Oz <oz-agent@warp.dev>` in AI-assisted commits.
+- Include `Co-Authored-By: Qwen <noreply@qwen.ai>` in AI-assisted commits.
 
 ## 5. Frontend code standards
 
@@ -80,7 +82,7 @@ All four must pass before you tell the user the task is complete.
 
 - Match the existing file's style, naming, and comment density.
 - Minimal changes. No opportunistic refactors.
-- ESLint and Prettier rules are enforced via pre-commit hooks; `make lint` must pass.
+- ESLint + Prettier enforced via `make lint` / `make format`.
 - No `console.log` except `console.warn`/`console.error`.
 
 ## 8. Universal coding standards
