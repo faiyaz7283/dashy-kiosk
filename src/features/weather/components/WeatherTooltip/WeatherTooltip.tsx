@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { spacing, radii, shadows, zIndices, colors } from '@/theme/tokens'
 import { LOCALE } from '@/theme/config'
 import type { DailyForecast } from '@/types'
+import { useUiScale } from '@/features/kiosk/hooks/useUiScale'
 import { ThermometerIcon } from './icons/ThermometerIcon'
 import { FeelsLikeFaceIcon } from './icons/FeelsLikeFaceIcon'
 import { HumidityIcon } from './icons/HumidityIcon'
@@ -301,6 +302,7 @@ function UnifiedContent({ forecast, hasHourly }: { forecast: DailyForecast; hasH
 }
 
 export function WeatherTooltip({ forecast, visible, x, y }: WeatherTooltipProps) {
+  const scale = useUiScale()
   const [position, setPosition] = useState({ x: 0, y: 0 })
 
   if (!visible || !forecast) return null
@@ -348,6 +350,7 @@ export function WeatherTooltip({ forecast, visible, x, y }: WeatherTooltipProps)
           padding: `${spacing.lg}px`,
           boxShadow: shadows.popup,
           width: `${tooltipWidth}px`,
+          zoom: scale,
         }}
       >
         <UnifiedContent forecast={forecast} hasHourly={hasHourly} />
