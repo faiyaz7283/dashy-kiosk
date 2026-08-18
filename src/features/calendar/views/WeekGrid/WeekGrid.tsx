@@ -108,7 +108,7 @@ export function WeekGrid({
             month: 'short',
             day: 'numeric',
           })}
-          events={getEventsForDate(events, popupState.date)}
+          events={popupState.hoveredEvent ? [popupState.hoveredEvent] : []}
           members={members}
         />
       )}

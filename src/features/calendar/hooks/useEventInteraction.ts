@@ -16,9 +16,11 @@ interface PopupState {
   x: number
   y: number
   date: Date | null
+  /** The specific event being hovered (null when hovering a day cell). */
+  hoveredEvent: CalendarEvent | null
 }
 
-const HIDDEN_POPUP: PopupState = { visible: false, x: 0, y: 0, date: null }
+const HIDDEN_POPUP: PopupState = { visible: false, x: 0, y: 0, date: null, hoveredEvent: null }
 
 /**
  * useEventInteraction hook.
@@ -30,11 +32,21 @@ export function useEventInteraction(events: CalendarEvent[]) {
   const [popupState, setPopupState] = useState<PopupState>(HIDDEN_POPUP)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
 
-  /** Show the popup when the hovered day has events, hide otherwise. */
+  /**
+   * Show the popup when the hovered day has events, hide otherwise.
+   *
+   * @param e - Mouse event for cursor position.
+   * @param date - The date being hovered.
+   * @param event - Optional specific event being hovered (for per-event popups).
+   */
   const handleDayMouseEnter = useCallback(
-    (e: React.MouseEvent, date: Date) => {
+    (e: React.MouseEvent, date: Date, event?: CalendarEvent) => {
       const hasEvents = events.some((ev) => isSameDay(new Date(ev.start), date))
-      setPopupState(hasEvents ? { visible: true, x: e.clientX, y: e.clientY, date } : HIDDEN_POPUP)
+      setPopupState(
+        hasEvents
+          ? { visible: true, x: e.clientX, y: e.clientY, date, hoveredEvent: event ?? null }
+          : HIDDEN_POPUP,
+      )
     },
     [events],
   )

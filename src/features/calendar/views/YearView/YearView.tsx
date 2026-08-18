@@ -308,6 +308,7 @@ export function YearView({
                           }
                         }}
                         onMouseMove={handleMouseMove}
+                        onMouseLeave={handleMouseLeave}
                         className={!dayData.otherMonth && !isToday ? 'hover-bg' : ''}
                         style={{
                           textAlign: 'center',

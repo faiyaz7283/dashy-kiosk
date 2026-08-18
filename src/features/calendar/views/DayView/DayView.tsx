@@ -11,11 +11,7 @@ import type { CalendarEvent, DailyForecast, FamilyMember } from '@/types'
 import { colors, spacing, radii, typography, layout, zIndices } from '@/theme/tokens'
 import { themeConfig, LOCALE } from '@/theme/config'
 import { isSameDay } from '@/shared/utils/dateFormat'
-import {
-  getEventsForDate,
-  getTimedEventsForDate,
-  getAllDayEventsForDate,
-} from '@/domain/calendar/utils'
+import { getTimedEventsForDate, getAllDayEventsForDate } from '@/domain/calendar/utils'
 import { getWeatherForDate } from '@/domain/weather/utils'
 import { EventItem } from '@/features/calendar/components/EventItem'
 import { EventPopup } from '@/features/calendar/components/EventPopup'
@@ -262,7 +258,7 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
                       size="sm"
                       showTime={false}
                       onClick={openEvent}
-                      onMouseEnter={(e) => handleDayMouseEnter(e, currentDate)}
+                      onMouseEnter={(e) => handleDayMouseEnter(e, currentDate, event)}
                       onMouseMove={handleMouseMove}
                       onMouseLeave={handleMouseLeave}
                     />
@@ -339,7 +335,7 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
                   height: `${height}px`,
                 }}
                 onClick={openEvent}
-                onMouseEnter={(e) => handleDayMouseEnter(e, currentDate)}
+                onMouseEnter={(e) => handleDayMouseEnter(e, currentDate, event)}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               />
@@ -387,7 +383,7 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
             month: 'short',
             day: 'numeric',
           })}
-          events={getEventsForDate(events, popupState.date)}
+          events={popupState.hoveredEvent ? [popupState.hoveredEvent] : []}
           members={members}
         />
       )}

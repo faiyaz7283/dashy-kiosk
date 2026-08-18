@@ -23,6 +23,7 @@ describe('useEventInteraction', () => {
   it('starts with hidden popup and no selection', () => {
     const { result } = renderHook(() => useEventInteraction(mockEvents))
     expect(result.current.popupState.visible).toBe(false)
+    expect(result.current.popupState.hoveredEvent).toBeNull()
     expect(result.current.selectedEvent).toBeNull()
   })
 
@@ -35,7 +36,39 @@ describe('useEventInteraction', () => {
       result.current.handleDayMouseEnter(mouseEvent(100, 200), date)
     })
 
-    expect(result.current.popupState).toEqual({ visible: true, x: 100, y: 200, date })
+    expect(result.current.popupState).toEqual({
+      visible: true,
+      x: 100,
+      y: 200,
+      date,
+      hoveredEvent: null,
+    })
+  })
+
+  it('tracks the specific event when hovered', () => {
+    const { result } = renderHook(() => useEventInteraction(mockEvents))
+    const date = new Date(2026, 7, 10)
+
+    act(() => {
+      result.current.handleDayMouseEnter(mouseEvent(100, 200), date, mockEvents[0])
+    })
+
+    expect(result.current.popupState.hoveredEvent).toEqual(mockEvents[0])
+  })
+
+  it('clears hoveredEvent when hovering a day without a specific event', () => {
+    const { result } = renderHook(() => useEventInteraction(mockEvents))
+    const date = new Date(2026, 7, 10)
+
+    act(() => {
+      result.current.handleDayMouseEnter(mouseEvent(100, 200), date, mockEvents[0])
+    })
+    expect(result.current.popupState.hoveredEvent).toEqual(mockEvents[0])
+
+    act(() => {
+      result.current.handleDayMouseEnter(mouseEvent(150, 250), date)
+    })
+    expect(result.current.popupState.hoveredEvent).toBeNull()
   })
 
   it('hides popup when hovering a day with no events', () => {

@@ -25,7 +25,7 @@ interface DayCardProps {
   /** Callback when an event is clicked (opens the event modal). */
   onEventClick?: (event: CalendarEvent) => void
   /** Callback when an event is hovered (shows the day popup). */
-  onEventMouseEnter?: (e: React.MouseEvent, date: Date) => void
+  onEventMouseEnter?: (e: React.MouseEvent, date: Date, event: CalendarEvent) => void
   onEventMouseMove?: (e: React.MouseEvent) => void
   onEventMouseLeave?: (e: React.MouseEvent) => void
 }
@@ -212,7 +212,7 @@ export function DayCard({
             variant="card"
             {...(onEventClick ? { onClick: onEventClick } : {})}
             {...(onEventMouseEnter
-              ? { onMouseEnter: (e: React.MouseEvent) => onEventMouseEnter(e, date) }
+              ? { onMouseEnter: (e: React.MouseEvent) => onEventMouseEnter(e, date, event) }
               : {})}
             {...(onEventMouseMove ? { onMouseMove: onEventMouseMove } : {})}
             {...(onEventMouseLeave ? { onMouseLeave: onEventMouseLeave } : {})}
