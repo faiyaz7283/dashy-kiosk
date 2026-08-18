@@ -62,10 +62,9 @@ All four must pass before you tell the user the task is complete.
 ## 5. Frontend code standards
 
 - **TypeScript required** — all new components must be `.tsx`. Avoid `any`; if unavoidable, add a comment explaining why.
-- **One component per folder** — each component lives in its own folder under `src/components/` with `Component.tsx`, `Component.test.tsx`, and `index.ts` barrel export.
+- **One component per folder** — each component lives in its own folder under `src/features/` with `Component.tsx`, `Component.test.tsx`, and `index.ts` barrel export.
 - **Every new component/hook needs tests** — at minimum a render test. Add tests as you build.
-- **Keep mock data in `src/data/`** — do not inline mock data in components.
-- **Reusable logic goes in `src/hooks/`** — not inside components.
+- **Reusable logic goes in `src/shared/hooks/`** — not inside components.
 - **Shared types go in `src/types/`**.
 - **No emojis in source or UI** — use SVG icons.
 

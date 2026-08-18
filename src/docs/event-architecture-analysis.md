@@ -63,7 +63,7 @@ The pattern "colored avatar + event title + member-colored background/border" is
 WeekView has no way to see event details without navigating away. DayView is the only view with a modal.
 
 ### 4. TypeScript Types Are Outdated
-`frontend/src/types/index.ts` `CalendarEvent` interface is missing all the new backend fields:
+`src/types/index.ts` `CalendarEvent` interface is missing all the new backend fields:
 - `description`
 - `organizer`
 - `attendees`

@@ -56,12 +56,14 @@ make build       # Production build
 src/
 ├── main.tsx              # Entry point
 ├── App.tsx               # Root component
-├── core/                 # API client, config, DI
-├── domain/               # Domain types, utilities
-├── features/             # Feature modules (weather, calendar, family)
+├── index.css             # Global styles
+├── domain/               # Domain types, utilities (calendar, family, weather)
+├── features/             # Feature modules (weather, calendar, navigation, dashboard, kiosk)
+├── shared/               # Shared components, hooks, api, config, services, utils
+├── test/                 # Test utilities
 ├── theme/                # Design tokens, scaling system
-├── shared/               # Shared components, hooks
-└── types/                # TypeScript type definitions
+├── types/                # TypeScript type definitions
+└── docs/                 # Documentation
 ```
 
 **Key patterns:**
