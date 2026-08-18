@@ -158,10 +158,10 @@ import { formatRecurrenceRule } from '@/shared/utils/recurrence'
 ### 6. Run quality gate
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+make lint-kiosk
+make typecheck-kiosk
+make test-kiosk
+make build-kiosk
 ```
 
 All four must pass before declaring the task complete.
@@ -175,10 +175,10 @@ All four must pass before declaring the task complete.
 - [ ] Created co-located test file
 - [ ] Tests cover happy path and edge cases
 - [ ] No imports from `features/` or `domain/` (shared is below them)
-- [ ] `pnpm lint` passes
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test` passes
-- [ ] `pnpm build` passes
+- [ ] `make lint-kiosk` passes
+- [ ] `make typecheck-kiosk` passes
+- [ ] `make test-kiosk` passes
+- [ ] `make build-kiosk` passes
 
 ## Example: Adding a temperature formatting utility
 
@@ -266,7 +266,7 @@ Scenario: Both the weather feature and a new "comfort index" component need to f
    import { formatTemperature } from '@/shared/utils/temperature'
    ```
 
-4. **Run** `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
+4. **Run** `make lint-kiosk && make typecheck-kiosk && make test-kiosk && make build-kiosk`.
 
 ## Example: Adding to an existing utility file
 

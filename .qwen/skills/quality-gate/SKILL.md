@@ -15,24 +15,24 @@ Run the full frontend quality gate to verify correctness of any change.
 
 ## Steps
 
-Run all four commands in sequence from the `frontend/` directory. All must pass.
+Run all four commands in sequence from the orchestrator root. All must pass.
 
 ### 1. Lint
 
 ```bash
-pnpm lint
+make lint-kiosk
 ```
 
-Checks ESLint rules across all source files. Fix auto-fixable issues with:
+Checks ESLint rules across all source files. To auto-fix issues, exec into the container:
 
 ```bash
-pnpm lint --fix
+docker compose -f compose/docker-compose.dev.yml exec kiosk pnpm lint --fix
 ```
 
 ### 2. Type check
 
 ```bash
-pnpm typecheck
+make typecheck-kiosk
 ```
 
 Runs the TypeScript compiler in check-only mode (`tsc --noEmit`). Catches type errors without producing output files.
@@ -40,7 +40,7 @@ Runs the TypeScript compiler in check-only mode (`tsc --noEmit`). Catches type e
 ### 3. Test
 
 ```bash
-pnpm test
+make test-kiosk
 ```
 
 Runs the Vitest test suite. Includes coverage reporting.
@@ -48,13 +48,13 @@ Runs the Vitest test suite. Includes coverage reporting.
 Run a specific test file:
 
 ```bash
-pnpm vitest run src/path/to/file.test.ts
+make test-kiosk  # Or: docker compose exec kiosk pnpm vitest run src/path/to/file.test.ts
 ```
 
 ### 4. Build
 
 ```bash
-pnpm build
+make build-kiosk
 ```
 
 Produces the production bundle via Vite. Catches build-time errors, missing imports, and bundle issues.
@@ -65,6 +65,6 @@ All four steps must complete with exit code 0. If any step fails, fix the issues
 
 ## Notes
 
-- These commands run natively (no Docker needed) since the frontend repo has pnpm installed directly.
-- The orchestrator's `make lint-frontend`, `make typecheck-frontend`, etc. targets run these same commands inside Docker — use this skill when working directly in the frontend repo.
+- All commands run inside Docker containers via Makefile targets — never run pnpm directly on the host.
+- The orchestrator's `make lint-kiosk`, `make typecheck-kiosk`, etc. targets run these commands inside the Docker container.
 - Coverage targets: 80% for utils/hooks, 70% for components.

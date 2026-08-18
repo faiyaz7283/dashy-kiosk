@@ -239,10 +239,10 @@ export const NAV_ITEMS = [
 ### 9. Run quality gate
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+make lint-kiosk
+make typecheck-kiosk
+make test-kiosk
+make build-kiosk
 ```
 
 ## Checklist

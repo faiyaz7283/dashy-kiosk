@@ -422,10 +422,10 @@ describe('getTimedEventsForDate', () => {
 ### 6. Run quality gate
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+make lint-kiosk
+make typecheck-kiosk
+make test-kiosk
+make build-kiosk
 ```
 
 All four must pass before declaring the task complete.
@@ -438,7 +438,7 @@ All four must pass before declaring the task complete.
 - [ ] TSDoc on every exported function with `@param` and `@returns`
 - [ ] Barrel re-export updated in `src/types/index.ts` (if new types added)
 - [ ] Tests added for all new utility functions
-- [ ] Quality gate passes (`pnpm lint && pnpm typecheck && pnpm test && pnpm build`)
+- [ ] Quality gate passes (`make lint-kiosk && make typecheck-kiosk && make test-kiosk && make build-kiosk`)
 
 ## Example: Adding a "location" field to CalendarEvent
 

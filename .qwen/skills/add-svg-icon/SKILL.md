@@ -272,9 +272,9 @@ import { WindIcon } from './icons/WindIcon'
 ### 4. Run quality gate
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm build
+make lint-kiosk
+make typecheck-kiosk
+make build-kiosk
 ```
 
 All three must pass (no tests needed for purely visual SVG components, but add a render test if the icon has complex conditional logic).
@@ -291,7 +291,7 @@ All three must pass (no tests needed for purely visual SVG components, but add a
 - [ ] Helper functions (color computation, etc.) defined at module level
 - [ ] No external dependencies — pure SVG elements only
 - [ ] Imported and used in the parent component
-- [ ] Quality gate passes (`pnpm lint && pnpm typecheck && pnpm build`)
+- [ ] Quality gate passes (`make lint-kiosk && make typecheck-kiosk && make build-kiosk`)
 
 ## Example: Adding a DewPointIcon to the weather tooltip
 

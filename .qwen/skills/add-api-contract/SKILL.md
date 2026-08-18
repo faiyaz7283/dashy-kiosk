@@ -277,10 +277,10 @@ describe('getTasks', () => {
 ### 7. Run quality gate
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+make lint-kiosk
+make typecheck-kiosk
+make test-kiosk
+make build-kiosk
 ```
 
 All four must pass before declaring the task complete.
@@ -296,10 +296,10 @@ All four must pass before declaring the task complete.
 - [ ] Consumed endpoint in component via `useApi` hook
 - [ ] Handled loading, error, and data states in the component
 - [ ] Added tests for the fetch function
-- [ ] `pnpm lint` passes
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test` passes
-- [ ] `pnpm build` passes
+- [ ] `make lint-kiosk` passes
+- [ ] `make typecheck-kiosk` passes
+- [ ] `make test-kiosk` passes
+- [ ] `make build-kiosk` passes
 
 ## Example: Adding a "notifications" endpoint
 

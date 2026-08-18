@@ -172,9 +172,9 @@ export function <ComponentName>() {
 ### 5. Run quality gate
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
+make lint-kiosk
+make typecheck-kiosk
+make test-kiosk
 ```
 
 ## Common patterns

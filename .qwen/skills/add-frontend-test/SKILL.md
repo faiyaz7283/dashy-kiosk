@@ -234,19 +234,19 @@ describe('getWeather', () => {
 ### 7. Run tests and verify
 
 ```bash
-pnpm test
+make test-kiosk
 ```
 
 Check specific file:
 
 ```bash
-pnpm vitest run src/shared/utils/dateFormat.test.ts
+make test-kiosk  # Or: docker compose exec kiosk pnpm vitest run src/shared/utils/dateFormat.test.ts
 ```
 
 ### 8. Check coverage (if needed)
 
 ```bash
-pnpm test  # Coverage is included in the output
+make test-kiosk  # Coverage is included in the output
 ```
 
 **Coverage targets:**
@@ -314,7 +314,7 @@ const mockWeather: WeatherResponse = {
 - [ ] Tested behavior, not implementation details
 - [ ] Added edge case tests
 - [ ] Mock data defined at top of file or in `src/test/mocks/`
-- [ ] `pnpm test` passes
+- [ ] `make test-kiosk` passes
 - [ ] Coverage meets targets (80% utils/hooks, 70% components)
 
 ## Example: Testing a new utility function
@@ -324,7 +324,7 @@ Scenario: You added a `formatTemperature` function to `src/shared/utils/dateForm
 1. Create `src/shared/utils/dateFormat.test.ts` (or add to existing file)
 2. Import the function and `describe`/`it`/`expect` from vitest
 3. Write tests for each branch: Fahrenheit, Celsius, rounding, edge cases
-4. Run `pnpm test`
+4. Run `make test-kiosk`
 
 ## Example: Testing a new component
 
@@ -336,7 +336,7 @@ Scenario: You created a `TaskItem` component.
 4. Use `screen.getByText()`, `screen.getByRole()`, `screen.queryByText()` for assertions
 5. Use `fireEvent` or `userEvent` for interactions
 6. Use `vi.fn()` for callback props
-7. Run `pnpm test`
+7. Run `make test-kiosk`
 
 ## Notes
 
