@@ -33,7 +33,7 @@ src/domain/<domainName>/
 **Current domains:** `calendar`, `weather`, `family`
 
 **Shared utilities available for import:**
-- `@/shared/utils/dateFormat` — `isSameDay`, `getWeekDays`, `getDateKey`, `formatHeaderDate`, etc.
+- `@/shared/date` — `today()`, `getWeekDays()`, `getMonthGridDates()`, `getDateKey()`, `formatHeaderDate()`, `parseCalendarEvent()`, `eventDate()`, etc. (all Temporal-based)
 - `@/shared/utils/density` — `getRelativeDensity`, `getAbsoluteDensity`, `getEventCountsByDay`, etc.
 - `@/shared/utils/memberColors` — `getMemberColorPalette`, `MemberColorPalette`
 
@@ -66,8 +66,9 @@ Edit `src/domain/<domain>/types.ts`.
 /**
  * Calendar domain types.
  *
- * Defines the shape of calendar events, attendees, and view configuration
- * used across all calendar views (day, week, month, year).
+ * CalendarEvent is a discriminated union on the `all_day` field:
+ * - AllDayCalendarEvent: start/end are PlainDate (calendar dates without time)
+ * - TimedCalendarEvent: start/end are PlainDateTime (date + time without timezone)
  */
 
 /** Available calendar view modes. */
@@ -90,23 +91,50 @@ export interface Attendee {
   color: string
 }
 
-/** A calendar event fetched from the backend. */
-export interface CalendarEvent {
+/** Common fields shared by all calendar events. */
+interface CalendarEventBase {
   /** Unique event identifier. */
   id: string
   /** Event title. */
   title: string
-  /** ISO date string for event start. */
-  start: string
-  /** ISO date string for event end. */
-  end: string
-  /** Whether the event spans the full day. */
-  all_day?: boolean
   /** Optional event location. */
   location?: string
   /** Family member keys associated with this event. */
   members: string[]
   // ... more fields
+}
+
+/** An all-day calendar event — start and end are calendar dates without time. */
+export interface AllDayCalendarEvent extends CalendarEventBase {
+  /** Discriminator: true for all-day events. */
+  all_day: true
+  /** Event start date (PlainDate — no time component). */
+  start: Temporal.PlainDate
+  /** Event end date (PlainDate — no time component). */
+  end: Temporal.PlainDate
+}
+
+/** A timed calendar event — start and end include time of day. */
+export interface TimedCalendarEvent extends CalendarEventBase {
+  /** Discriminator: false or undefined for timed events. */
+  all_day?: false
+  /** Event start date+time (PlainDateTime — includes hour/minute). */
+  start: Temporal.PlainDateTime
+  /** Event end date+time (PlainDateTime — includes hour/minute). */
+  end: Temporal.PlainDateTime
+}
+
+/** A calendar event — discriminated union on the `all_day` field. */
+export type CalendarEvent = AllDayCalendarEvent | TimedCalendarEvent
+
+/** Type guard: checks if an event is an all-day event. */
+export function isAllDayEvent(event: CalendarEvent): event is AllDayCalendarEvent {
+  return event.all_day === true
+}
+
+/** Type guard: checks if an event is a timed event. */
+export function isTimedEvent(event: CalendarEvent): event is TimedCalendarEvent {
+  return event.all_day !== true
 }
 ```
 
@@ -170,7 +198,7 @@ Edit `src/domain/<domain>/utils.ts` (create if it doesn't exist).
 - Pure functions only — no side effects, no React imports, no DOM access
 - TSDoc on every exported function with `@param` and `@returns`
 - Import domain types with relative path: `import type { CalendarEvent } from './types'`
-- Import shared utils with alias: `import { isSameDay } from '@/shared/utils/dateFormat'`
+- Import shared utils with alias: `import { eventDate } from '@/shared/date'`
 
 **Example — calendar utils (from `domain/calendar/utils.ts`):**
 
@@ -183,7 +211,7 @@ Edit `src/domain/<domain>/utils.ts` (create if it doesn't exist).
  */
 
 import type { CalendarEvent } from './types'
-import { isSameDay } from '@/shared/utils/dateFormat'
+import { eventDate } from '@/shared/date'
 
 /**
  * Returns all events occurring on a given date.
@@ -191,33 +219,42 @@ import { isSameDay } from '@/shared/utils/dateFormat'
  * Compares calendar day only (year/month/date), ignoring time components.
  *
  * @param events - The full list of calendar events.
- * @param date - The date to filter by.
+ * @param date - The date to filter by (PlainDate).
  * @returns Events whose start date falls on the given day.
  */
-export function getEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
-  return events.filter((e) => isSameDay(new Date(e.start), date))
+export function getEventsForDate(
+  events: CalendarEvent[],
+  date: Temporal.PlainDate
+): CalendarEvent[] {
+  return events.filter((e) => eventDate(e.start).equals(date))
 }
 
 /**
  * Returns timed (non-all-day) events for a given date.
  *
  * @param events - The full list of calendar events.
- * @param date - The date to filter by.
+ * @param date - The date to filter by (PlainDate).
  * @returns Non-all-day events whose start date falls on the given day.
  */
-export function getTimedEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
-  return events.filter((e) => isSameDay(new Date(e.start), date) && !e.all_day)
+export function getTimedEventsForDate(
+  events: CalendarEvent[],
+  date: Temporal.PlainDate
+): CalendarEvent[] {
+  return events.filter((e) => eventDate(e.start).equals(date) && !e.all_day)
 }
 
 /**
  * Returns all-day events for a given date.
  *
  * @param events - The full list of calendar events.
- * @param date - The date to filter by.
+ * @param date - The date to filter by (PlainDate).
  * @returns All-day events whose start date falls on the given day.
  */
-export function getAllDayEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
-  return events.filter((e) => isSameDay(new Date(e.start), date) && e.all_day)
+export function getAllDayEventsForDate(
+  events: CalendarEvent[],
+  date: Temporal.PlainDate
+): CalendarEvent[] {
+  return events.filter((e) => eventDate(e.start).equals(date) && e.all_day)
 }
 ```
 
@@ -236,19 +273,19 @@ import type { DailyForecast } from './types'
 /**
  * Returns the weather forecast for a given date.
  *
- * Builds a YYYY-MM-DD key from local date components and matches against
- * the forecast's `date` field (backend uses local timezone formatting).
+ * Converts PlainDate to ISO string format and matches against the forecast's
+ * `date` field (backend uses ISO 8601 date strings).
  *
  * @param forecast - Array of daily forecasts, or undefined if not loaded.
- * @param date - The date to look up.
+ * @param date - The date to look up (PlainDate).
  * @returns The matching daily forecast, or undefined if no match.
  */
 export function getWeatherForDate(
   forecast: DailyForecast[] | undefined,
-  date: Date,
+  date: Temporal.PlainDate,
 ): DailyForecast | undefined {
   if (!forecast) return undefined
-  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  const dateStr = date.toString() // ISO 8601: "2026-08-18"
   return forecast.find((f) => f.date === dateStr)
 }
 ```
@@ -266,7 +303,7 @@ When a domain needs a focused set of utilities around a specific concern, create
  */
 
 import type { CalendarEvent, CalendarView } from '@/types'
-import { isSameDay, getWeekDays } from '@/shared/utils/dateFormat'
+import { eventDate } from '@/shared/date'
 import { getRelativeDensity, getAbsoluteDensity } from '@/shared/utils/density'
 import type { DensityLevel } from '@/theme/config'
 
@@ -284,18 +321,18 @@ export interface DensityInfo {
  * Computes density badge info based on the current view and date.
  *
  * @param view - The active calendar view.
- * @param date - The currently selected date.
+ * @param date - The currently selected date (PlainDate).
  * @param events - All calendar events for the active range.
  * @returns Density info with level, label, and short label.
  */
 export function getDensityInfo(
   view: CalendarView,
-  date: Date,
+  date: Temporal.PlainDate,
   events: CalendarEvent[],
 ): DensityInfo {
   switch (view) {
     case 'day': {
-      const dayEvents = events.filter((e) => isSameDay(new Date(e.start), date))
+      const dayEvents = events.filter((e) => eventDate(e.start).equals(date))
       const density = getAbsoluteDensity(dayEvents.length)
       return {
         density,
@@ -374,16 +411,16 @@ const mockEvents: CalendarEvent[] = [
   {
     id: '1',
     title: 'All Day Event',
-    start: '2025-03-15T00:00:00',
-    end: '2025-03-15T23:59:59',
+    start: Temporal.PlainDate.from('2025-03-15'),
+    end: Temporal.PlainDate.from('2025-03-15'),
     all_day: true,
     members: ['mom'],
   },
   {
     id: '2',
     title: 'Timed Event',
-    start: '2025-03-15T10:00:00',
-    end: '2025-03-15T11:00:00',
+    start: Temporal.PlainDateTime.from('2025-03-15T10:00:00'),
+    end: Temporal.PlainDateTime.from('2025-03-15T11:00:00'),
     all_day: false,
     members: ['dad'],
   },
@@ -391,13 +428,13 @@ const mockEvents: CalendarEvent[] = [
 
 describe('getEventsForDate', () => {
   it('returns all events for a matching date', () => {
-    const date = new Date(2025, 2, 15) // March 15
+    const date = Temporal.PlainDate.from('2025-03-15')
     const result = getEventsForDate(mockEvents, date)
     expect(result).toHaveLength(2)
   })
 
   it('returns empty array for non-matching date', () => {
-    const date = new Date(2025, 2, 16) // March 16
+    const date = Temporal.PlainDate.from('2025-03-16')
     const result = getEventsForDate(mockEvents, date)
     expect(result).toHaveLength(0)
   })
@@ -405,7 +442,7 @@ describe('getEventsForDate', () => {
 
 describe('getTimedEventsForDate', () => {
   it('excludes all-day events', () => {
-    const date = new Date(2025, 2, 15)
+    const date = Temporal.PlainDate.from('2025-03-15')
     const result = getTimedEventsForDate(mockEvents, date)
     expect(result).toHaveLength(1)
     expect(result[0].title).toBe('Timed Event')
@@ -469,5 +506,6 @@ All four must pass before declaring the task complete.
 - Use `import type` for type-only imports to avoid bundling overhead
 - When adding to an existing domain, match the existing code style exactly
 - Specialized utils (like `density.ts`) are fine when a concern is large enough to warrant its own file
-- Shared utilities in `@/shared/utils/` are fair game for domain utils to import
+- Shared utilities in `@/shared/utils/` and `@/shared/date/` are fair game for domain utils to import
 - The family domain currently has no `utils.ts` — create one if family-specific logic is needed
+- **Always use Temporal API for date/time** — never use `Date`, `Date.now()`, or date strings. Use `Temporal.PlainDate`, `Temporal.PlainDateTime`, `Temporal.PlainTime`, etc. See `src/domain/calendar/types.ts` for the discriminated union pattern

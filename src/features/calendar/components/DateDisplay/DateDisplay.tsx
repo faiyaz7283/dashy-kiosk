@@ -10,16 +10,16 @@ import { useState, useCallback, useRef } from 'react'
 import { Calendar, ChevronDown } from 'lucide-react'
 import type { CalendarView } from '@/types'
 import { colors, radii, layout } from '@/theme/tokens'
-import { getWeekDays } from '@/shared/utils/dateFormat'
+import { getWeekDays } from '@/shared/date'
 import { DatePicker } from '@/features/calendar/components/DatePicker'
 
 interface DateDisplayProps {
   /** The current date to display. */
-  currentDate: Date
+  currentDate: Temporal.PlainDate
   /** The current calendar view. */
   currentView: CalendarView
   /** Callback when a date is selected. */
-  onDateChange: (date: Date) => void
+  onDateChange: (date: Temporal.PlainDate) => void
   /** Compact mode (narrow viewports): shrink to content width. */
   compact?: boolean
 }
@@ -61,23 +61,23 @@ const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
  * @param view - The current view type.
  * @returns Formatted date string.
  */
-function formatDateText(date: Date, view: CalendarView): string {
+function formatDateText(date: Temporal.PlainDate, view: CalendarView): string {
   switch (view) {
     case 'day':
-      return `${dayNames[date.getDay()]}, ${shortMonthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
+      return `${dayNames[date.dayOfWeek % 7]}, ${shortMonthNames[date.month - 1]} ${date.day}, ${date.year}`
     case 'week': {
       const weekDays = getWeekDays(date)
       const monday = weekDays[0]!
       const sunday = weekDays[6]!
-      if (monday.getMonth() === sunday.getMonth()) {
-        return `${shortMonthNames[monday.getMonth()]} ${monday.getDate()} – ${sunday.getDate()}, ${monday.getFullYear()}`
+      if (monday.month === sunday.month) {
+        return `${shortMonthNames[monday.month - 1]} ${monday.day} – ${sunday.day}, ${monday.year}`
       }
-      return `${shortMonthNames[monday.getMonth()]} ${monday.getDate()} – ${shortMonthNames[sunday.getMonth()]} ${sunday.getDate()}, ${sunday.getFullYear()}`
+      return `${shortMonthNames[monday.month - 1]} ${monday.day} – ${shortMonthNames[sunday.month - 1]} ${sunday.day}, ${sunday.year}`
     }
     case 'month':
-      return `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+      return `${monthNames[date.month - 1]} ${date.year}`
     case 'year':
-      return `${date.getFullYear()}`
+      return `${date.year}`
   }
 }
 

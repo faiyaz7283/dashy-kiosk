@@ -13,9 +13,9 @@
 import { useState } from 'react'
 import type { CalendarEvent, FamilyMember } from '@/types'
 import { colors, radii, spacing, typography, zIndices } from '@/theme/tokens'
-import { LOCALE } from '@/theme/config'
 import { Repeat } from 'lucide-react'
 import { getMemberColorPalette } from '@/shared/utils/memberColors'
+import { formatTime } from '@/shared/date'
 
 interface EventItemProps {
   /** The event to render. */
@@ -45,10 +45,10 @@ interface EventItemProps {
  */
 function formatTimeRange(event: CalendarEvent): string {
   if (event.all_day) return 'All day'
-  const opts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true }
-  const start = new Date(event.start).toLocaleTimeString(LOCALE, opts)
-  const end = new Date(event.end).toLocaleTimeString(LOCALE, opts)
-  return `${start} – ${end}`
+  // For timed events, extract the time portion from PlainDateTime
+  const startTime = event.start.toPlainTime()
+  const endTime = event.end.toPlainTime()
+  return `${formatTime(startTime)} – ${formatTime(endTime)}`
 }
 
 /**

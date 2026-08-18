@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { MonthView } from './MonthView'
 import type { CalendarEvent, FamilyMember } from '@/types'
+import { parseCalendarEvent } from '@/shared/date'
 
 const mockMembers: FamilyMember[] = [
   {
@@ -20,25 +21,25 @@ const mockMembers: FamilyMember[] = [
   },
 ]
 
-const mockDate = new Date('2026-08-15T12:00:00') // August 2026
+const mockDate = Temporal.PlainDate.from('2026-08-15') // August 2026
 
 const mockEvents: CalendarEvent[] = [
-  {
+  parseCalendarEvent({
     id: '1',
     title: 'Team Standup',
     start: '2026-08-10T09:00:00',
     end: '2026-08-10T09:30:00',
     all_day: false,
     members: ['faiyaz'],
-  },
-  {
+  }),
+  parseCalendarEvent({
     id: '2',
     title: 'Birthday Party',
-    start: '2026-08-20T00:00:00',
-    end: '2026-08-20T23:59:00',
+    start: '2026-08-20',
+    end: '2026-08-20',
     all_day: true,
     members: ['faiyaz'],
-  },
+  }),
 ]
 
 describe('MonthView', () => {

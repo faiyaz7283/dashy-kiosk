@@ -52,9 +52,11 @@ function parseTime(timeStr: string | undefined | null): { hours: number; minutes
 
   // Try ISO format first (e.g., "2026-08-18T06:13:00-04:00")
   if (timeStr.includes('T')) {
-    const date = new Date(timeStr)
-    if (!isNaN(date.getTime())) {
-      return { hours: date.getHours(), minutes: date.getMinutes() }
+    try {
+      const dt = Temporal.PlainDateTime.from(timeStr)
+      return { hours: dt.hour, minutes: dt.minute }
+    } catch {
+      // Fall through to HH:MM format
     }
   }
 
@@ -84,10 +86,10 @@ function timeToMinutes(hours: number, minutes: number): number {
  * Light mode: between sunrise and sunset
  */
 function getTimeBasedPreference(sunrise: string | null, sunset: string | null): ResolvedTheme {
-  if (typeof Date === 'undefined') return 'light'
+  if (typeof Temporal === 'undefined') return 'light'
 
-  const now = new Date()
-  const currentMinutes = timeToMinutes(now.getHours(), now.getMinutes())
+  const now = Temporal.Now.plainTimeISO()
+  const currentMinutes = timeToMinutes(now.hour, now.minute)
 
   // Parse sunrise time (use default if not available)
   const sunriseStr: string = sunrise ?? DEFAULT_SUNRISE

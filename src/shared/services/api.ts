@@ -6,6 +6,8 @@
  */
 
 import type { CalendarEvent, FamilyMember, WeekCalendar, WeatherResponse } from '@/types'
+import type { RawWeekCalendar } from '@/shared/date/parse'
+import { parseWeekCalendar } from '@/shared/date/parse'
 import { ENDPOINTS } from '@/shared/api/endpoints'
 
 const API_BASE = import.meta.env.VITE_API_URL
@@ -110,8 +112,8 @@ export async function getCalendar(
   if (!options.bypassCache && cached && cacheTtl > 0 && Date.now() - cached.fetchedAt < cacheTtl) {
     return {
       data: {
-        week_start: startDate,
-        week_end: endDate,
+        week_start: Temporal.PlainDate.from(startDate),
+        week_end: Temporal.PlainDate.from(endDate),
         events: cached.events,
       },
       cached: true,
@@ -119,7 +121,12 @@ export async function getCalendar(
   }
 
   const params = new URLSearchParams({ start_date: startDate, end_date: endDate })
-  const data = await fetchWithRetry<WeekCalendar>(`${API_BASE}${ENDPOINTS.calendar.url}?${params}`)
+  const rawData = await fetchWithRetry<RawWeekCalendar>(
+    `${API_BASE}${ENDPOINTS.calendar.url}?${params}`,
+  )
+
+  // Parse raw API response into typed WeekCalendar with Temporal dates
+  const data = parseWeekCalendar(rawData)
 
   calendarCache.set(cacheKey, {
     events: data.events,

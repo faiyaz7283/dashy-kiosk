@@ -9,13 +9,13 @@
 
 import { useState, useCallback } from 'react'
 import type { CalendarEvent } from '@/types'
-import { isSameDay } from '@/shared/utils/dateFormat'
+import { eventDate } from '@/shared/date'
 
 interface PopupState {
   visible: boolean
   x: number
   y: number
-  date: Date | null
+  date: Temporal.PlainDate | null
   /** The specific event being hovered (null when hovering a day cell). */
   hoveredEvent: CalendarEvent | null
 }
@@ -40,8 +40,8 @@ export function useEventInteraction(events: CalendarEvent[]) {
    * @param event - Optional specific event being hovered (for per-event popups).
    */
   const handleDayMouseEnter = useCallback(
-    (e: React.MouseEvent, date: Date, event?: CalendarEvent) => {
-      const hasEvents = events.some((ev) => isSameDay(new Date(ev.start), date))
+    (e: React.MouseEvent, date: Temporal.PlainDate, event?: CalendarEvent) => {
+      const hasEvents = events.some((ev) => eventDate(ev.start).equals(date))
       setPopupState(
         hasEvents
           ? { visible: true, x: e.clientX, y: e.clientY, date, hoveredEvent: event ?? null }

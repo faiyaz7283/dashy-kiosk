@@ -2,13 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { WeatherTooltip } from './WeatherTooltip'
 import type { DailyForecast } from '@/types'
-import { LOCALE } from '@/theme/config'
 
-// Helper to get today's date in YYYY-MM-DD format
-const getTodayStr = () => {
-  const today = new Date()
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-}
+// Helper to get today's date in YYYY-MM-DD format using Temporal
+const getTodayStr = () => Temporal.Now.plainDateISO().toString()
 
 const mockForecast: DailyForecast = {
   date: getTodayStr(),
@@ -135,8 +131,8 @@ describe('WeatherTooltip', () => {
   })
 
   it('renders basic content when forecast has no hourly data', () => {
-    const today = new Date()
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const today = Temporal.Now.plainDateISO()
+    const todayStr = today.toString()
     const basicForecast: DailyForecast = {
       date: todayStr,
       high: 78,
@@ -157,8 +153,8 @@ describe('WeatherTooltip', () => {
     expect(screen.getByText('78°F')).toBeInTheDocument()
     expect(screen.getByText('Today')).toBeInTheDocument()
     // Date should match today's date (dynamic)
-    const today = new Date()
-    const expectedDate = today.toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' })
+    const today = Temporal.Now.plainDateISO()
+    const expectedDate = today.toLocaleString('en-US', { month: 'short', day: 'numeric' })
     expect(screen.getByText(expectedDate)).toBeInTheDocument()
     // "Temperature" appears once as section heading (removed duplicate from chart)
     expect(screen.getByText('Temperature')).toBeInTheDocument()
@@ -260,11 +256,10 @@ describe('WeatherTooltip', () => {
   })
 
   it('renders correct day labels (Today, Tomorrow, weekday)', () => {
-    const today = new Date()
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+    const today = Temporal.Now.plainDateISO()
+    const todayStr = today.toString()
+    const tomorrow = today.add({ days: 1 })
+    const tomorrowStr = tomorrow.toString()
 
     const todayForecast: DailyForecast = {
       date: todayStr,

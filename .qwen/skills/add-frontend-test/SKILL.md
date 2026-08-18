@@ -54,8 +54,11 @@ Decide which tier based on what you're testing:
 Co-locate the test file next to the source file:
 
 ```
-src/shared/utils/dateFormat.ts
-src/shared/utils/dateFormat.test.ts    ← co-located
+src/shared/utils/density.ts
+src/shared/utils/density.test.ts    ← co-located
+
+src/shared/date/format.ts
+src/shared/date/format.test.ts      ← co-located
 
 src/features/calendar/components/EventItem/EventItem.tsx
 src/features/calendar/components/EventItem/EventItem.test.tsx    ← co-located
@@ -67,7 +70,7 @@ Follow the `recurrence.test.ts` pattern — import from `vitest`, use `describe`
 
 ```typescript
 import { describe, it, expect } from 'vitest'
-import { getOrdinalSuffix } from './dateFormat'
+import { getOrdinalSuffix } from './formatting'
 
 describe('getOrdinalSuffix', () => {
   it('returns st for 1, 21, 31', () => {
@@ -240,7 +243,7 @@ make test-kiosk
 Check specific file:
 
 ```bash
-make test-kiosk  # Or: docker compose exec kiosk pnpm vitest run src/shared/utils/dateFormat.test.ts
+make test-kiosk  # Or: docker compose exec kiosk pnpm vitest run src/shared/utils/density.test.ts
 ```
 
 ### 8. Check coverage (if needed)
@@ -264,9 +267,22 @@ make test-kiosk  # Coverage is included in the output
 const mockEvent: CalendarEvent = {
   id: '1',
   title: 'Team Standup',
-  start: '2026-08-04T09:00:00',
-  end: '2026-08-04T09:30:00',
+  start: Temporal.PlainDateTime.from('2026-08-04T09:00:00'),
+  end: Temporal.PlainDateTime.from('2026-08-04T09:30:00'),
   all_day: false,
+  members: ['faiyaz'],
+}
+```
+
+**All-day event:**
+
+```typescript
+const mockAllDayEvent: CalendarEvent = {
+  id: '2',
+  title: 'Birthday Party',
+  start: Temporal.PlainDate.from('2026-08-20'),
+  end: Temporal.PlainDate.from('2026-08-20'),
+  all_day: true,
   members: ['faiyaz'],
 }
 ```
@@ -319,9 +335,9 @@ const mockWeather: WeatherResponse = {
 
 ## Example: Testing a new utility function
 
-Scenario: You added a `formatTemperature` function to `src/shared/utils/dateFormat.ts`.
+Scenario: You added a `formatTemperature` function to `src/shared/utils/temperature.ts`.
 
-1. Create `src/shared/utils/dateFormat.test.ts` (or add to existing file)
+1. Create `src/shared/utils/temperature.test.ts` (or add to existing file)
 2. Import the function and `describe`/`it`/`expect` from vitest
 3. Write tests for each branch: Fahrenheit, Celsius, rounding, edge cases
 4. Run `make test-kiosk`

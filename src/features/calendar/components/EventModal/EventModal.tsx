@@ -7,6 +7,7 @@
  */
 
 import type { AttendeeStatus, CalendarEvent, FamilyMember } from '@/types'
+import { isTimedEvent } from '@/domain/calendar/types'
 import { createPortal } from 'react-dom'
 import { colors, radii, shadows, spacing, zIndices, densityColors } from '@/theme/tokens'
 import { LOCALE } from '@/theme/config'
@@ -69,20 +70,33 @@ export function EventModal({ visible, event, members, onClose }: EventModalProps
   const attendees = event.attendees ?? []
   const isRecurring = Boolean(event.is_recurring_instance || event.recurrence_rule)
 
-  const startTime = new Date(event.start).toLocaleString(LOCALE, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-  const endTime = new Date(event.end).toLocaleTimeString(LOCALE, {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
+  // Format start/end times based on event type
+  let startTime: string
+  let endTime: string
+  if (isTimedEvent(event)) {
+    startTime = event.start.toLocaleString(LOCALE, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+    endTime = event.end.toLocaleString(LOCALE, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  } else {
+    startTime = event.start.toLocaleString(LOCALE, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    endTime = ''
+  }
 
   // Rendered via portal: escapes the app's root zoom so the overlay covers
   // the full viewport; the dialog card applies the same zoom for consistency.

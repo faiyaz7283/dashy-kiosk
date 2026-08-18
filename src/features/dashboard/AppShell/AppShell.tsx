@@ -33,7 +33,6 @@ import { useViewNavigation } from '@/shared/hooks/useViewNavigation'
 import { getWeather, getFamilyMembers, waitForBackend } from '@/shared/services/api'
 import { ENDPOINTS } from '@/shared/api/endpoints'
 import { colors, spacing, layout } from '@/theme/tokens'
-import { isSameDay } from '@/shared/utils/dateFormat'
 import { getDensityInfo } from '@/domain/calendar/density'
 import { useTheme } from '@/theme/ThemeContext'
 
@@ -167,7 +166,7 @@ export function AppShell() {
       : sidebarState === 'collapsed'
         ? layout.sidebarCollapsed
         : 0
-  const isViewingToday = isSameDay(currentDate, new Date())
+  const isViewingToday = currentDate.equals(Temporal.Now.plainDateISO())
 
   /**
    * Renders the active calendar view.

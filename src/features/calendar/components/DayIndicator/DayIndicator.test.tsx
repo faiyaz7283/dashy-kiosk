@@ -2,6 +2,7 @@ import { render } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { DayIndicator } from './DayIndicator'
 import type { CalendarEvent, FamilyMember } from '@/types'
+import { Temporal } from '@js-temporal/polyfill'
 
 const mockMembers: FamilyMember[] = [
   {
@@ -24,8 +25,8 @@ function makeEvent(id: string, members: string[]): CalendarEvent {
   return {
     id,
     title: `Event ${id}`,
-    start: '2026-08-10T09:00:00',
-    end: '2026-08-10T10:00:00',
+    start: Temporal.PlainDateTime.from('2026-08-10T09:00:00'),
+    end: Temporal.PlainDateTime.from('2026-08-10T10:00:00'),
     all_day: false,
     members,
   }

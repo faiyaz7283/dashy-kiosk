@@ -4,18 +4,18 @@ import { LOCALE } from '@/theme/config'
 import { EventItem } from '@/features/calendar/components/EventItem'
 import { WeatherIcon } from '@/features/weather/components/WeatherWidget/WeatherIcon'
 import { colors, radii, spacing, typography, densityBarColors } from '@/theme/tokens'
-import { getShortWeekday } from '@/shared/utils/dateFormat'
+import { getShortWeekday } from '@/shared/date'
 import { useWeatherTooltip } from '@/features/weather/hooks/useWeatherTooltip'
 import { WeatherTooltip } from '@/features/weather/components/WeatherTooltip'
 
 interface DayCardProps {
-  date: Date
+  date: Temporal.PlainDate
   events: CalendarEvent[]
   members: FamilyMember[]
   isToday: boolean
   isNextWeek?: boolean
   /** End date for next week range (used when isNextWeek is true). */
-  nextWeekEnd?: Date
+  nextWeekEnd?: Temporal.PlainDate
   /** Density level for the density bar indicator. */
   density?: DensityLevel
   /** Weather forecast for this day. */
@@ -25,7 +25,7 @@ interface DayCardProps {
   /** Callback when an event is clicked (opens the event modal). */
   onEventClick?: (event: CalendarEvent) => void
   /** Callback when an event is hovered (shows the day popup). */
-  onEventMouseEnter?: (e: React.MouseEvent, date: Date, event: CalendarEvent) => void
+  onEventMouseEnter?: (e: React.MouseEvent, date: Temporal.PlainDate, event: CalendarEvent) => void
   onEventMouseMove?: (e: React.MouseEvent) => void
   onEventMouseLeave?: (e: React.MouseEvent) => void
 }
@@ -46,17 +46,17 @@ export function DayCard({
   onEventMouseLeave,
 }: DayCardProps) {
   const dayName = getShortWeekday(date)
-  const dayNum = date.getDate()
+  const dayNum = date.day
   const eventCount = events.length
   const { tooltipState, showTooltip, hideTooltip } = useWeatherTooltip()
 
   // Format date range for next week card
   const formatNextWeekRange = () => {
     if (!nextWeekEnd) return 'Next week'
-    const startDay = date.getDate()
-    const endDay = nextWeekEnd.getDate()
-    const startMonth = date.toLocaleDateString(LOCALE, { month: 'short' })
-    const endMonth = nextWeekEnd.toLocaleDateString(LOCALE, { month: 'short' })
+    const startDay = date.day
+    const endDay = nextWeekEnd.day
+    const startMonth = date.toLocaleString(LOCALE, { month: 'short' })
+    const endMonth = nextWeekEnd.toLocaleString(LOCALE, { month: 'short' })
     if (startMonth === endMonth) {
       return `${startMonth} ${startDay} – ${endDay}`
     }

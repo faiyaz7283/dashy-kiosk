@@ -7,7 +7,7 @@
  */
 
 import type { CalendarEvent, CalendarView } from '@/types'
-import { isSameDay, getWeekDays } from '@/shared/utils/dateFormat'
+import { getWeekDays, eventDate } from '@/shared/date'
 import { getRelativeDensity, getAbsoluteDensity } from '@/shared/utils/density'
 import type { DensityLevel } from '@/theme/config'
 
@@ -33,12 +33,12 @@ export interface DensityInfo {
  */
 export function getDensityInfo(
   view: CalendarView,
-  date: Date,
+  date: Temporal.PlainDate,
   events: CalendarEvent[],
 ): DensityInfo {
   switch (view) {
     case 'day': {
-      const dayEvents = events.filter((e) => isSameDay(new Date(e.start), date))
+      const dayEvents = events.filter((e) => eventDate(e.start).equals(date))
       const density = getAbsoluteDensity(dayEvents.length)
       return {
         density,
@@ -51,8 +51,11 @@ export function getDensityInfo(
       const weekStart = weekDays[0]!
       const weekEnd = weekDays[6]!
       const weekEvents = events.filter((e) => {
-        const d = new Date(e.start)
-        return d >= weekStart && d <= weekEnd
+        const d = eventDate(e.start)
+        return (
+          Temporal.PlainDate.compare(d, weekStart) >= 0 &&
+          Temporal.PlainDate.compare(d, weekEnd) <= 0
+        )
       })
       const density = getRelativeDensity(weekEvents.length, [weekEvents.length])
       return {
@@ -63,8 +66,8 @@ export function getDensityInfo(
     }
     case 'month': {
       const monthEvents = events.filter((e) => {
-        const d = new Date(e.start)
-        return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth()
+        const d = eventDate(e.start)
+        return d.year === date.year && d.month === date.month
       })
       const density = getRelativeDensity(monthEvents.length, [monthEvents.length])
       return {
@@ -75,8 +78,8 @@ export function getDensityInfo(
     }
     case 'year': {
       const yearEvents = events.filter((e) => {
-        const d = new Date(e.start)
-        return d.getFullYear() === date.getFullYear()
+        const d = eventDate(e.start)
+        return d.year === date.year
       })
       const density = getRelativeDensity(yearEvents.length, [yearEvents.length])
       return {

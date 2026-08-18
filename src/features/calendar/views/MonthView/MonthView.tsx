@@ -10,8 +10,12 @@
 import { useState } from 'react'
 import type { CalendarEvent, DailyForecast, FamilyMember } from '@/types'
 import { colors, spacing, radii, typography, densityBarColors } from '@/theme/tokens'
-import { LOCALE } from '@/theme/config'
-import { isSameDay } from '@/shared/utils/dateFormat'
+import {
+  today,
+  getMonthGridDates as getTemporalMonthGrid,
+  formatDateParts,
+  eventDate,
+} from '@/shared/date'
 import { getRelativeDensity } from '@/shared/utils/density'
 import { getEventsForDate } from '@/domain/calendar/utils'
 import { getWeatherForDate } from '@/domain/weather/utils'
@@ -25,52 +29,15 @@ import { useWeatherTooltip } from '@/features/weather/hooks/useWeatherTooltip'
 
 interface MonthViewProps {
   /** The current month to display. */
-  currentDate: Date
+  currentDate: Temporal.PlainDate
   /** Calendar events to display. */
   events: CalendarEvent[]
   /** Family members for resolving member info. */
   members: FamilyMember[]
   /** Callback when a day is clicked. */
-  onDayClick: (date: Date) => void
+  onDayClick: (date: Temporal.PlainDate) => void
   /** Weather forecast data. */
   weatherForecast?: DailyForecast[]
-}
-
-/**
- * Returns all dates to display in a month grid (including padding days).
- *
- * @param year - The year.
- * @param month - The month (0-11).
- * @returns Array of dates for the grid.
- */
-function getMonthGridDates(year: number, month: number): Date[] {
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const startDay = firstDay.getDay()
-  const paddingStart = startDay === 0 ? 6 : startDay - 1 // Monday start
-
-  const dates: Date[] = []
-
-  // Padding days from previous month
-  for (let i = paddingStart; i > 0; i--) {
-    const d = new Date(year, month, 1 - i)
-    dates.push(d)
-  }
-
-  // Current month days
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    dates.push(new Date(year, month, d))
-  }
-
-  // Padding days from next month to fill 6 rows
-  while (dates.length < 42) {
-    const lastDate = dates[dates.length - 1]!
-    const next = new Date(lastDate)
-    next.setDate(next.getDate() + 1)
-    dates.push(next)
-  }
-
-  return dates
 }
 
 /**
@@ -92,13 +59,12 @@ export function MonthView({
 
   const { tooltipState, showTooltip, hideTooltip } = useWeatherTooltip()
 
-  const year = currentDate.getFullYear()
-  const month = currentDate.getMonth()
-  const today = new Date()
-  const gridDates = getMonthGridDates(year, month)
+  const yearMonth = currentDate.toPlainYearMonth()
+  const todayDate = today()
+  const gridDates = getTemporalMonthGrid(yearMonth)
 
   // Group dates into weeks for density calculation
-  const weeks: Date[][] = []
+  const weeks: Temporal.PlainDate[][] = []
   for (let i = 0; i < gridDates.length; i += 7) {
     weeks.push(gridDates.slice(i, i + 7))
   }
@@ -186,8 +152,8 @@ export function MonthView({
           }}
         >
           {gridDates.map((date, idx) => {
-            const isCurrentMonth = date.getMonth() === month
-            const isToday = isSameDay(date, today)
+            const isCurrentMonth = date.month === currentDate.month
+            const isToday = date.equals(todayDate)
             const dayEvents = getEventsForDate(events, date)
             const dayWeather = getWeatherForDate(weatherForecast, date)
             const isHovered = hoveredEvent && dayEvents.some((e) => e.id === hoveredEvent.id)
@@ -245,7 +211,7 @@ export function MonthView({
                         : {}),
                     }}
                   >
-                    {date.getDate()}
+                    {date.day}
                   </div>
 
                   {/* Center: weather - absolutely positioned for true center */}
@@ -343,7 +309,7 @@ export function MonthView({
           visible={true}
           x={popupPos.x}
           y={popupPos.y}
-          dateLabel={new Date(hoveredEvent.start).toLocaleDateString(LOCALE, {
+          dateLabel={formatDateParts(eventDate(hoveredEvent.start), {
             weekday: 'short',
             month: 'short',
             day: 'numeric',

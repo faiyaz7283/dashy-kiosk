@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { EventPopup } from './EventPopup'
 import type { CalendarEvent, FamilyMember } from '@/types'
+import { Temporal } from '@js-temporal/polyfill'
 
 const mockMembers: FamilyMember[] = [
   {
@@ -24,8 +25,8 @@ const mockEvents: CalendarEvent[] = [
   {
     id: '1',
     title: 'Team Standup',
-    start: '2026-08-08T09:00:00',
-    end: '2026-08-08T09:30:00',
+    start: Temporal.PlainDateTime.from('2026-08-08T09:00:00'),
+    end: Temporal.PlainDateTime.from('2026-08-08T09:30:00'),
     all_day: false,
     members: ['faiyaz'],
   },
@@ -93,8 +94,8 @@ describe('EventPopup', () => {
     const allDayEvent: CalendarEvent = {
       ...mockEvents[0]!,
       all_day: true,
-      start: '2026-08-08T00:00:00',
-      end: '2026-08-08T23:59:00',
+      start: Temporal.PlainDate.from('2026-08-08'),
+      end: Temporal.PlainDate.from('2026-08-08'),
     }
     render(
       <EventPopup
@@ -129,8 +130,8 @@ describe('EventPopup', () => {
       {
         id: '2',
         title: 'Lunch Meeting',
-        start: '2026-08-08T12:00:00',
-        end: '2026-08-08T13:00:00',
+        start: Temporal.PlainDateTime.from('2026-08-08T12:00:00'),
+        end: Temporal.PlainDateTime.from('2026-08-08T13:00:00'),
         all_day: false,
         members: ['trisha'],
       },

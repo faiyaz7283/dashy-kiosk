@@ -12,6 +12,7 @@ Dashy Kiosk is a React + Vite single-page application designed for full-viewport
 - **Language:** TypeScript
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS 4 + CSS Custom Properties
+- **Date/Time:** Temporal API (`@js-temporal/polyfill` for build/test, native in Chromium 151+)
 - **Icons:** Lucide React (UI icons), Custom SVG (weather/data visualizations)
 - **Package Manager:** pnpm
 - **Testing:** Vitest + React Testing Library
@@ -58,10 +59,17 @@ src/
 ├── main.tsx              # Entry point
 ├── App.tsx               # Root component
 ├── index.css             # Global styles
+├── temporal.d.ts         # Global Temporal type declarations
 ├── domain/               # Domain types, utilities (calendar, family, weather)
 ├── features/             # Feature modules (weather, calendar, navigation, dashboard, kiosk)
-├── shared/               # Shared components, hooks, api, config, services, utils
-├── test/                 # Test utilities
+├── shared/
+│   ├── components/       # Shared UI components
+│   ├── hooks/            # Shared React hooks
+│   ├── services/         # API client and service layer
+│   ├── config/           # App configuration
+│   ├── date/             # Temporal-based date utilities (parse, format, calendar)
+│   └── utils/            # General-purpose pure utilities
+├── test/                 # Test setup and utilities
 ├── theme/                # Design tokens, theming system (dark/light/auto mode), scaling
 ├── types/                # TypeScript type definitions
 └── docs/                 # Documentation
@@ -71,6 +79,8 @@ src/
 - **Fluid full-viewport layout** — scales to any display via `useUiScale`
 - **Feature-based organization** — each feature is self-contained
 - **Domain-driven** — domain types separate from UI concerns
+- **Temporal API for all date/time** — immutable, timezone-safe `PlainDate`, `PlainDateTime`, `PlainTime`; no legacy `Date` objects. CalendarEvent is a discriminated union (`AllDayCalendarEvent` | `TimedCalendarEvent`) with type guards
+- **Date infrastructure** — `shared/date/` module handles parsing API responses (`parse.ts`), display formatting (`format.ts`), and calendar utilities like `today()`, `getWeekDays()`, `getMonthGridDates()` (`calendar.ts`)
 - **Theming system** — CSS custom properties enable dark/light/auto modes; auto mode switches based on sunrise/sunset from weather API
 - **Icon architecture** — Lucide React for UI chrome, custom SVG for data visualizations
 
@@ -80,6 +90,7 @@ src/
 - **Floating layers** — modals portal to `document.body` with scale factor
 - **Configurable** — family members, colors, API URLs from environment
 - **No hardcoded viewport assumptions** — responsive to any screen size
+- **Temporal over Date** — all date/time uses the Temporal API; no legacy `Date` objects, no timezone ambiguity, no mutable date state
 - **Theming support** — dark/light/auto mode with CSS custom properties; auto mode uses sunrise/sunset times from weather data
 - **Icon strategy** — Lucide React for UI icons (consistent, themeable), custom SVG for weather/data visualizations (specialized, data-driven)
 

@@ -81,8 +81,8 @@ export function TempChart({ hourly }: { hourly: DailyForecast['hourly'] }) {
           })}
           {sampled.map((h, i) => {
             const x = padding + (i / (sampled.length - 1)) * chartWidth
-            const time = new Date(h.time)
-            const label = time.toLocaleTimeString(LOCALE, { hour: 'numeric', hour12: true })
+            const time = Temporal.PlainDateTime.from(h.time).toPlainTime()
+            const label = time.toLocaleString(LOCALE, { hour: 'numeric', hour12: true })
             const isFirst = i === 0
             const isLast = i === sampled.length - 1
             return (

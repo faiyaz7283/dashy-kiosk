@@ -2,6 +2,8 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { WeekGrid } from './WeekGrid'
 import type { CalendarEvent, FamilyMember } from '@/types'
+import { parseCalendarEvent } from '@/shared/date'
+import { Temporal } from '@js-temporal/polyfill'
 
 const mockMembers: FamilyMember[] = [
   {
@@ -20,25 +22,25 @@ const mockMembers: FamilyMember[] = [
   },
 ]
 
-const mockDate = new Date('2026-08-10T12:00:00') // Monday
+const mockDate = Temporal.PlainDate.from('2026-08-10') // Monday
 
 const mockEvents: CalendarEvent[] = [
-  {
+  parseCalendarEvent({
     id: '1',
     title: 'Team Standup',
     start: '2026-08-10T09:00:00',
     end: '2026-08-10T09:30:00',
     all_day: false,
     members: ['faiyaz'],
-  },
-  {
+  }),
+  parseCalendarEvent({
     id: '2',
     title: 'Lunch Meeting',
     start: '2026-08-12T12:00:00',
     end: '2026-08-12T13:00:00',
     all_day: false,
     members: ['trisha'],
-  },
+  }),
 ]
 
 describe('WeekGrid', () => {

@@ -21,8 +21,8 @@ describe('useCalendarEvents', () => {
     {
       id: '1',
       title: 'Test Event',
-      start: '2026-08-10T09:00:00',
-      end: '2026-08-10T10:00:00',
+      start: Temporal.PlainDateTime.from('2026-08-10T09:00:00'),
+      end: Temporal.PlainDateTime.from('2026-08-10T10:00:00'),
       all_day: false,
       members: ['faiyaz'],
     },
@@ -30,8 +30,8 @@ describe('useCalendarEvents', () => {
 
   const mockResponse = {
     data: {
-      week_start: '2026-08-10',
-      week_end: '2026-08-16',
+      week_start: Temporal.PlainDate.from('2026-08-10'),
+      week_end: Temporal.PlainDate.from('2026-08-16'),
       events: mockEvents,
     },
     cached: false,
@@ -40,7 +40,9 @@ describe('useCalendarEvents', () => {
   it('fetches events on mount', async () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
-    const { result } = renderHook(() => useCalendarEvents('week', new Date('2026-08-12')))
+    const { result } = renderHook(() =>
+      useCalendarEvents('week', Temporal.PlainDate.from('2026-08-12')),
+    )
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
@@ -53,8 +55,7 @@ describe('useCalendarEvents', () => {
   it('computes correct date range for day view', async () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
-    // Use local timezone construction to avoid UTC offset issues
-    const date = new Date(2026, 7, 15) // Aug 15, 2026 (month is 0-indexed)
+    const date = Temporal.PlainDate.from('2026-08-15')
     renderHook(() => useCalendarEvents('day', date))
 
     await waitFor(() => {
@@ -66,7 +67,7 @@ describe('useCalendarEvents', () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
     // Wednesday Aug 12, 2026 -> week is Mon Aug 10 to Sun Aug 16
-    const date = new Date(2026, 7, 12) // Aug 12, 2026 (month is 0-indexed)
+    const date = Temporal.PlainDate.from('2026-08-12')
     renderHook(() => useCalendarEvents('week', date))
 
     await waitFor(() => {
@@ -77,7 +78,7 @@ describe('useCalendarEvents', () => {
   it('computes correct date range for month view', async () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
-    const date = new Date(2026, 7, 15) // Aug 15, 2026 (month is 0-indexed)
+    const date = Temporal.PlainDate.from('2026-08-15')
     renderHook(() => useCalendarEvents('month', date))
 
     await waitFor(() => {
@@ -88,7 +89,7 @@ describe('useCalendarEvents', () => {
   it('computes correct date range for year view', async () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
-    const date = new Date(2026, 7, 15) // Aug 15, 2026 (month is 0-indexed)
+    const date = Temporal.PlainDate.from('2026-08-15')
     renderHook(() => useCalendarEvents('year', date))
 
     await waitFor(() => {
@@ -100,7 +101,8 @@ describe('useCalendarEvents', () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
     const { rerender } = renderHook(
-      ({ view }: { view: CalendarView }) => useCalendarEvents(view, new Date(2026, 7, 12)),
+      ({ view }: { view: CalendarView }) =>
+        useCalendarEvents(view, Temporal.PlainDate.from('2026-08-12')),
       { initialProps: { view: 'day' as CalendarView } },
     )
 
@@ -125,7 +127,7 @@ describe('useCalendarEvents', () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
     const { rerender } = renderHook(({ date }) => useCalendarEvents('day', date), {
-      initialProps: { date: new Date(2026, 7, 12) }, // Aug 12, 2026
+      initialProps: { date: Temporal.PlainDate.from('2026-08-12') },
     })
 
     await waitFor(() => {
@@ -134,7 +136,7 @@ describe('useCalendarEvents', () => {
 
     // Change date
     await act(async () => {
-      rerender({ date: new Date(2026, 7, 13) }) // Aug 13, 2026
+      rerender({ date: Temporal.PlainDate.from('2026-08-13') })
     })
 
     // Should have been called with new date
@@ -146,7 +148,9 @@ describe('useCalendarEvents', () => {
   it('handles fetch error', async () => {
     mockGetCalendar.mockRejectedValue(new Error('Network error'))
 
-    const { result } = renderHook(() => useCalendarEvents('week', new Date('2026-08-12')))
+    const { result } = renderHook(() =>
+      useCalendarEvents('week', Temporal.PlainDate.from('2026-08-12')),
+    )
 
     await waitFor(() => {
       expect(result.current.error).toBe('Network error')
@@ -159,7 +163,9 @@ describe('useCalendarEvents', () => {
   it('exposes refetch function', async () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
-    const { result } = renderHook(() => useCalendarEvents('week', new Date('2026-08-12')))
+    const { result } = renderHook(() =>
+      useCalendarEvents('week', Temporal.PlainDate.from('2026-08-12')),
+    )
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
@@ -172,7 +178,9 @@ describe('useCalendarEvents', () => {
   it('forceRefresh bypasses cache and does not toggle loading', async () => {
     mockGetCalendar.mockResolvedValue(mockResponse)
 
-    const { result } = renderHook(() => useCalendarEvents('week', new Date('2026-08-12')))
+    const { result } = renderHook(() =>
+      useCalendarEvents('week', Temporal.PlainDate.from('2026-08-12')),
+    )
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     const callsBeforeForceRefresh = mockGetCalendar.mock.calls.length

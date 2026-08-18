@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import type { CalendarView } from '@/types'
 import { colors, spacing, radii, shadows, zIndices } from '@/theme/tokens'
-import { getWeekDays, isSameDay } from '@/shared/utils/dateFormat'
+import { getWeekDays, today } from '@/shared/date'
 import { useUiScale } from '@/features/kiosk/hooks/useUiScale'
 
 const monthNames = [
@@ -31,11 +31,11 @@ const monthNames = [
 
 interface DatePickerProps {
   /** The currently selected date. */
-  currentDate: Date
+  currentDate: Temporal.PlainDate
   /** The active calendar view (affects week highlighting). */
   currentView: CalendarView
   /** Callback when a date is selected. */
-  onDateChange: (date: Date) => void
+  onDateChange: (date: Temporal.PlainDate) => void
   /** Whether the picker is open. */
   isOpen: boolean
   /** Callback to close the picker. */
@@ -48,37 +48,37 @@ interface DatePickerProps {
  * Gets the days to display in a calendar month grid.
  *
  * @param year - The year.
- * @param month - The month (0-11).
+ * @param month - The month (1-12).
  * @returns Array of day objects with date and otherMonth flag.
  */
 function getCalendarDays(
   year: number,
   month: number,
-): Array<{ day: number; date: Date; otherMonth: boolean }> {
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const startDow = firstDay.getDay()
-  const paddingStart = startDow === 0 ? 6 : startDow - 1
+): Array<{ day: number; date: Temporal.PlainDate; otherMonth: boolean }> {
+  const yearMonth = Temporal.PlainYearMonth.from({ year, month })
+  const firstDay = Temporal.PlainDate.from({ year, month, day: 1 })
+  const lastDay = Temporal.PlainDate.from({ year, month, day: yearMonth.daysInMonth })
+  const startDow = firstDay.dayOfWeek // 1=Monday, 7=Sunday
+  const paddingStart = startDow === 7 ? 6 : startDow - 1 // Monday start
 
-  const days: Array<{ day: number; date: Date; otherMonth: boolean }> = []
+  const days: Array<{ day: number; date: Temporal.PlainDate; otherMonth: boolean }> = []
 
   // Leading days from previous month
   for (let i = paddingStart; i > 0; i--) {
-    const d = new Date(year, month, 1 - i)
-    days.push({ day: d.getDate(), date: d, otherMonth: true })
+    const d = firstDay.subtract({ days: i })
+    days.push({ day: d.day, date: d, otherMonth: true })
   }
 
   // Current month days
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    days.push({ day: d, date: new Date(year, month, d), otherMonth: false })
+  for (let d = 1; d <= lastDay.day; d++) {
+    days.push({ day: d, date: Temporal.PlainDate.from({ year, month, day: d }), otherMonth: false })
   }
 
   // Trailing days to fill complete weeks
   while (days.length % 7 !== 0) {
     const lastDate = days[days.length - 1]!.date
-    const next = new Date(lastDate)
-    next.setDate(next.getDate() + 1)
-    days.push({ day: next.getDate(), date: next, otherMonth: true })
+    const next = lastDate.add({ days: 1 })
+    days.push({ day: next.day, date: next, otherMonth: true })
   }
 
   return days
@@ -99,12 +99,12 @@ export function DatePicker({
   anchorRect,
 }: DatePickerProps) {
   const [pickerMonth, setPickerMonth] = useState({
-    year: currentDate.getFullYear(),
-    month: currentDate.getMonth(),
+    year: currentDate.year,
+    month: currentDate.month,
   })
   const pickerRef = useRef<HTMLDivElement>(null)
   const scale = useUiScale()
-  const today = new Date()
+  const todayDate = today()
 
   // Close picker on outside click
   useEffect(() => {
@@ -123,13 +123,13 @@ export function DatePicker({
 
   // Sync picker month with current date when it changes
   useEffect(() => {
-    setPickerMonth({ year: currentDate.getFullYear(), month: currentDate.getMonth() })
+    setPickerMonth({ year: currentDate.year, month: currentDate.month })
   }, [currentDate])
 
   const handlePrevMonth = useCallback(() => {
     setPickerMonth((prev) => {
       const newMonth = prev.month - 1
-      if (newMonth < 0) return { year: prev.year - 1, month: 11 }
+      if (newMonth < 1) return { year: prev.year - 1, month: 12 }
       return { ...prev, month: newMonth }
     })
   }, [])
@@ -137,7 +137,7 @@ export function DatePicker({
   const handleNextMonth = useCallback(() => {
     setPickerMonth((prev) => {
       const newMonth = prev.month + 1
-      if (newMonth > 11) return { year: prev.year + 1, month: 0 }
+      if (newMonth > 12) return { year: prev.year + 1, month: 1 }
       return { ...prev, month: newMonth }
     })
   }, [])
@@ -151,7 +151,7 @@ export function DatePicker({
   }, [])
 
   const handleDayClick = useCallback(
-    (date: Date) => {
+    (date: Temporal.PlainDate) => {
       onDateChange(date)
       onClose()
     },
@@ -164,25 +164,25 @@ export function DatePicker({
   /**
    * Checks if a date is in the selected week (for week view highlighting).
    */
-  const isInSelectedWeek = (date: Date): boolean => {
+  const isInSelectedWeek = (date: Temporal.PlainDate): boolean => {
     if (!weekDays) return false
-    return weekDays.some((d) => isSameDay(d, date))
+    return weekDays.some((d) => d.equals(date))
   }
 
   /**
    * Gets the border radius for a date in week view (rounded corners).
    */
-  const getWeekBorderRadius = (date: Date): string => {
+  const getWeekBorderRadius = (date: Temporal.PlainDate): string => {
     if (!weekDays) return '6px'
-    const idx = weekDays.findIndex((d) => isSameDay(d, date))
+    const idx = weekDays.findIndex((d) => d.equals(date))
     if (idx === 0) return '6px 0 0 6px'
     if (idx === 6) return '0 6px 6px 0'
     if (idx > 0) return '0'
     return '6px'
   }
 
-  const isDateSelected = (date: Date): boolean => isSameDay(date, currentDate)
-  const isDateToday = (date: Date): boolean => isSameDay(date, today)
+  const isDateSelected = (date: Temporal.PlainDate): boolean => date.equals(currentDate)
+  const isDateToday = (date: Temporal.PlainDate): boolean => date.equals(todayDate)
 
   if (!isOpen || !anchorRect) {
     return null
@@ -259,7 +259,7 @@ export function DatePicker({
             </button>
           </div>
           <span style={{ fontSize: '14px', fontWeight: 600, color: colors.textPrimary }}>
-            {monthNames[pickerMonth.month]} {pickerMonth.year}
+            {monthNames[pickerMonth.month - 1]} {pickerMonth.year}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
             <button
@@ -334,8 +334,8 @@ export function DatePicker({
             const isSelected = isDateSelected(dayData.date)
             const isToday = isDateToday(dayData.date)
             const inWeek = isInSelectedWeek(dayData.date)
-            const isPast = dayData.date < today && !isToday
-            const isFuture = dayData.date > today && !isToday
+            const isPast = Temporal.PlainDate.compare(dayData.date, todayDate) < 0 && !isToday
+            const isFuture = Temporal.PlainDate.compare(dayData.date, todayDate) > 0 && !isToday
 
             let background: string = 'transparent'
             let textColor: string = dayData.otherMonth ? colors.textDisabled : colors.textSecondary

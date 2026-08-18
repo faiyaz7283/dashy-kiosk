@@ -9,9 +9,9 @@ import type { CalendarEvent, FamilyMember } from '@/types'
 import { createPortal } from 'react-dom'
 import { useState, useLayoutEffect, useRef } from 'react'
 import { colors, radii, shadows, spacing, typography, zIndices } from '@/theme/tokens'
-import { LOCALE } from '@/theme/config'
 import { MapPin, Repeat } from 'lucide-react'
 import { useUiScale } from '@/features/kiosk/hooks/useUiScale'
+import { formatTime } from '@/shared/date'
 
 interface EventPopupProps {
   /** Whether the popup is visible. */
@@ -99,16 +99,8 @@ export function EventPopup({ visible, x, y, dateLabel, events, members }: EventP
         </div>
         {events.map((event, idx) => {
           const eventMembers = members.filter((m) => event.members.includes(m.key))
-          const startTime = new Date(event.start).toLocaleTimeString(LOCALE, {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          })
-          const endTime = new Date(event.end).toLocaleTimeString(LOCALE, {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          })
+          const startTime = event.all_day ? null : formatTime(event.start.toPlainTime())
+          const endTime = event.all_day ? null : formatTime(event.end.toPlainTime())
           const isLast = idx === events.length - 1
 
           return (

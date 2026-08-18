@@ -18,6 +18,7 @@ Add a shared utility function used across multiple features in the Dashy fronten
 - The function is only used by one feature → put it in that feature's directory instead
 - The function has side effects (API calls, DOM manipulation, React hooks) → it doesn't belong in `shared/utils/`
 - The function is React-specific → put it in `shared/hooks/` instead
+- The function deals with date/time parsing, formatting, or calendar logic → put it in `shared/date/` instead (uses Temporal API)
 
 ## Prerequisites
 
@@ -28,24 +29,33 @@ Add a shared utility function used across multiple features in the Dashy fronten
 ## Directory structure
 
 ```
-src/shared/utils/
-├── dateFormat.ts       # Date formatting, week calculation
-├── dateFormat.test.ts  # Co-located test
-├── density.ts          # Density calculations
-├── density.test.ts
-├── recurrence.ts       # RRULE humanization
-├── recurrence.test.ts
-├── memberColors.ts     # Member color palette utilities
-└── memberColors.test.ts
+src/shared/
+├── date/               # Temporal-based date utilities (parse, format, calendar)
+│   ├── calendar.ts     # today(), getWeekDays(), getMonthGridDates(), getDateKey(), etc.
+│   ├── calendar.test.ts
+│   ├── format.ts       # formatHeaderDate(), formatTime(), formatDateTime(), etc.
+│   ├── format.test.ts
+│   ├── parse.ts        # parseCalendarEvent(), parseEventStart(), parseForecastDate(), etc.
+│   ├── parse.test.ts
+│   └── index.ts        # Barrel export
+└── utils/              # General-purpose pure utilities
+    ├── density.ts      # Density calculations
+    ├── density.test.ts
+    ├── recurrence.ts   # RRULE humanization
+    ├── recurrence.test.ts
+    ├── memberColors.ts # Member color palette utilities
+    └── memberColors.test.ts
 ```
+
+**Note:** Date/time utilities live in `src/shared/date/` (not `src/shared/utils/`) and use the Temporal API. See the "When NOT to use" section for guidance on when to add to `shared/date/` vs `shared/utils/`.
 
 ## Conventions
 
-- **camelCase filename** (e.g., `dateFormat.ts`, not `date-format.ts`)
+- **camelCase filename** (e.g., `density.ts`, not `density-calculations.ts`)
 - **Pure functions only** — no React, no side effects, no I/O, no external dependencies beyond stdlib
 - **TSDoc on every exported function** with `@param`, `@returns`, and `@example`
-- **Co-located test file** — `dateFormat.test.ts` next to `dateFormat.ts`
-- **Import path**: components import from `@/shared/utils/<filename>`
+- **Co-located test file** — `density.test.ts` next to `density.ts`
+- **Import path**: components import from `@/shared/utils/<filename>` or `@/shared/date` for date utilities
 - **No feature-specific dependencies** — `shared/` is below `features/` in the dependency graph; it must never import from `features/` or `domain/`
 
 ## Steps
@@ -79,7 +89,7 @@ If adding to an existing file, append the function. If creating a new file:
 
 ### 3. Write the function with TSDoc
 
-Follow the `dateFormat.ts` pattern — every exported function gets full TSDoc:
+Follow the `density.ts` pattern — every exported function gets full TSDoc:
 
 ```typescript
 /**
@@ -151,7 +161,7 @@ describe('yourFunction', () => {
 Components import shared utilities using the `@/` alias:
 
 ```typescript
-import { getOrdinalSuffix } from '@/shared/utils/dateFormat'
+import { getOrdinalSuffix } from '@/shared/utils/formatting'
 import { formatRecurrenceRule } from '@/shared/utils/recurrence'
 ```
 
@@ -270,11 +280,11 @@ Scenario: Both the weather feature and a new "comfort index" component need to f
 
 ## Example: Adding to an existing utility file
 
-Scenario: `dateFormat.ts` needs a new `formatRelativeDate` function.
+Scenario: `recurrence.ts` needs a new `formatRecurrenceSummary` function.
 
-1. **Open** `src/shared/utils/dateFormat.ts`
+1. **Open** `src/shared/utils/recurrence.ts`
 2. **Add** the function with TSDoc at the end of the file
-3. **Add** tests to `src/shared/utils/dateFormat.test.ts`
+3. **Add** tests to `src/shared/utils/recurrence.test.ts`
 4. **Run** quality gate
 
 ## Notes
@@ -282,6 +292,6 @@ Scenario: `dateFormat.ts` needs a new `formatRelativeDate` function.
 - `src/shared/utils/` must never import from `features/`, `domain/`, or `shared/hooks/` — it's at the bottom of the dependency graph
 - If a function needs React (e.g., uses `useState`), it belongs in `src/shared/hooks/`, not `src/shared/utils/`
 - If a function needs to call an API, it belongs in `src/shared/services/api.ts`
-- Keep utility files focused — `dateFormat.ts` is for dates, `recurrence.ts` is for RRULE parsing; don't mix concerns
-- If a utility grows beyond ~150 lines, consider splitting it into a subdirectory: `src/shared/utils/date/` with `format.ts`, `calculate.ts`, etc.
+- Keep utility files focused — `density.ts` is for density calculations, `recurrence.ts` is for RRULE parsing; don't mix concerns
+- If a utility grows beyond ~150 lines, consider splitting it into a subdirectory structure
 - Pure functions are trivially testable — if testing is hard, the function probably has hidden dependencies

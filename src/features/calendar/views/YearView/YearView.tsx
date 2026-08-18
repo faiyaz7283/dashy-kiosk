@@ -10,8 +10,8 @@
 
 import type { CalendarEvent, FamilyMember } from '@/types'
 import { colors, spacing, radii, typography, densityBarColors } from '@/theme/tokens'
-import { themeConfig, LOCALE } from '@/theme/config'
-import { isSameDay } from '@/shared/utils/dateFormat'
+import { themeConfig } from '@/theme/config'
+import { getMonthGridDates, formatDateParts, eventDate, today } from '@/shared/date'
 import { getRelativeDensity } from '@/shared/utils/density'
 import { getEventsForDate } from '@/domain/calendar/utils'
 import { DayIndicator } from '@/features/calendar/components/DayIndicator'
@@ -20,15 +20,15 @@ import { useEventInteraction } from '@/features/calendar/hooks/useEventInteracti
 
 interface YearViewProps {
   /** The current year to display. */
-  currentDate: Date
+  currentDate: Temporal.PlainDate
   /** Calendar events to display. */
   events: CalendarEvent[]
   /** Family members for resolving member info. */
   members: FamilyMember[]
   /** Callback when a month is clicked. */
-  onMonthClick: (month: number) => void
+  onMonthClick: (yearMonth: Temporal.PlainYearMonth) => void
   /** Callback when a day is clicked. */
-  onDayClick: (date: Date) => void
+  onDayClick: (date: Temporal.PlainDate) => void
   /** Screen orientation — controls the month grid columns. */
   orientation?: 'landscape' | 'portrait'
 }
@@ -60,36 +60,14 @@ const monthNames = [
  * Includes leading/trailing days from adjacent months to fill complete weeks.
  */
 function getMiniCalDays(
-  year: number,
-  month: number,
-): Array<{ day: number; otherMonth: boolean; date: Date }> {
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const startDow = firstDay.getDay()
-  const paddingStart = startDow === 0 ? 6 : startDow - 1 // Monday start
-
-  const days: Array<{ day: number; otherMonth: boolean; date: Date }> = []
-
-  // Leading days from previous month
-  for (let i = paddingStart; i > 0; i--) {
-    const d = new Date(year, month, 1 - i)
-    days.push({ day: d.getDate(), otherMonth: true, date: d })
-  }
-
-  // Current month days
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    days.push({ day: d, otherMonth: false, date: new Date(year, month, d) })
-  }
-
-  // Trailing days to fill complete weeks
-  while (days.length % 7 !== 0) {
-    const lastDate = days[days.length - 1]!.date
-    const next = new Date(lastDate)
-    next.setDate(next.getDate() + 1)
-    days.push({ day: next.getDate(), otherMonth: true, date: next })
-  }
-
-  return days
+  yearMonth: Temporal.PlainYearMonth,
+): Array<{ day: number; otherMonth: boolean; date: Temporal.PlainDate }> {
+  const gridDates = getMonthGridDates(yearMonth)
+  return gridDates.map((date) => ({
+    day: date.day,
+    otherMonth: date.month !== yearMonth.month,
+    date,
+  }))
 }
 
 /**
@@ -109,10 +87,10 @@ export function YearView({
   const { popupState, handleDayMouseEnter, handleMouseMove, handleMouseLeave } =
     useEventInteraction(events)
 
-  const year = currentDate.getFullYear()
-  const today = new Date()
-  const selectedMonth = currentDate.getMonth()
-  const currentMonth = today.getMonth()
+  const year = currentDate.year
+  const todayDate = today()
+  const selectedMonth = currentDate.month
+  const currentMonth = todayDate.month
   const cols =
     orientation === 'landscape'
       ? themeConfig.calendar.yearGridLandscape
@@ -122,8 +100,8 @@ export function YearView({
   // Calculate event counts per month for density
   const monthEventCounts = Array.from({ length: 12 }, (_, m) => {
     return events.filter((e) => {
-      const d = new Date(e.start)
-      return d.getFullYear() === year && d.getMonth() === m
+      const d = eventDate(e.start)
+      return d.year === year && d.month === m + 1
     }).length
   })
 
@@ -142,7 +120,8 @@ export function YearView({
         }}
       >
         {Array.from({ length: 12 }, (_, monthIdx) => {
-          const days = getMiniCalDays(year, monthIdx)
+          const yearMonth = Temporal.PlainYearMonth.from({ year, month: monthIdx + 1 })
+          const days = getMiniCalDays(yearMonth)
           const weeks: (typeof days)[] = []
           for (let i = 0; i < days.length; i += 7) {
             weeks.push(days.slice(i, i + 7))
@@ -156,10 +135,10 @@ export function YearView({
           )
 
           // Month is "selected" if it matches the currently navigated date's month
-          const isSelectedMonth = monthIdx === selectedMonth
+          const isSelectedMonth = monthIdx + 1 === selectedMonth
           // Past/present/future coloring for month cards
           const isPastMonth =
-            year < today.getFullYear() || (year === today.getFullYear() && monthIdx < currentMonth)
+            year < todayDate.year || (year === todayDate.year && monthIdx + 1 < currentMonth)
           const monthDensity = getRelativeDensity(monthEventCounts[monthIdx]!, monthEventCounts)
 
           // Month card border/color follows selected date's month
@@ -173,7 +152,9 @@ export function YearView({
           return (
             <div
               key={monthIdx}
-              onClick={() => onMonthClick(monthIdx)}
+              onClick={() =>
+                onMonthClick(Temporal.PlainYearMonth.from({ year, month: monthIdx + 1 }))
+              }
               className="hover-lift"
               style={{
                 background: colors.white,
@@ -291,7 +272,7 @@ export function YearView({
                   {days.map((dayData, idx) => {
                     const dayEvents = getEventsForDate(events, dayData.date)
                     const hasEvents = dayEvents.length > 0 && !dayData.otherMonth
-                    const isToday = isSameDay(dayData.date, today)
+                    const isToday = dayData.date.equals(todayDate)
 
                     return (
                       <div
@@ -360,11 +341,11 @@ export function YearView({
       {/* Event popup - key forces full re-render when date changes */}
       {popupState.date && (
         <EventPopup
-          key={popupState.date.toISOString()}
+          key={popupState.date.toString()}
           visible={popupState.visible}
           x={popupState.x}
           y={popupState.y}
-          dateLabel={popupState.date.toLocaleDateString(LOCALE, {
+          dateLabel={formatDateParts(popupState.date, {
             month: 'short',
             day: 'numeric',
           })}

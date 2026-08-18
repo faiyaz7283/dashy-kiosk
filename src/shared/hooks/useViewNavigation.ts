@@ -5,11 +5,13 @@
  * (previous/next/today), and localStorage persistence. Extracted from
  * App.tsx to separate navigation concerns from layout orchestration.
  *
- * @returns View state, navigation handlers, and setters.
+ * Uses Temporal.PlainDate for immutable date state — no more mutable Date
+ * objects or month-overflow bugs.
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import type { CalendarView } from '@/types'
+import type { CalendarView } from '@/domain/calendar/types'
+import { today } from '@/shared/date'
 
 const VIEW_STORAGE_KEY = 'dashy-calendar-view'
 const VIEW_STORAGE_VERSION_KEY = 'dashy-calendar-view-version'
@@ -18,12 +20,12 @@ const CURRENT_VIEW_STORAGE_VERSION = '2'
 export interface UseViewNavigationResult {
   /** The active calendar view (day/week/month/year). */
   currentView: CalendarView
-  /** The currently selected date. */
-  currentDate: Date
+  /** The currently selected date (PlainDate — immutable). */
+  currentDate: Temporal.PlainDate
   /** Switch to a different view. */
   setCurrentView: (view: CalendarView) => void
   /** Navigate to a specific date. */
-  setCurrentDate: (date: Date) => void
+  setCurrentDate: (date: Temporal.PlainDate) => void
   /** Navigate to the previous period (day/week/month/year). */
   navigatePrevious: () => void
   /** Navigate to the next period (day/week/month/year). */
@@ -31,9 +33,9 @@ export interface UseViewNavigationResult {
   /** Navigate to today. */
   navigateToday: () => void
   /** Handle day click (navigates to day view). */
-  handleDayClick: (date: Date) => void
+  handleDayClick: (date: Temporal.PlainDate) => void
   /** Handle month click (navigates to month view). */
-  handleMonthClick: (month: number) => void
+  handleMonthClick: (yearMonth: Temporal.PlainYearMonth) => void
 }
 
 /**
@@ -60,7 +62,7 @@ export function useViewNavigation(): UseViewNavigationResult {
     return (saved as CalendarView) || 'month'
   })
 
-  const [currentDate, setCurrentDate] = useState<Date>(() => new Date())
+  const [currentDate, setCurrentDate] = useState<Temporal.PlainDate>(() => today())
 
   // Persist view changes
   useEffect(() => {
@@ -69,49 +71,41 @@ export function useViewNavigation(): UseViewNavigationResult {
 
   /**
    * Navigate to the previous period based on the current view.
+   *
+   * Uses Temporal arithmetic — immutable, no overflow bugs.
    */
   const navigatePrevious = useCallback(() => {
     setCurrentDate((prev) => {
-      const next = new Date(prev)
       switch (currentView) {
         case 'day':
-          next.setDate(next.getDate() - 1)
-          break
+          return prev.subtract({ days: 1 })
         case 'week':
-          next.setDate(next.getDate() - 7)
-          break
+          return prev.subtract({ days: 7 })
         case 'month':
-          next.setMonth(next.getMonth() - 1)
-          break
+          return prev.subtract({ months: 1 })
         case 'year':
-          next.setFullYear(next.getFullYear() - 1)
-          break
+          return prev.subtract({ years: 1 })
       }
-      return next
     })
   }, [currentView])
 
   /**
    * Navigate to the next period based on the current view.
+   *
+   * Uses Temporal arithmetic — immutable, no overflow bugs.
    */
   const navigateNext = useCallback(() => {
     setCurrentDate((prev) => {
-      const next = new Date(prev)
       switch (currentView) {
         case 'day':
-          next.setDate(next.getDate() + 1)
-          break
+          return prev.add({ days: 1 })
         case 'week':
-          next.setDate(next.getDate() + 7)
-          break
+          return prev.add({ days: 7 })
         case 'month':
-          next.setMonth(next.getMonth() + 1)
-          break
+          return prev.add({ months: 1 })
         case 'year':
-          next.setFullYear(next.getFullYear() + 1)
-          break
+          return prev.add({ years: 1 })
       }
-      return next
     })
   }, [currentView])
 
@@ -119,15 +113,15 @@ export function useViewNavigation(): UseViewNavigationResult {
    * Navigate to today.
    */
   const navigateToday = useCallback(() => {
-    setCurrentDate(new Date())
+    setCurrentDate(today())
   }, [])
 
   /**
    * Handle day click — navigate to day view for the clicked date.
    *
-   * @param date - The clicked date.
+   * @param date - The clicked date (PlainDate).
    */
-  const handleDayClick = useCallback((date: Date) => {
+  const handleDayClick = useCallback((date: Temporal.PlainDate) => {
     setCurrentDate(date)
     setCurrentView('day')
   }, [])
@@ -135,14 +129,16 @@ export function useViewNavigation(): UseViewNavigationResult {
   /**
    * Handle month click — navigate to month view for the clicked month.
    *
-   * @param month - The clicked month (0-11).
+   * @param yearMonth - The clicked month as PlainYearMonth (1-based month, no overflow).
    */
-  const handleMonthClick = useCallback((month: number) => {
-    setCurrentDate((prev) => {
-      const next = new Date(prev)
-      next.setMonth(month)
-      return next
-    })
+  const handleMonthClick = useCallback((yearMonth: Temporal.PlainYearMonth) => {
+    setCurrentDate(
+      Temporal.PlainDate.from({
+        year: yearMonth.year,
+        month: yearMonth.month,
+        day: 1,
+      }),
+    )
     setCurrentView('month')
   }, [])
 

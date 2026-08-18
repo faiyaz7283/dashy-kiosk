@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { CalendarEvent, CalendarView } from '@/types'
 import { getCalendar } from '@/shared/services/api'
-import { getWeekDays } from '@/shared/utils/dateFormat'
+import { getWeekDays } from '@/shared/date'
 import { ENDPOINTS } from '@/shared/api/endpoints'
 
 interface UseCalendarEventsResult {
@@ -11,63 +11,6 @@ interface UseCalendarEventsResult {
   lastRefresh: number | null
   refetch: () => void
   forceRefresh: () => void
-}
-
-/**
- * Formats a Date to ISO date string (YYYY-MM-DD).
- */
-function toIsoDate(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-/**
- * Computes the start and end dates for a given view and current date.
- *
- * @param view - The calendar view type.
- * @param currentDate - The currently selected date.
- * @returns An object with startDate and endDate as ISO date strings.
- */
-function computeDateRange(
-  view: CalendarView,
-  currentDate: Date,
-): { startDate: string; endDate: string } {
-  switch (view) {
-    case 'day': {
-      // Single day
-      const iso = toIsoDate(currentDate)
-      return { startDate: iso, endDate: iso }
-    }
-    case 'week': {
-      // Monday to Sunday of the current week
-      const weekDays = getWeekDays(currentDate)
-      return {
-        startDate: toIsoDate(weekDays[0]!),
-        endDate: toIsoDate(weekDays[6]!),
-      }
-    }
-    case 'month': {
-      // 1st to last day of the current month
-      const year = currentDate.getFullYear()
-      const month = currentDate.getMonth()
-      const firstDay = new Date(year, month, 1)
-      const lastDay = new Date(year, month + 1, 0)
-      return {
-        startDate: toIsoDate(firstDay),
-        endDate: toIsoDate(lastDay),
-      }
-    }
-    case 'year': {
-      // Jan 1 to Dec 31 of the current year
-      const year = currentDate.getFullYear()
-      return {
-        startDate: `${year}-01-01`,
-        endDate: `${year}-12-31`,
-      }
-    }
-  }
 }
 
 /**
@@ -85,7 +28,7 @@ function computeDateRange(
  */
 export function useCalendarEvents(
   currentView: CalendarView,
-  currentDate: Date,
+  currentDate: Temporal.PlainDate,
 ): UseCalendarEventsResult {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -160,4 +103,50 @@ export function useCalendarEvents(
   }, [forceRefresh, error])
 
   return { events, loading, error, lastRefresh, refetch: fetchData, forceRefresh }
+}
+
+/**
+ * Computes the start and end dates for a given view and current date.
+ *
+ * @param view - The calendar view type.
+ * @param currentDate - The currently selected date.
+ * @returns An object with startDate and endDate as ISO date strings.
+ */
+function computeDateRange(
+  view: CalendarView,
+  currentDate: Temporal.PlainDate,
+): { startDate: string; endDate: string } {
+  switch (view) {
+    case 'day': {
+      // Single day
+      const iso = currentDate.toString()
+      return { startDate: iso, endDate: iso }
+    }
+    case 'week': {
+      // Monday to Sunday of the current week
+      const weekDays = getWeekDays(currentDate)
+      return {
+        startDate: weekDays[0]!.toString(),
+        endDate: weekDays[6]!.toString(),
+      }
+    }
+    case 'month': {
+      // 1st to last day of the current month
+      const firstDay = currentDate.with({ day: 1 })
+      const lastDay = currentDate.with({ day: currentDate.daysInMonth })
+      return {
+        startDate: firstDay.toString(),
+        endDate: lastDay.toString(),
+      }
+    }
+    case 'year': {
+      // Jan 1 to Dec 31 of the current year
+      const firstDay = currentDate.with({ month: 1, day: 1 })
+      const lastDay = currentDate.with({ month: 12, day: 31 })
+      return {
+        startDate: firstDay.toString(),
+        endDate: lastDay.toString(),
+      }
+    }
+  }
 }

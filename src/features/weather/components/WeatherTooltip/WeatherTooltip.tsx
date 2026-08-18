@@ -5,7 +5,6 @@
 import { createPortal } from 'react-dom'
 import { useState } from 'react'
 import { spacing, radii, shadows, zIndices, colors } from '@/theme/tokens'
-import { LOCALE } from '@/theme/config'
 import type { DailyForecast } from '@/types'
 import { useUiScale } from '@/features/kiosk/hooks/useUiScale'
 import { ThermometerIcon } from './icons/ThermometerIcon'
@@ -28,17 +27,15 @@ interface WeatherTooltipProps {
 }
 
 function formatDate(dateStr: string): { dayLabel: string; dateLabel: string } {
-  const date = new Date(dateStr + 'T12:00:00')
-  const today = new Date()
-  today.setHours(12, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const date = Temporal.PlainDate.from(dateStr)
+  const today = Temporal.Now.plainDateISO()
+  const tomorrow = today.add({ days: 1 })
 
-  const dayName = date.toLocaleDateString(LOCALE, { weekday: 'short' })
-  const dateName = date.toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' })
+  const dayName = date.toLocaleString(undefined, { weekday: 'short' })
+  const dateName = date.toLocaleString(undefined, { month: 'short', day: 'numeric' })
 
-  if (date.getTime() === today.getTime()) return { dayLabel: 'Today', dateLabel: dateName }
-  if (date.getTime() === tomorrow.getTime()) return { dayLabel: 'Tomorrow', dateLabel: dateName }
+  if (date.equals(today)) return { dayLabel: 'Today', dateLabel: dateName }
+  if (date.equals(tomorrow)) return { dayLabel: 'Tomorrow', dateLabel: dateName }
   return { dayLabel: dayName, dateLabel: dateName }
 }
 

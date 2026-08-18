@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { DayView } from './DayView'
 import type { CalendarEvent, FamilyMember } from '@/types'
+import { parseCalendarEvent } from '@/shared/date'
 
 const mockMembers: FamilyMember[] = [
   {
@@ -20,25 +21,25 @@ const mockMembers: FamilyMember[] = [
   },
 ]
 
-const mockDate = new Date('2026-08-08T12:00:00')
+const mockDate = Temporal.PlainDate.from('2026-08-08')
 
 const mockEvents: CalendarEvent[] = [
-  {
+  parseCalendarEvent({
     id: '1',
     title: 'Morning Meeting',
     start: '2026-08-08T09:00:00',
     end: '2026-08-08T10:00:00',
     all_day: false,
     members: ['faiyaz'],
-  },
-  {
+  }),
+  parseCalendarEvent({
     id: '2',
     title: 'Ninja Warrior',
-    start: '2026-08-08T00:00:00',
-    end: '2026-08-08T23:59:00',
+    start: '2026-08-08',
+    end: '2026-08-08',
     all_day: true,
     members: ['faiyaz'],
-  },
+  }),
 ]
 
 describe('DayView', () => {

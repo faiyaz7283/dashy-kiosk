@@ -6,7 +6,7 @@
  */
 
 import type { CalendarEvent } from './types'
-import { isSameDay } from '@/shared/utils/dateFormat'
+import { eventDate } from '@/shared/date'
 
 /**
  * Returns all events occurring on a given date.
@@ -17,8 +17,11 @@ import { isSameDay } from '@/shared/utils/dateFormat'
  * @param date - The date to filter by.
  * @returns Events whose start date falls on the given day.
  */
-export function getEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
-  return events.filter((e) => isSameDay(new Date(e.start), date))
+export function getEventsForDate(
+  events: CalendarEvent[],
+  date: Temporal.PlainDate,
+): CalendarEvent[] {
+  return events.filter((e) => eventDate(e.start).equals(date))
 }
 
 /**
@@ -28,8 +31,11 @@ export function getEventsForDate(events: CalendarEvent[], date: Date): CalendarE
  * @param date - The date to filter by.
  * @returns Non-all-day events whose start date falls on the given day.
  */
-export function getTimedEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
-  return events.filter((e) => isSameDay(new Date(e.start), date) && !e.all_day)
+export function getTimedEventsForDate(
+  events: CalendarEvent[],
+  date: Temporal.PlainDate,
+): CalendarEvent[] {
+  return events.filter((e) => !e.all_day && eventDate(e.start).equals(date))
 }
 
 /**
@@ -39,6 +45,9 @@ export function getTimedEventsForDate(events: CalendarEvent[], date: Date): Cale
  * @param date - The date to filter by.
  * @returns All-day events whose start date falls on the given day.
  */
-export function getAllDayEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
-  return events.filter((e) => isSameDay(new Date(e.start), date) && e.all_day)
+export function getAllDayEventsForDate(
+  events: CalendarEvent[],
+  date: Temporal.PlainDate,
+): CalendarEvent[] {
+  return events.filter((e) => e.all_day === true && eventDate(e.start).equals(date))
 }

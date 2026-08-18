@@ -9,9 +9,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Droplet, Wind } from 'lucide-react'
 import type { CalendarEvent, DailyForecast, FamilyMember } from '@/types'
+import { isTimedEvent } from '@/domain/calendar/types'
 import { colors, spacing, radii, typography, layout, zIndices } from '@/theme/tokens'
-import { themeConfig, LOCALE } from '@/theme/config'
-import { isSameDay } from '@/shared/utils/dateFormat'
+import { themeConfig } from '@/theme/config'
+import { today, now, formatDateParts } from '@/shared/date'
 import { getTimedEventsForDate, getAllDayEventsForDate } from '@/domain/calendar/utils'
 import { getWeatherForDate } from '@/domain/weather/utils'
 import { EventItem } from '@/features/calendar/components/EventItem'
@@ -24,7 +25,7 @@ import { useWeatherTooltip } from '@/features/weather/hooks/useWeatherTooltip'
 
 interface DayViewProps {
   /** The date to display. */
-  currentDate: Date
+  currentDate: Temporal.PlainDate
   /** Calendar events to display. */
   events: CalendarEvent[]
   /** Family members for resolving member info. */
@@ -37,9 +38,9 @@ interface DayViewProps {
  * Calculates the top position (px) for an event based on its start time.
  */
 function getEventTopPx(event: CalendarEvent): number {
-  const start = new Date(event.start)
-  const hours = start.getHours()
-  const minutes = start.getMinutes()
+  if (!isTimedEvent(event)) return 0
+  const hours = event.start.hour
+  const minutes = event.start.minute
   const { timelineStartHour, timelineHourHeight } = {
     timelineStartHour: themeConfig.calendar.timelineStartHour,
     timelineHourHeight: layout.timelineHourHeight,
@@ -51,9 +52,10 @@ function getEventTopPx(event: CalendarEvent): number {
  * Calculates the height (px) for an event based on its duration.
  */
 function getEventHeightPx(event: CalendarEvent): number {
-  const start = new Date(event.start)
-  const end = new Date(event.end)
-  const durationMinutes = (end.getTime() - start.getTime()) / 60000
+  if (!isTimedEvent(event)) return 20
+  const start = event.start
+  const end = event.end
+  const durationMinutes = start.until(end).total('minutes')
   const pxPerMinute = layout.timelineHourHeight / 60
   return Math.max(durationMinutes * pxPerMinute, 20) // Minimum 20px
 }
@@ -78,8 +80,7 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
   const [currentTimeTop, setCurrentTimeTop] = useState<number>(0)
   const timelineRef = useRef<HTMLDivElement>(null)
 
-  const today = new Date()
-  const isToday = isSameDay(currentDate, today)
+  const isToday = currentDate.equals(today())
   const allDayEvents = getAllDayEventsForDate(events, currentDate)
   const timedEvents = getTimedEventsForDate(events, currentDate)
   const dayWeather = getWeatherForDate(weatherForecast, currentDate)
@@ -95,9 +96,9 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
     if (!isToday) return
 
     const updateTime = () => {
-      const now = new Date()
-      const hours = now.getHours()
-      const minutes = now.getMinutes()
+      const currentTime = now()
+      const hours = currentTime.hour
+      const minutes = currentTime.minute
       const top =
         (hours - timelineStartHour) * layout.timelineHourHeight +
         (minutes / 60) * layout.timelineHourHeight
@@ -365,7 +366,7 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
           visible={popupState.visible}
           x={popupState.x}
           y={popupState.y}
-          dateLabel={popupState.date.toLocaleDateString(LOCALE, {
+          dateLabel={formatDateParts(popupState.date, {
             weekday: 'short',
             month: 'short',
             day: 'numeric',

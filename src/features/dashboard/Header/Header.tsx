@@ -3,14 +3,14 @@ import type { WeatherCurrent } from '@/types'
 import { WeatherWidget } from '@/features/weather/components/WeatherWidget'
 import { Clock } from '@/features/dashboard/Clock'
 import { colors, spacing, typography } from '@/theme/tokens'
-import { formatHeaderDate } from '@/shared/utils/dateFormat'
+import { formatHeaderDate } from '@/shared/date'
 
 interface HeaderProps {
   weather: WeatherCurrent
   /** Right-side controls (ViewSwitcher, Today button, date display, etc.). */
   children?: ReactNode
   /** Date to display in the header. Defaults to today. */
-  currentDate?: Date
+  currentDate?: Temporal.PlainDate
   /** Progressive visibility tiers — driven by viewport width (App.tsx). */
   showDate?: boolean
   showClock?: boolean
@@ -20,7 +20,7 @@ interface HeaderProps {
 export function Header({
   weather,
   children,
-  currentDate = new Date(),
+  currentDate = Temporal.Now.plainDateISO(),
   showDate = true,
   showClock = true,
   showWeather = true,

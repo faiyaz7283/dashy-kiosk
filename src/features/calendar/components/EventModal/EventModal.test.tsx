@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { EventModal } from './EventModal'
 import type { CalendarEvent, FamilyMember } from '@/types'
+import { Temporal } from '@js-temporal/polyfill'
 
 const mockMembers: FamilyMember[] = [
   {
@@ -23,8 +24,8 @@ const mockMembers: FamilyMember[] = [
 const mockEvent: CalendarEvent = {
   id: '1',
   title: 'Team Standup',
-  start: '2026-08-10T09:00:00',
-  end: '2026-08-10T09:30:00',
+  start: Temporal.PlainDateTime.from('2026-08-10T09:00:00'),
+  end: Temporal.PlainDateTime.from('2026-08-10T09:30:00'),
   all_day: false,
   members: ['faiyaz'],
 }

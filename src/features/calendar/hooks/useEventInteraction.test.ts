@@ -7,8 +7,8 @@ const mockEvents: CalendarEvent[] = [
   {
     id: '1',
     title: 'Team Standup',
-    start: '2026-08-10T09:00:00',
-    end: '2026-08-10T09:30:00',
+    start: Temporal.PlainDateTime.from('2026-08-10T09:00:00'),
+    end: Temporal.PlainDateTime.from('2026-08-10T09:30:00'),
     all_day: false,
     members: ['faiyaz'],
   },
@@ -29,8 +29,7 @@ describe('useEventInteraction', () => {
 
   it('shows popup when hovering a day with events', () => {
     const { result } = renderHook(() => useEventInteraction(mockEvents))
-    // Local timezone construction to avoid UTC offset issues
-    const date = new Date(2026, 7, 10) // Aug 10, 2026
+    const date = Temporal.PlainDate.from('2026-08-10')
 
     act(() => {
       result.current.handleDayMouseEnter(mouseEvent(100, 200), date)
@@ -47,7 +46,7 @@ describe('useEventInteraction', () => {
 
   it('tracks the specific event when hovered', () => {
     const { result } = renderHook(() => useEventInteraction(mockEvents))
-    const date = new Date(2026, 7, 10)
+    const date = Temporal.PlainDate.from('2026-08-10')
 
     act(() => {
       result.current.handleDayMouseEnter(mouseEvent(100, 200), date, mockEvents[0])
@@ -58,7 +57,7 @@ describe('useEventInteraction', () => {
 
   it('clears hoveredEvent when hovering a day without a specific event', () => {
     const { result } = renderHook(() => useEventInteraction(mockEvents))
-    const date = new Date(2026, 7, 10)
+    const date = Temporal.PlainDate.from('2026-08-10')
 
     act(() => {
       result.current.handleDayMouseEnter(mouseEvent(100, 200), date, mockEvents[0])
@@ -75,10 +74,16 @@ describe('useEventInteraction', () => {
     const { result } = renderHook(() => useEventInteraction(mockEvents))
 
     act(() => {
-      result.current.handleDayMouseEnter(mouseEvent(100, 200), new Date(2026, 7, 10))
+      result.current.handleDayMouseEnter(
+        mouseEvent(100, 200),
+        Temporal.PlainDate.from('2026-08-10'),
+      )
     })
     act(() => {
-      result.current.handleDayMouseEnter(mouseEvent(150, 250), new Date(2026, 7, 11))
+      result.current.handleDayMouseEnter(
+        mouseEvent(150, 250),
+        Temporal.PlainDate.from('2026-08-11'),
+      )
     })
 
     expect(result.current.popupState.visible).toBe(false)
@@ -89,7 +94,10 @@ describe('useEventInteraction', () => {
     const { result } = renderHook(() => useEventInteraction(mockEvents))
 
     act(() => {
-      result.current.handleDayMouseEnter(mouseEvent(100, 200), new Date(2026, 7, 10))
+      result.current.handleDayMouseEnter(
+        mouseEvent(100, 200),
+        Temporal.PlainDate.from('2026-08-10'),
+      )
     })
     act(() => {
       result.current.handleMouseMove(mouseEvent(120, 220))
@@ -113,7 +121,10 @@ describe('useEventInteraction', () => {
     const { result } = renderHook(() => useEventInteraction(mockEvents))
 
     act(() => {
-      result.current.handleDayMouseEnter(mouseEvent(100, 200), new Date(2026, 7, 10))
+      result.current.handleDayMouseEnter(
+        mouseEvent(100, 200),
+        Temporal.PlainDate.from('2026-08-10'),
+      )
     })
     act(() => {
       result.current.handleMouseLeave()

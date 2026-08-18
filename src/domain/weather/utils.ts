@@ -10,18 +10,17 @@ import type { DailyForecast } from './types'
 /**
  * Returns the weather forecast for a given date.
  *
- * Builds a YYYY-MM-DD key from local date components and matches against
- * the forecast's `date` field (backend uses local timezone formatting).
+ * Matches the forecast's `date` field (YYYY-MM-DD) against the PlainDate.
  *
  * @param forecast - Array of daily forecasts, or undefined if not loaded.
- * @param date - The date to look up.
+ * @param date - The date to look up (PlainDate).
  * @returns The matching daily forecast, or undefined if no match.
  */
 export function getWeatherForDate(
   forecast: DailyForecast[] | undefined,
-  date: Date,
+  date: Temporal.PlainDate,
 ): DailyForecast | undefined {
   if (!forecast) return undefined
-  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  const dateStr = date.toString() // YYYY-MM-DD
   return forecast.find((f) => f.date === dateStr)
 }

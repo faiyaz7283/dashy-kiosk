@@ -3,8 +3,8 @@ import { DayCard } from '@/features/calendar/components/DayCard'
 import { EventPopup } from '@/features/calendar/components/EventPopup'
 import { EventModal } from '@/features/calendar/components/EventModal'
 import { spacing } from '@/theme/tokens'
-import { themeConfig, LOCALE } from '@/theme/config'
-import { getWeekDays, isSameDay } from '@/shared/utils/dateFormat'
+import { themeConfig } from '@/theme/config'
+import { getWeekDays, today, formatDateParts } from '@/shared/date'
 import { getRelativeDensity } from '@/shared/utils/density'
 import { getEventsForDate } from '@/domain/calendar/utils'
 import { getWeatherForDate } from '@/domain/weather/utils'
@@ -15,9 +15,9 @@ interface WeekGridProps {
   members: FamilyMember[]
   orientation: 'landscape' | 'portrait'
   /** The current date for the week view (used for navigation). */
-  currentDate: Date
+  currentDate: Temporal.PlainDate
   /** Callback when a day card is clicked. */
-  onDayClick?: (date: Date) => void
+  onDayClick?: (date: Temporal.PlainDate) => void
   /** Weather forecast data for the next 16 days. */
   weatherForecast?: DailyForecast[]
 }
@@ -40,12 +40,10 @@ export function WeekGrid({
     closeEvent,
   } = useEventInteraction(events)
 
-  const today = new Date()
+  const todayDate = today()
   const weekDays = getWeekDays(currentDate)
-  const nextWeekStart = new Date(weekDays[6]!)
-  nextWeekStart.setDate(nextWeekStart.getDate() + 1)
-  const nextWeekEnd = new Date(nextWeekStart)
-  nextWeekEnd.setDate(nextWeekEnd.getDate() + 6)
+  const nextWeekStart = weekDays[6]!.add({ days: 1 })
+  const nextWeekEnd = nextWeekStart.add({ days: 6 })
 
   const cols =
     orientation === 'landscape'
@@ -71,11 +69,11 @@ export function WeekGrid({
           const dayWeather = getWeatherForDate(weatherForecast, date)
           return (
             <DayCard
-              key={date.toISOString()}
+              key={date.toString()}
               date={date}
               events={getEventsForDate(events, date)}
               members={members}
-              isToday={isSameDay(date, today)}
+              isToday={date.equals(todayDate)}
               density={getRelativeDensity(dayCounts[idx]!, dayCounts)}
               {...(onDayClick ? { onClick: () => onDayClick(date) } : {})}
               onEventClick={openEvent}
@@ -99,11 +97,11 @@ export function WeekGrid({
       {/* Event popup - key forces full re-render when date changes */}
       {popupState.date && (
         <EventPopup
-          key={popupState.date.toISOString()}
+          key={popupState.date.toString()}
           visible={popupState.visible}
           x={popupState.x}
           y={popupState.y}
-          dateLabel={popupState.date.toLocaleDateString(LOCALE, {
+          dateLabel={formatDateParts(popupState.date, {
             weekday: 'short',
             month: 'short',
             day: 'numeric',

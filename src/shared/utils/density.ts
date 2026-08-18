@@ -13,6 +13,8 @@
  */
 
 import { themeConfig, type DensityLevel } from '@/theme/config'
+import type { CalendarEvent } from '@/domain/calendar/types'
+import { eventDate, getMonthKey, getWeekKey } from '@/shared/date'
 
 /**
  * Calculates relative density level based on a count compared to a set of counts.
@@ -101,13 +103,11 @@ export function getAbsoluteDensity(count: number): DensityLevel {
  * @param events - Array of calendar events to count.
  * @returns A record mapping date strings to event counts.
  */
-export function getEventCountsByDay(
-  events: import('@/types').CalendarEvent[],
-): Record<string, number> {
+export function getEventCountsByDay(events: CalendarEvent[]): Record<string, number> {
   const counts: Record<string, number> = {}
 
   for (const event of events) {
-    const dateKey = new Date(event.start).toISOString().split('T')[0]!
+    const dateKey = eventDate(event.start).toString()
     counts[dateKey] = (counts[dateKey] || 0) + 1
   }
 
@@ -123,14 +123,11 @@ export function getEventCountsByDay(
  * @param events - Array of calendar events to count.
  * @returns A record mapping week identifiers to event counts.
  */
-export function getEventCountsByWeek(
-  events: import('@/types').CalendarEvent[],
-): Record<string, number> {
+export function getEventCountsByWeek(events: CalendarEvent[]): Record<string, number> {
   const counts: Record<string, number> = {}
 
   for (const event of events) {
-    const date = new Date(event.start)
-    const weekKey = getWeekKey(date)
+    const weekKey = getWeekKey(eventDate(event.start))
     counts[weekKey] = (counts[weekKey] || 0) + 1
   }
 
@@ -146,33 +143,13 @@ export function getEventCountsByWeek(
  * @param events - Array of calendar events to count.
  * @returns A record mapping month identifiers to event counts.
  */
-export function getEventCountsByMonth(
-  events: import('@/types').CalendarEvent[],
-): Record<string, number> {
+export function getEventCountsByMonth(events: CalendarEvent[]): Record<string, number> {
   const counts: Record<string, number> = {}
 
   for (const event of events) {
-    const date = new Date(event.start)
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    const monthKey = getMonthKey(eventDate(event.start))
     counts[monthKey] = (counts[monthKey] || 0) + 1
   }
 
   return counts
-}
-
-/**
- * Returns an ISO week key (YYYY-W##) for a given date.
- *
- * @param date - The date to get the week key for.
- * @returns A string in the format "YYYY-W##".
- */
-function getWeekKey(date: Date): string {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  // Adjust to nearest Thursday for ISO week calculation.
-  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7))
-  const jan4 = new Date(d.getFullYear(), 0, 4)
-  const weekNum =
-    1 + Math.round(((d.getTime() - jan4.getTime()) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7)
-  return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
 }

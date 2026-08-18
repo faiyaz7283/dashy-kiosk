@@ -38,7 +38,13 @@ describe('getCalendar', () => {
 
     const result = await getCalendar('2026-08-10', '2026-08-16')
 
-    expect(result).toEqual({ data: mockResponse, cached: false })
+    expect(result.cached).toBe(false)
+    expect(result.data.week_start.toString()).toBe('2026-08-10')
+    expect(result.data.week_end.toString()).toBe('2026-08-16')
+    expect(result.data.events).toHaveLength(1)
+    expect(result.data.events[0]!.id).toBe('1')
+    expect(result.data.events[0]!.start.toString()).toBe('2026-08-10T09:00:00')
+    expect(result.data.events[0]!.end.toString()).toBe('2026-08-10T10:00:00')
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('start_date=2026-08-10'))
     expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('end_date=2026-08-16'))
@@ -57,7 +63,9 @@ describe('getCalendar', () => {
     // Second call - should use cache
     const result2 = await getCalendar('2026-08-10', '2026-08-16')
     expect(mockFetch).toHaveBeenCalledTimes(1) // Still 1, no new fetch
-    expect(result2).toEqual({ data: mockResponse, cached: true })
+    expect(result2.cached).toBe(true)
+    expect(result2.data.week_start.toString()).toBe('2026-08-10')
+    expect(result2.data.events).toHaveLength(1)
   })
 
   it('fetches fresh data after cache expires', async () => {
@@ -134,7 +142,12 @@ describe('getCalendar', () => {
     })
 
     const result = await getCalendar('2026-08-10', '2026-08-16')
-    expect(result).toEqual({ data: mockResponse, cached: false })
+    expect(result.cached).toBe(false)
+    expect(result.data.week_start.toString()).toBe('2026-08-10')
+    expect(result.data.week_end.toString()).toBe('2026-08-16')
+    expect(result.data.events).toHaveLength(1)
+    expect(result.data.events[0]!.start.toString()).toBe('2026-08-10T09:00:00')
+    expect(result.data.events[0]!.end.toString()).toBe('2026-08-10T10:00:00')
     expect(mockFetch).toHaveBeenCalledTimes(2)
   }, 60000)
 })

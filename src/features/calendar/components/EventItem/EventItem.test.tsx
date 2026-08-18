@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { EventItem } from './EventItem'
 import type { CalendarEvent, FamilyMember } from '@/types'
+import { Temporal } from '@js-temporal/polyfill'
 
 const mockMembers: FamilyMember[] = [
   {
@@ -23,8 +24,8 @@ const mockMembers: FamilyMember[] = [
 const mockEvent: CalendarEvent = {
   id: '1',
   title: 'Team Standup',
-  start: '2026-08-04T09:00:00',
-  end: '2026-08-04T09:30:00',
+  start: Temporal.PlainDateTime.from('2026-08-04T09:00:00'),
+  end: Temporal.PlainDateTime.from('2026-08-04T09:30:00'),
   all_day: false,
   members: ['faiyaz'],
 }
@@ -47,7 +48,12 @@ describe('EventItem', () => {
     })
 
     it('renders all-day events correctly', () => {
-      const allDayEvent: CalendarEvent = { ...mockEvent, all_day: true }
+      const allDayEvent: CalendarEvent = {
+        ...mockEvent,
+        all_day: true,
+        start: Temporal.PlainDate.from('2026-08-04'),
+        end: Temporal.PlainDate.from('2026-08-04'),
+      }
       render(<EventItem event={allDayEvent} members={mockMembers} variant="card" />)
       expect(screen.getByText('All day')).toBeInTheDocument()
     })

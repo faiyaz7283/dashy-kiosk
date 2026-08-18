@@ -1,22 +1,18 @@
 import { useState, useEffect } from 'react'
-import { LOCALE } from '@/theme/config'
+import { formatTime } from '@/shared/date'
 
 export function Clock() {
-  const [time, setTime] = useState(new Date())
+  const [time, setTime] = useState(Temporal.Now.plainTimeISO())
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTime(new Date())
+      setTime(Temporal.Now.plainTimeISO())
     }, 1000)
 
     return () => clearInterval(timer)
   }, [])
 
-  const timeStr = time.toLocaleTimeString(LOCALE, {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
+  const timeStr = formatTime(time)
 
   return <span style={{ fontSize: '14px', color: '#6b7280', whiteSpace: 'nowrap' }}>{timeStr}</span>
 }
