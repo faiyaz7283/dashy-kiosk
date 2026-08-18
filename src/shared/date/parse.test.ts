@@ -40,6 +40,21 @@ describe('parseEventStart', () => {
     expect(result.month).toBe(1)
     expect(result.day).toBe(15)
   })
+
+  it('strips UTC "Z" designator from timed events', () => {
+    const result = parseEventStart('2026-08-08T14:00:00Z', false) as Temporal.PlainDateTime
+    expect(result.toString()).toBe('2026-08-08T14:00:00')
+  })
+
+  it('strips timezone offset from timed events', () => {
+    const result = parseEventStart('2026-08-08T14:00:00-04:00', false) as Temporal.PlainDateTime
+    expect(result.toString()).toBe('2026-08-08T14:00:00')
+  })
+
+  it('strips positive timezone offset from timed events', () => {
+    const result = parseEventStart('2026-08-08T14:00:00+05:30', false) as Temporal.PlainDateTime
+    expect(result.toString()).toBe('2026-08-08T14:00:00')
+  })
 })
 
 describe('parseEventEnd', () => {
@@ -97,6 +112,18 @@ describe('parseWeatherTime', () => {
     const result = parseWeatherTime('23:59')
     expect(result.hour).toBe(23)
     expect(result.minute).toBe(59)
+  })
+
+  it('strips UTC "Z" designator from ISO datetime', () => {
+    const result = parseWeatherTime('2026-08-08T14:45:00Z')
+    expect(result.hour).toBe(14)
+    expect(result.minute).toBe(45)
+  })
+
+  it('strips timezone offset from ISO datetime', () => {
+    const result = parseWeatherTime('2026-08-08T14:45:00-04:00')
+    expect(result.hour).toBe(14)
+    expect(result.minute).toBe(45)
   })
 })
 

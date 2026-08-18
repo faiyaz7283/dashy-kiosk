@@ -12,6 +12,36 @@
 
 import type { CalendarEvent, WeekCalendar } from '@/domain/calendar/types'
 
+/**
+ * Strips timezone designators from an ISO datetime string.
+ *
+ * Google Calendar API returns datetimes with timezone info (e.g., "Z" or "-04:00").
+ * Temporal.PlainDateTime doesn't accept timezone designators, so we strip them.
+ * The backend handles timezone conversions; the frontend treats all times as local.
+ *
+ * @param iso - ISO datetime string, possibly with timezone.
+ * @returns Datetime string without timezone designator.
+ *
+ * @example
+ * ```ts
+ * stripTimezone('2026-08-08T14:00:00Z')       // '2026-08-08T14:00:00'
+ * stripTimezone('2026-08-08T14:00:00-04:00')  // '2026-08-08T14:00:00'
+ * stripTimezone('2026-08-08T14:00:00')        // '2026-08-08T14:00:00'
+ * ```
+ */
+function stripTimezone(iso: string): string {
+  // Remove trailing "Z"
+  if (iso.endsWith('Z')) {
+    return iso.slice(0, -1)
+  }
+  // Remove timezone offset like "+00:00" or "-04:00"
+  const tzMatch = iso.match(/([+-]\d{2}:\d{2})$/)
+  if (tzMatch && tzMatch[1]) {
+    return iso.slice(0, -tzMatch[1].length)
+  }
+  return iso
+}
+
 /** Raw calendar event from the API (before parsing). */
 export interface RawCalendarEvent {
   id: string
@@ -62,7 +92,7 @@ export function parseEventStart(
   iso: string,
   allDay: boolean,
 ): Temporal.PlainDate | Temporal.PlainDateTime {
-  return allDay ? Temporal.PlainDate.from(iso) : Temporal.PlainDateTime.from(iso)
+  return allDay ? Temporal.PlainDate.from(iso) : Temporal.PlainDateTime.from(stripTimezone(iso))
 }
 
 /**
@@ -78,7 +108,7 @@ export function parseEventEnd(
   iso: string,
   allDay: boolean,
 ): Temporal.PlainDate | Temporal.PlainDateTime {
-  return allDay ? Temporal.PlainDate.from(iso) : Temporal.PlainDateTime.from(iso)
+  return allDay ? Temporal.PlainDate.from(iso) : Temporal.PlainDateTime.from(stripTimezone(iso))
 }
 
 /**
@@ -116,7 +146,7 @@ export function parseForecastDate(dateStr: string): Temporal.PlainDate {
  */
 export function parseWeatherTime(timeStr: string): Temporal.PlainTime {
   if (timeStr.includes('T')) {
-    return Temporal.PlainDateTime.from(timeStr).toPlainTime()
+    return Temporal.PlainDateTime.from(stripTimezone(timeStr)).toPlainTime()
   }
   return Temporal.PlainTime.from(timeStr)
 }
@@ -171,8 +201,8 @@ export function parseCalendarEvent(raw: RawCalendarEvent): CalendarEvent {
   return {
     ...raw,
     all_day: false,
-    start: Temporal.PlainDateTime.from(raw.start),
-    end: Temporal.PlainDateTime.from(raw.end),
+    start: Temporal.PlainDateTime.from(stripTimezone(raw.start)),
+    end: Temporal.PlainDateTime.from(stripTimezone(raw.end)),
   }
 }
 
