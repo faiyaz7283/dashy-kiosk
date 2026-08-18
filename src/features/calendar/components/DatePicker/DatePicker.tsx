@@ -8,6 +8,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import type { CalendarView } from '@/types'
 import { colors, spacing, radii, shadows, zIndices } from '@/theme/tokens'
 import { getWeekDays, isSameDay } from '@/shared/utils/dateFormat'
@@ -235,14 +236,7 @@ export function DatePicker({
                 color: colors.textFaint,
               }}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 19l-7-7 7-7M18 19l-7-7 7-7"
-                />
-              </svg>
+              <ChevronsLeft width={14} height={14} />
             </button>
             <button
               onClick={handlePrevMonth}
@@ -261,14 +255,7 @@ export function DatePicker({
                 color: colors.textMuted,
               }}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <ChevronLeft width={14} height={14} />
             </button>
           </div>
           <span style={{ fontSize: '14px', fontWeight: 600, color: colors.textPrimary }}>
@@ -292,14 +279,7 @@ export function DatePicker({
                 color: colors.textMuted,
               }}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <ChevronRight width={14} height={14} />
             </button>
             <button
               onClick={handleNextYear}
@@ -318,14 +298,7 @@ export function DatePicker({
                 color: colors.textFaint,
               }}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 5l7 7-7 7M6 5l7 7-7 7"
-                />
-              </svg>
+              <ChevronsRight width={14} height={14} />
             </button>
           </div>
         </div>

@@ -11,7 +11,8 @@ Dashy Kiosk is a React + Vite single-page application designed for full-viewport
 - **Framework:** React 19
 - **Language:** TypeScript
 - **Build Tool:** Vite
-- **Styling:** Tailwind CSS 4
+- **Styling:** Tailwind CSS 4 + CSS Custom Properties
+- **Icons:** Lucide React (UI icons), Custom SVG (weather/data visualizations)
 - **Package Manager:** pnpm
 - **Testing:** Vitest + React Testing Library
 - **Linting:** ESLint + Prettier
@@ -61,7 +62,7 @@ src/
 ├── features/             # Feature modules (weather, calendar, navigation, dashboard, kiosk)
 ├── shared/               # Shared components, hooks, api, config, services, utils
 ├── test/                 # Test utilities
-├── theme/                # Design tokens, scaling system
+├── theme/                # Design tokens, theming system (dark/light/auto mode), scaling
 ├── types/                # TypeScript type definitions
 └── docs/                 # Documentation
 ```
@@ -70,7 +71,8 @@ src/
 - **Fluid full-viewport layout** — scales to any display via `useUiScale`
 - **Feature-based organization** — each feature is self-contained
 - **Domain-driven** — domain types separate from UI concerns
-- **No emojis** — SVG icons only
+- **Theming system** — CSS custom properties enable dark/light/auto modes; auto mode switches based on sunrise/sunset from weather API
+- **Icon architecture** — Lucide React for UI chrome, custom SVG for data visualizations
 
 ## Design Principles
 
@@ -78,6 +80,8 @@ src/
 - **Floating layers** — modals portal to `document.body` with scale factor
 - **Configurable** — family members, colors, API URLs from environment
 - **No hardcoded viewport assumptions** — responsive to any screen size
+- **Theming support** — dark/light/auto mode with CSS custom properties; auto mode uses sunrise/sunset times from weather data
+- **Icon strategy** — Lucide React for UI icons (consistent, themeable), custom SVG for weather/data visualizations (specialized, data-driven)
 
 ## Deployment
 

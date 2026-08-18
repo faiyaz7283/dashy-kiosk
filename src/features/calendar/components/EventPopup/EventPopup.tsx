@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom'
 import { useState, useLayoutEffect, useRef } from 'react'
 import { colors, radii, shadows, spacing, typography, zIndices } from '@/theme/tokens'
 import { LOCALE } from '@/theme/config'
-import { RecurringIcon, MapPinIcon } from '@/features/calendar/components/EventItem'
+import { MapPin, Repeat } from 'lucide-react'
 import { useUiScale } from '@/features/kiosk/hooks/useUiScale'
 
 interface EventPopupProps {
@@ -152,7 +152,7 @@ export function EventPopup({ visible, x, y, dateLabel, events, members }: EventP
                   {event.title}
                 </span>
                 {(event.is_recurring_instance || event.recurrence_rule) && (
-                  <RecurringIcon size={11} />
+                  <Repeat size={11} style={{ opacity: 0.6 }} />
                 )}
               </div>
               <div
@@ -175,7 +175,7 @@ export function EventPopup({ visible, x, y, dateLabel, events, members }: EventP
                     gap: '4px',
                   }}
                 >
-                  <MapPinIcon size={11} />
+                  <MapPin size={11} />
                   {event.location}
                 </div>
               )}

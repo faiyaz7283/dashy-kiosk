@@ -55,7 +55,7 @@ describe('DayIndicator', () => {
     const bar = renderBar([makeEvent('1', ['unknown'])])
     const segments = bar.querySelectorAll('span')
     expect(segments).toHaveLength(1)
-    expect(segments[0]).toHaveStyle('background: #d1d5db')
+    expect(segments[0]).toHaveStyle('background: var(--dt-border-dark)')
   })
 
   it('shows 4 member-colored segments when the day has exactly 4 events', () => {
@@ -81,7 +81,7 @@ describe('DayIndicator', () => {
     const segments = bar.querySelectorAll('span')
     expect(segments).toHaveLength(4)
     // 4th segment is the grey "more" indicator (textDisabled)
-    expect(segments[3]).toHaveStyle('background: #d1d5db')
+    expect(segments[3]).toHaveStyle('background: var(--dt-text-disabled)')
   })
 
   it('exposes event titles via the title attribute', () => {

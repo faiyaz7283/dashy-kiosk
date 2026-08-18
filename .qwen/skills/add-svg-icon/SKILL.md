@@ -5,37 +5,44 @@ description: Create custom SVG icon components for domain-specific illustrations
 
 # Add SVG Icon
 
-Create custom SVG icon components for domain-specific illustrations that are not covered by the standard icon library.
+**IMPORTANT: Use Lucide React for standard UI icons.** Only create custom SVG components for domain-specific illustrations that Lucide doesn't provide.
 
-## When to use
+## When to use Lucide (90% of cases)
 
-- The feature needs a domain-specific illustration (weather metrics, calendar indicators, etc.)
+For standard UI icons (arrows, checks, closes, navigation, actions, etc.), import from `lucide-react`:
+
+```tsx
+import { Calendar, ChevronDown, Settings, MapPin } from 'lucide-react'
+
+<Calendar size={16} />
+<ChevronDown size={12} color="var(--dt-text-faint)" />
+```
+
+**Benefits:**
+- Consistent visual style across all UI icons
+- Automatic theme support via `currentColor`
+- Smaller bundle size (tree-shakeable)
+- No need to maintain custom SVG paths
+
+## When to create custom SVG (10% of cases)
+
+Only create a custom SVG component when:
+
+- The icon is a domain-specific illustration (weather metrics, calendar indicators, etc.)
 - The icon must react to data values (temperature-based coloring, intensity levels, etc.)
-- The design calls for a custom visual not available in any icon library
-- Not for standard UI icons (arrows, close buttons, settings) — use lucide-react for those
+- The design calls for a custom visual not available in Lucide
+- Not for standard UI icons — use Lucide for those
 - Not for emoji or unicode glyphs — the Pi kiosk lacks emoji fonts
-
-## When NOT to use
-
-- lucide-react already has the icon you need — just `import { IconName } from 'lucide-react'`
-- The icon is a standard UI pattern (check, x, chevron, search, etc.)
-- You need an animated or interactive element — use a React component instead
-
-## Prerequisites
-
-- Check if lucide-react has the icon: `grep -r "from 'lucide-react'" src/` to see what's already imported
-- Have the SVG path data ready (from Figma export, hand-drawn, or adapted from an open-source icon set)
-- Decide if the icon needs dynamic props (data-driven coloring, sizing, etc.)
 
 ## Decision flow
 
 ```
 Need an icon?
-├── Is it a standard UI icon? (arrow, check, close, search, etc.)
-│   └── YES → import from 'lucide-react'
+├── Is it a standard UI icon? (arrow, check, close, search, settings, etc.)
+│   └── YES → import from 'lucide-react' (DO NOT create custom SVG)
 ├── Does it need data-driven visual changes? (color by temperature, size by intensity)
 │   └── YES → create custom SVG component (this skill)
-└── Is it a domain-specific illustration? (thermometer, humidity drop, moon phase)
+└── Is it a domain-specific illustration? (thermometer, humidity drop, moon phase, weather condition)
     └── YES → create custom SVG component (this skill)
 ```
 
@@ -66,10 +73,19 @@ src/features/weather/components/WeatherTooltip/icons/
 
 src/features/weather/components/WeatherWidget/
 └── WeatherIcon.tsx        # 15 OWM conditions with day/night variants
+```
 
-src/features/calendar/components/EventItem/
-├── RecurringIcon.tsx      # Repeating arrows glyph
-└── MapPinIcon.tsx         # Location pin
+**Standard UI icons (use Lucide, not custom SVG):**
+
+```tsx
+// Navigation & UI
+import { Calendar, Settings, RefreshCw, ChevronDown, ChevronLeft } from 'lucide-react'
+
+// Event indicators
+import { MapPin, Repeat } from 'lucide-react'
+
+// Weather metrics (in DayView)
+import { Droplet, Wind } from 'lucide-react'
 ```
 
 ## Steps

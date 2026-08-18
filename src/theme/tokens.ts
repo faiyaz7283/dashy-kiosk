@@ -2,9 +2,9 @@
  * Design tokens for the Dashy application.
  *
  * All visual values (colors, spacing, sizes, typography) are centralized here
- * so components reference tokens instead of hardcoded values. When a settings
- * or configuration system is implemented, these tokens can be swapped at
- * runtime by replacing the default values.
+ * so components reference tokens instead of hardcoded values. Colors now
+ * reference CSS custom properties (variables) defined in index.css, enabling
+ * runtime theme switching (light/dark/auto) without rebuilding tokens.
  *
  * Avoid adding hardcoded hex, px, rem, or other visual values directly in
  * components — always import from this file.
@@ -16,34 +16,34 @@
 
 /** Brand / primary palette. */
 export const colors = {
-  primary: '#4f46e5',
-  primaryHover: '#4338ca',
-  primaryLight: '#eef2ff',
-  primaryLightHover: '#e0e7ff',
-  primaryRing: '#c7d2fe',
+  primary: 'var(--dt-primary)',
+  primaryHover: 'var(--dt-primary-hover)',
+  primaryLight: 'var(--dt-primary-light)',
+  primaryLightHover: 'var(--dt-primary-light-hover)',
+  primaryRing: 'var(--dt-primary-ring)',
 
   /** Neutral / surface colors. */
-  white: '#ffffff',
-  bg: '#f9fafb',
-  bgHover: '#f3f4f6',
+  white: 'var(--dt-white)',
+  bg: 'var(--dt-bg)',
+  bgHover: 'var(--dt-bg-hover)',
 
   /** Text colors. */
-  textPrimary: '#1f2937',
-  textSecondary: '#374151',
-  textMuted: '#6b7280',
-  textFaint: '#9ca3af',
-  textDisabled: '#d1d5db',
+  textPrimary: 'var(--dt-text-primary)',
+  textSecondary: 'var(--dt-text-secondary)',
+  textMuted: 'var(--dt-text-muted)',
+  textFaint: 'var(--dt-text-faint)',
+  textDisabled: 'var(--dt-text-disabled)',
 
   /** Border colors. */
-  border: '#e5e7eb',
-  borderLight: '#f3f4f6',
-  borderDark: '#d1d5db',
+  border: 'var(--dt-border)',
+  borderLight: 'var(--dt-border-light)',
+  borderDark: 'var(--dt-border-dark)',
 
   /** Status colors. */
-  success: '#22c55e',
-  danger: '#ef4444',
-  dangerBg: '#fee2e2',
-  dangerText: '#991b1b',
+  success: 'var(--dt-success)',
+  danger: 'var(--dt-danger)',
+  dangerBg: 'var(--dt-danger-bg)',
+  dangerText: 'var(--dt-danger-text)',
 } as const
 
 /**
@@ -56,10 +56,10 @@ export const colors = {
  * - high: red (heavy activity)
  */
 export const densityColors = {
-  none: { bg: '#f3f4f6', text: '#6b7280' },
-  low: { bg: '#dcfce7', text: '#16a34a' },
-  medium: { bg: '#fef3c7', text: '#d97706' },
-  high: { bg: '#fee2e2', text: '#dc2626' },
+  none: { bg: 'var(--dt-density-none)', text: 'var(--dt-text-muted)' },
+  low: { bg: 'var(--dt-density-low)', text: 'var(--dt-success)' },
+  medium: { bg: 'var(--dt-density-medium)', text: 'var(--dt-warning)' },
+  high: { bg: 'var(--dt-density-high)', text: 'var(--dt-danger)' },
 } as const
 
 /**
@@ -67,10 +67,10 @@ export const densityColors = {
  * visual density indicators (bars, columns, cells).
  */
 export const densityBarColors = {
-  none: '#f3f4f6',
-  low: '#bbf7d0',
-  medium: '#fcd34d',
-  high: '#fca5a5',
+  none: 'var(--dt-density-none)',
+  low: 'var(--dt-density-low)',
+  medium: 'var(--dt-density-medium)',
+  high: 'var(--dt-density-high)',
 } as const
 
 // ---------------------------------------------------------------------------

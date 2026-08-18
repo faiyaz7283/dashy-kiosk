@@ -141,7 +141,7 @@ export function MonthView({
       <div
         style={{
           flex: 1,
-          background: colors.white,
+          background: colors.bg,
           borderRadius: `${radii['2xl']}px`,
           border: `1px solid ${colors.border}`,
           overflow: 'hidden',
@@ -211,7 +211,7 @@ export function MonthView({
                       ? colors.bgHover
                       : isCurrentMonth
                         ? 'transparent'
-                        : '#fafafa',
+                        : colors.bgHover,
                 }}
               >
                 {/* Top row: date number (left), weather (center), event count (right) */}

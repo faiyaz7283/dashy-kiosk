@@ -14,7 +14,7 @@ import { useState } from 'react'
 import type { CalendarEvent, FamilyMember } from '@/types'
 import { colors, radii, spacing, typography, zIndices } from '@/theme/tokens'
 import { LOCALE } from '@/theme/config'
-import { RecurringIcon } from './RecurringIcon'
+import { Repeat } from 'lucide-react'
 import { getMemberColorPalette } from '@/shared/utils/memberColors'
 
 interface EventItemProps {
@@ -212,7 +212,7 @@ export function EventItem({
           </span>
         )}
         <span style={titleStyle}>{event.title}</span>
-        {isRecurring && <RecurringIcon size={iconSize} />}
+        {isRecurring && <Repeat size={iconSize} style={{ opacity: 0.6 }} />}
       </div>
       {variant === 'card' && showTime && (
         <div

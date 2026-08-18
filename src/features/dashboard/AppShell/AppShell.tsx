@@ -35,6 +35,7 @@ import { ENDPOINTS } from '@/shared/api/endpoints'
 import { colors, spacing, layout } from '@/theme/tokens'
 import { isSameDay } from '@/shared/utils/dateFormat'
 import { getDensityInfo } from '@/domain/calendar/density'
+import { useTheme } from '@/theme/ThemeContext'
 
 /**
  * AppShell component — orchestrates layout and data fetching.
@@ -105,6 +106,14 @@ export function AppShell() {
     loading: familyLoading,
     error: familyError,
   } = useApi(getFamilyMembers)
+
+  // Update theme auto mode with sunrise/sunset times from weather data
+  const { setSunTimes } = useTheme()
+  useEffect(() => {
+    if (weather?.current) {
+      setSunTimes(weather.current.sunrise || null, weather.current.sunset || null)
+    }
+  }, [weather, setSunTimes])
 
   if (!backendReady) {
     const seconds = Math.floor(elapsed / 1000)

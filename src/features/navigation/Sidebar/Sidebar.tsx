@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import { RefreshCw } from 'lucide-react'
 import type { SidebarState } from '@/features/dashboard/hooks/useSidebar'
 import { NAV_ITEMS } from '@/shared/config/navigation'
 
@@ -139,17 +140,18 @@ export function Sidebar({ state, onChange, onRefreshCalendar }: SidebarProps) {
   return (
     <nav
       ref={navRef}
-      className={`bg-white border-r flex flex-col relative transition-all duration-250 ${
+      className={`flex flex-col relative transition-all duration-250 border-r ${
         isHidden ? 'w-0 overflow-hidden' : isCollapsed ? 'w-16' : 'w-56'
       }`}
-      style={{ borderColor: 'var(--dt-border)' }}
+      style={{ backgroundColor: 'var(--dt-bg)', borderColor: 'var(--dt-border)' }}
     >
       {/* Drag Handle */}
       <div
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
-        className="absolute right-0 top-[40%] -translate-y-1/2 translate-x-full w-4 h-14 bg-white cursor-grab active:cursor-grabbing flex flex-col items-center justify-center gap-[3px] z-20 hover:bg-bg transition-colors select-none"
+        className="absolute right-0 top-[40%] -translate-y-1/2 translate-x-full w-4 h-14 cursor-grab active:cursor-grabbing flex flex-col items-center justify-center gap-[3px] z-20 hover:bg-bg-hover transition-colors select-none"
         style={{
+          backgroundColor: 'var(--dt-bg)',
           border: '1px solid var(--dt-border-dark)',
           borderLeft: 'none',
           borderRadius: '0 8px 8px 0',
@@ -177,14 +179,7 @@ export function Sidebar({ state, onChange, onRefreshCalendar }: SidebarProps) {
               color: i === 0 ? 'var(--dt-primary)' : 'var(--dt-text-secondary)',
             }}
           >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-            </svg>
+            <item.icon className="w-5 h-5 flex-shrink-0" />
             <span
               data-sidebar-label
               className={`transition-opacity duration-150 ${isCollapsed || isHidden ? 'opacity-0 pointer-events-none' : ''}`}
@@ -201,62 +196,11 @@ export function Sidebar({ state, onChange, onRefreshCalendar }: SidebarProps) {
                 className="ml-auto p-1 hover:bg-primary-light-hover rounded transition-colors"
                 title="Refresh calendar"
               >
-                <svg
-                  className="w-3.5 h-3.5"
-                  style={{ color: 'var(--dt-primary-ring)' }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
+                <RefreshCw className="w-3.5 h-3.5" style={{ color: 'var(--dt-primary-ring)' }} />
               </button>
             )}
           </div>
         ))}
-      </div>
-
-      {/* Settings */}
-      <div className="pt-2 pb-3" style={{ borderTop: '1px solid var(--dt-border-light)' }}>
-        <div
-          className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-bg-hover whitespace-nowrap overflow-hidden"
-          style={{
-            borderRadius: '10px',
-            margin: '0 8px',
-            color: 'var(--dt-text-secondary)',
-          }}
-        >
-          <svg
-            className="w-5 h-5 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <span
-            data-sidebar-label
-            className={`transition-opacity duration-150 ${isCollapsed || isHidden ? 'opacity-0 pointer-events-none' : ''}`}
-          >
-            Settings
-          </span>
-        </div>
       </div>
     </nav>
   )

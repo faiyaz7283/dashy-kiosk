@@ -6,12 +6,16 @@
  */
 
 import { useEffect, useState } from 'react'
+import { Calendar, Settings, Sun } from 'lucide-react'
+import { ThemeToggle } from '@/theme/ThemeToggle'
 
 interface StatusBarProps {
   calendarLastRefresh: number | null
   weatherLastRefresh: number | null
   /** Whether the bar is visible (mouse near the bottom edge). */
   visible?: boolean
+  /** Callback to open settings. */
+  onSettingsClick?: () => void
 }
 
 const CALENDAR_INTERVAL = 120 // 2 minutes in seconds
@@ -27,6 +31,7 @@ export function StatusBar({
   calendarLastRefresh,
   weatherLastRefresh,
   visible = true,
+  onSettingsClick,
 }: StatusBarProps) {
   const [now, setNow] = useState(0)
 
@@ -57,7 +62,7 @@ export function StatusBar({
 
   return (
     <div
-      className={`flex-shrink-0 flex items-center justify-center px-4 transition-all duration-250 overflow-hidden ${
+      className={`flex-shrink-0 flex items-center justify-between px-4 transition-all duration-250 overflow-hidden ${
         visible ? 'h-7 opacity-100' : 'h-0 opacity-0'
       }`}
       style={{
@@ -67,6 +72,18 @@ export function StatusBar({
         color: 'var(--dt-text-faint)',
       }}
     >
+      {/* Left: Settings icon */}
+      <button
+        onClick={onSettingsClick}
+        className="p-1 rounded hover:bg-[var(--dt-bg-hover)] transition-colors"
+        style={{ color: 'var(--dt-text-secondary)' }}
+        title="Settings"
+        aria-label="Settings"
+      >
+        <Settings className="w-4 h-4" />
+      </button>
+
+      {/* Center: Countdown timers */}
       <div className="flex items-center gap-3">
         {/* Calendar indicator */}
         <div className="flex items-center gap-1.5">
@@ -74,19 +91,7 @@ export function StatusBar({
             className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${calendarRefreshing ? 'animate-pulse' : ''}`}
             style={{ background: calendarRefreshing ? 'var(--dt-primary)' : 'var(--dt-success)' }}
           />
-          <svg
-            className="w-3.5 h-3.5 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
+          <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="inline-block min-w-[72px] text-left tabular-nums">
             {formatCountdown(calendarCountdown)}
           </span>
@@ -101,24 +106,15 @@ export function StatusBar({
             className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${weatherRefreshing ? 'animate-pulse' : ''}`}
             style={{ background: weatherRefreshing ? 'var(--dt-primary)' : 'var(--dt-success)' }}
           />
-          <svg
-            className="w-3.5 h-3.5 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-            />
-          </svg>
+          <Sun className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="inline-block min-w-[72px] text-left tabular-nums">
             {formatCountdown(weatherCountdown)}
           </span>
         </div>
       </div>
+
+      {/* Right: Theme toggle */}
+      <ThemeToggle />
     </div>
   )
 }

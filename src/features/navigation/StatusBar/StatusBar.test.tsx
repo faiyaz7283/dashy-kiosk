@@ -1,6 +1,7 @@
 import { render, screen, act } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { StatusBar } from './StatusBar'
+import { ThemeProvider } from '@/theme/ThemeContext'
 
 describe('StatusBar', () => {
   afterEach(() => {
@@ -9,7 +10,11 @@ describe('StatusBar', () => {
 
   it('renders calendar and weather countdown timers', () => {
     const now = Date.now()
-    render(<StatusBar calendarLastRefresh={now} weatherLastRefresh={now} />)
+    render(
+      <ThemeProvider>
+        <StatusBar calendarLastRefresh={now} weatherLastRefresh={now} />
+      </ThemeProvider>,
+    )
 
     // Calendar: 2 min interval, just refreshed = "in 2m 00s"
     expect(screen.getByText('in 2m 00s')).toBeTruthy()
@@ -21,7 +26,11 @@ describe('StatusBar', () => {
   it('counts down correctly over time', () => {
     vi.useFakeTimers()
     const now = Date.now()
-    render(<StatusBar calendarLastRefresh={now} weatherLastRefresh={now} />)
+    render(
+      <ThemeProvider>
+        <StatusBar calendarLastRefresh={now} weatherLastRefresh={now} />
+      </ThemeProvider>,
+    )
 
     // Initial state
     expect(screen.getByText('in 2m 00s')).toBeTruthy()
@@ -36,7 +45,11 @@ describe('StatusBar', () => {
   it('shows refreshing state when countdown reaches 0', () => {
     vi.useFakeTimers()
     const now = Date.now()
-    render(<StatusBar calendarLastRefresh={now} weatherLastRefresh={now} />)
+    render(
+      <ThemeProvider>
+        <StatusBar calendarLastRefresh={now} weatherLastRefresh={now} />
+      </ThemeProvider>,
+    )
 
     // Advance past the 2-minute calendar interval
     act(() => {
@@ -49,7 +62,9 @@ describe('StatusBar', () => {
 
   it('renders status dots', () => {
     const { container } = render(
-      <StatusBar calendarLastRefresh={Date.now()} weatherLastRefresh={Date.now()} />,
+      <ThemeProvider>
+        <StatusBar calendarLastRefresh={Date.now()} weatherLastRefresh={Date.now()} />
+      </ThemeProvider>,
     )
 
     // Should show green status dots (using CSS variable for success color)

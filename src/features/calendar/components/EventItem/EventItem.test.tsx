@@ -87,7 +87,7 @@ describe('EventItem', () => {
     it('shows recurring icon for recurring instances', () => {
       const recurring: CalendarEvent = { ...mockEvent, is_recurring_instance: true }
       render(<EventItem event={recurring} members={mockMembers} variant="card" />)
-      expect(screen.getByTitle('Recurring event')).toBeInTheDocument()
+      expect(document.querySelector('.lucide-repeat')).toBeInTheDocument()
     })
 
     it('shows recurring icon when a recurrence rule is present', () => {
@@ -96,12 +96,12 @@ describe('EventItem', () => {
         recurrence_rule: 'RRULE:FREQ=WEEKLY;BYDAY=MO',
       }
       render(<EventItem event={recurring} members={mockMembers} variant="card" />)
-      expect(screen.getByTitle('Recurring event')).toBeInTheDocument()
+      expect(document.querySelector('.lucide-repeat')).toBeInTheDocument()
     })
 
     it('does not show recurring icon for one-off events', () => {
       render(<EventItem event={mockEvent} members={mockMembers} variant="card" />)
-      expect(screen.queryByTitle('Recurring event')).not.toBeInTheDocument()
+      expect(document.querySelector('.lucide-repeat')).not.toBeInTheDocument()
     })
   })
 

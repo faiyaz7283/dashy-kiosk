@@ -35,6 +35,7 @@
   /* Colors — status */
   --dt-success: #22c55e;
   --dt-danger: #ef4444;
+  --dt-warning: #f59e0b;
   --dt-danger-bg: #fee2e2;
   --dt-danger-text: #991b1b;
 
@@ -64,57 +65,119 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * Dark mode color palette
+ * Applied when data-theme="dark" is set on the document root
+ * --------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  /* Colors — brand / primary */
+  --dt-primary: #6366f1;
+  --dt-primary-hover: #818cf8;
+  --dt-primary-light: #1e1b4b;
+  --dt-primary-light-hover: #312e81;
+  --dt-primary-ring: #4f46e5;
+
+  /* Colors — surfaces */
+  --dt-white: #1e293b;
+  --dt-bg: #0f172a;
+  --dt-bg-hover: #1e293b;
+
+  /* Colors — text */
+  --dt-text-primary: #f1f5f9;
+  --dt-text-secondary: #cbd5e1;
+  --dt-text-muted: #94a3b8;
+  --dt-text-faint: #64748b;
+  --dt-text-disabled: #475569;
+
+  /* Colors — borders */
+  --dt-border: #334155;
+  --dt-border-light: #1e293b;
+  --dt-border-dark: #475569;
+
+  /* Colors — status */
+  --dt-success: #22c55e;
+  --dt-danger: #ef4444;
+  --dt-warning: #fbbf24;
+  --dt-danger-bg: #7f1d1d;
+  --dt-danger-text: #fecaca;
+
+  /* Density bar colors */
+  --dt-density-none: #334155;
+  --dt-density-low: #166534;
+  --dt-density-medium: #854d0e;
+  --dt-density-high: #991b1b;
+
+  /* Family member colors (slightly brighter for dark backgrounds) */
+  --dt-member-faiyaz: #60a5fa;
+  --dt-member-trisha: #f472b6;
+  --dt-member-arya: #4ade80;
+  --dt-member-raya: #fbbf24;
+
+  /* Shadows (darker, more subtle for dark mode) */
+  --dt-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --dt-shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --dt-shadow-side-nav: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --dt-shadow-side-nav-hover: 0 4px 12px rgba(99, 102, 241, 0.3);
+  --dt-shadow-popup: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --dt-shadow-modal: 0 20px 40px rgba(0, 0, 0, 0.6);
+  --dt-shadow-view-btn: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --dt-shadow-fab: 0 4px 12px rgba(99, 102, 241, 0.4);
+  --dt-shadow-fab-hover: 0 6px 16px rgba(99, 102, 241, 0.5);
+  --dt-shadow-sidebar: 2px 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------------------------------------------------------------------------
  * Tailwind theme — connects design tokens to Tailwind utility classes.
  *
- * Colors defined here generate utilities like bg-primary, text-text-primary,
- * border-border, etc. Only non-conflicting names are added.
+ * Colors reference CSS custom properties so Tailwind utilities automatically
+ * adapt to theme changes (light/dark/auto).
  * --------------------------------------------------------------------------- */
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
 
   /* Brand / primary */
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-primary-light: #eef2ff;
-  --color-primary-light-hover: #e0e7ff;
-  --color-primary-ring: #c7d2fe;
+  --color-primary: var(--dt-primary);
+  --color-primary-hover: var(--dt-primary-hover);
+  --color-primary-light: var(--dt-primary-light);
+  --color-primary-light-hover: var(--dt-primary-light-hover);
+  --color-primary-ring: var(--dt-primary-ring);
 
   /* Surfaces */
-  --color-bg: #f9fafb;
-  --color-bg-hover: #f3f4f6;
+  --color-bg: var(--dt-bg);
+  --color-bg-hover: var(--dt-bg-hover);
 
   /* Text */
-  --color-text-primary: #1f2937;
-  --color-text-secondary: #374151;
-  --color-text-muted: #6b7280;
-  --color-text-faint: #9ca3af;
-  --color-text-disabled: #d1d5db;
+  --color-text-primary: var(--dt-text-primary);
+  --color-text-secondary: var(--dt-text-secondary);
+  --color-text-muted: var(--dt-text-muted);
+  --color-text-faint: var(--dt-text-faint);
+  --color-text-disabled: var(--dt-text-disabled);
 
   /* Borders */
-  --color-border: #e5e7eb;
-  --color-border-light: #f3f4f6;
-  --color-border-dark: #d1d5db;
+  --color-border: var(--dt-border);
+  --color-border-light: var(--dt-border-light);
+  --color-border-dark: var(--dt-border-dark);
 
   /* Status */
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
-  --color-danger-bg: #fee2e2;
-  --color-danger-text: #991b1b;
+  --color-success: var(--dt-success);
+  --color-danger: var(--dt-danger);
+  --color-warning: var(--dt-warning);
+  --color-danger-bg: var(--dt-danger-bg);
+  --color-danger-text: var(--dt-danger-text);
 
   /* Family member colors */
-  --color-faiyaz: #4a90e2;
-  --color-trisha: #e24a8d;
-  --color-arya: #4ade80;
-  --color-raya: #fbbf24;
+  --color-faiyaz: var(--dt-member-faiyaz);
+  --color-trisha: var(--dt-member-trisha);
+  --color-arya: var(--dt-member-arya);
+  --color-raya: var(--dt-member-raya);
 
   /* Shadows */
-  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-popup: 0 8px 24px rgba(0, 0, 0, 0.15);
-  --shadow-modal: 0 20px 40px rgba(0, 0, 0, 0.2);
-  --shadow-fab: 0 4px 12px rgba(79, 70, 229, 0.4);
-  --shadow-fab-hover: 0 6px 16px rgba(79, 70, 229, 0.5);
-  --shadow-sidebar: 2px 0 4px rgba(0, 0, 0, 0.06);
+  --shadow-card: var(--dt-shadow-card);
+  --shadow-card-hover: var(--dt-shadow-card-hover);
+  --shadow-popup: var(--dt-shadow-popup);
+  --shadow-modal: var(--dt-shadow-modal);
+  --shadow-fab: var(--dt-shadow-fab);
+  --shadow-fab-hover: var(--dt-shadow-fab-hover);
+  --shadow-sidebar: var(--dt-shadow-sidebar);
 }
 
 /* ---------------------------------------------------------------------------
@@ -126,7 +189,9 @@
 
 /* Card lift on hover — shadow + translateY */
 .hover-lift {
-  transition: box-shadow 0.15s, transform 0.1s;
+  transition:
+    box-shadow 0.15s,
+    transform 0.1s;
 }
 .hover-lift:hover {
   box-shadow: var(--dt-shadow-card-hover) !important;

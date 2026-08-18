@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { Droplet, Wind } from 'lucide-react'
 import type { CalendarEvent, DailyForecast, FamilyMember } from '@/types'
 import { colors, spacing, radii, typography, layout, zIndices } from '@/theme/tokens'
 import { themeConfig, LOCALE } from '@/theme/config'
@@ -191,13 +192,7 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
                         gap: '2px',
                       }}
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"
-                          fill="#60A5FA"
-                          opacity="0.85"
-                        />
-                      </svg>
+                      <Droplet size={12} color="#60A5FA" style={{ opacity: 0.85 }} />
                       {dayWeather.humidity}%
                     </span>
                   )}
@@ -211,15 +206,7 @@ export function DayView({ currentDate, events, members, weatherForecast }: DayVi
                         gap: '2px',
                       }}
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"
-                          stroke="#94A3B8"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                      <Wind size={12} color="#94A3B8" />
                       {Math.round(dayWeather.wind_speed)} mph
                     </span>
                   )}
