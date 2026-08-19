@@ -50,6 +50,12 @@ export const ENDPOINTS = {
     refreshInterval: 0, // Fetch once on mount
     cacheTtl: 0,
   },
+  chores: {
+    url: '/api/v1/chores',
+    method: 'GET',
+    refreshInterval: 120_000, // 2 minutes
+    cacheTtl: 60_000, // 1 minute
+  },
 } as const satisfies Record<string, EndpointConfig>
 
 /**

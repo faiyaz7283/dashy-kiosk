@@ -4,7 +4,7 @@ Frontend for the Dashy Family Calendar Dashboard — a wall-mounted kiosk displa
 
 ## Overview
 
-Dashy Kiosk is a React + Vite single-page application designed for full-viewport display on a Raspberry Pi kiosk. It shows family calendar events, weather data, and time — all scaled fluidly to fit any display.
+Dashy Kiosk is a React + Vite single-page application designed for full-viewport display on a Raspberry Pi kiosk. It shows family calendar events, weather data, chores, and time — all scaled fluidly to fit any display.
 
 ## Tech Stack
 
@@ -60,8 +60,8 @@ src/
 ├── App.tsx               # Root component
 ├── index.css             # Global styles
 ├── temporal.d.ts         # Global Temporal type declarations
-├── domain/               # Domain types, utilities (calendar, family, weather)
-├── features/             # Feature modules (weather, calendar, navigation, dashboard, kiosk)
+├── domain/               # Domain types, utilities (calendar, family, weather, chores)
+├── features/             # Feature modules (weather, calendar, chores, navigation, dashboard, kiosk)
 ├── shared/
 │   ├── components/       # Shared UI components
 │   ├── hooks/            # Shared React hooks

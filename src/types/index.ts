@@ -26,3 +26,15 @@ export type {
   DailyForecast,
   WeatherResponse,
 } from '@/domain/weather/types'
+
+// Chores domain types
+export type {
+  ChoresData,
+  ChoreInstance,
+  MasterChore,
+  ChoreCategory,
+  ChoreTag,
+  ChoreFrequency,
+  ExpirationBehavior,
+  InstanceStatus,
+} from '@/domain/chores/types'

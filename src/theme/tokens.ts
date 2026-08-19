@@ -44,6 +44,16 @@ export const colors = {
   danger: 'var(--dt-danger)',
   dangerBg: 'var(--dt-danger-bg)',
   dangerText: 'var(--dt-danger-text)',
+
+  /** Chores status colors. */
+  choresOpen: 'var(--dt-chores-open)',
+  choresClaimed: 'var(--dt-chores-claimed)',
+  choresAssigned: 'var(--dt-chores-assigned)',
+  choresInProgress: 'var(--dt-chores-in-progress)',
+  choresPendingSignoff: 'var(--dt-chores-pending-signoff)',
+  choresCompleted: 'var(--dt-chores-completed)',
+  choresOverdue: 'var(--dt-chores-overdue)',
+  choresExpiringSoon: 'var(--dt-chores-expiring-soon)',
 } as const
 
 /**
