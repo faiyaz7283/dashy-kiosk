@@ -5,7 +5,7 @@
  * or loaded from an API in the future.
  */
 
-import { Calendar, CheckSquare, Star, BookOpen, Image, List } from 'lucide-react'
+import { Calendar, CheckSquare } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 /**
@@ -23,8 +23,7 @@ export interface NavItem {
 /**
  * Sidebar navigation items.
  *
- * Currently only Calendar is functional. Other items are placeholders
- * for future features.
+ * Currently Calendar and Chores are functional.
  */
 export const NAV_ITEMS: NavItem[] = [
   {
@@ -33,28 +32,8 @@ export const NAV_ITEMS: NavItem[] = [
     active: true,
   },
   {
-    label: 'Tasks',
+    label: 'Chores',
     icon: CheckSquare,
-    active: false,
-  },
-  {
-    label: 'Rewards',
-    icon: Star,
-    active: false,
-  },
-  {
-    label: 'Meals',
-    icon: BookOpen,
-    active: false,
-  },
-  {
-    label: 'Photos',
-    icon: Image,
-    active: false,
-  },
-  {
-    label: 'Lists',
-    icon: List,
-    active: false,
+    active: true,
   },
 ]

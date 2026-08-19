@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react'
 import { Header } from '@/features/dashboard/Header'
 import { Sidebar } from '@/features/navigation/Sidebar'
+import type { ActiveFeature } from '@/features/navigation/Sidebar'
 import { FamilyPills } from '@/features/dashboard/FamilyPills'
 import { DensityBadge } from '@/features/dashboard/DensityBadge'
 import { StickyArea } from '@/features/kiosk/components/StickyArea'
@@ -18,6 +19,7 @@ import { WeekGrid } from '@/features/calendar/views/WeekGrid'
 import { MonthView } from '@/features/calendar/views/MonthView'
 import { DayView } from '@/features/calendar/views/DayView'
 import { YearView } from '@/features/calendar/views/YearView'
+import { ChoresView } from '@/features/chores/views/ChoresView'
 import { StatusBar } from '@/features/navigation/StatusBar'
 import { DateDisplay } from '@/features/calendar/components/DateDisplay'
 import { LoadingSkeleton } from '@/shared/components/LoadingSkeleton'
@@ -44,6 +46,7 @@ import { useTheme } from '@/theme/ThemeContext'
 export function AppShell() {
   const [backendReady, setBackendReady] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [activeFeature, setActiveFeature] = useState<ActiveFeature>('calendar')
 
   const {
     currentView,
@@ -233,14 +236,16 @@ export function AppShell() {
         zoom: uiScale,
       }}
     >
-      {/* Side navigation arrows */}
-      <SideNav
-        onPrevious={navigatePrevious}
-        onNext={navigateNext}
-        previousTitle={`Previous ${currentView}`}
-        nextTitle={`Next ${currentView}`}
-        sidebarWidth={sidebarWidth}
-      />
+      {/* Side navigation arrows (calendar only) */}
+      {activeFeature === 'calendar' && (
+        <SideNav
+          onPrevious={navigatePrevious}
+          onNext={navigateNext}
+          previousTitle={`Previous ${currentView}`}
+          nextTitle={`Next ${currentView}`}
+          sidebarWidth={sidebarWidth}
+        />
+      )}
 
       {/* Unified sticky area with auto-hide */}
       <StickyArea
@@ -259,47 +264,66 @@ export function AppShell() {
                 compact={headerCompact}
               />
             )}
-            <DensityBadge
-              density={densityInfo.density}
-              label={headerCompact ? densityInfo.shortLabel : densityInfo.label}
-            />
-            <div
-              style={{ width: '1px', height: '24px', background: colors.border, margin: '0 4px' }}
-            />
-            <ViewSwitcher
-              activeView={currentView}
-              onViewChange={setCurrentView}
-              compact={headerCompact}
-            />
-            <div
-              style={{ width: '1px', height: '24px', background: colors.border, margin: '0 4px' }}
-            />
-            <button
-              onClick={navigateToday}
-              title="Today"
-              style={{
-                padding: '6px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: isViewingToday ? colors.primary : colors.textMuted,
-                background: isViewingToday ? colors.primaryLight : colors.white,
-                border: isViewingToday ? 'none' : `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              {headerCompact ? 'T' : 'Today'}
-            </button>
-            <div
-              style={{ width: '1px', height: '24px', background: colors.border, margin: '0 4px' }}
-            />
-            <DateDisplay
-              currentDate={currentDate}
-              currentView={currentView}
-              onDateChange={setCurrentDate}
-              compact={headerCompact}
-            />
+            {activeFeature === 'calendar' && (
+              <>
+                <DensityBadge
+                  density={densityInfo.density}
+                  label={headerCompact ? densityInfo.shortLabel : densityInfo.label}
+                />
+                <div
+                  style={{
+                    width: '1px',
+                    height: '24px',
+                    background: colors.border,
+                    margin: '0 4px',
+                  }}
+                />
+                <ViewSwitcher
+                  activeView={currentView}
+                  onViewChange={setCurrentView}
+                  compact={headerCompact}
+                />
+                <div
+                  style={{
+                    width: '1px',
+                    height: '24px',
+                    background: colors.border,
+                    margin: '0 4px',
+                  }}
+                />
+                <button
+                  onClick={navigateToday}
+                  title="Today"
+                  style={{
+                    padding: '6px 16px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: isViewingToday ? colors.primary : colors.textMuted,
+                    background: isViewingToday ? colors.primaryLight : colors.white,
+                    border: isViewingToday ? 'none' : `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {headerCompact ? 'T' : 'Today'}
+                </button>
+                <div
+                  style={{
+                    width: '1px',
+                    height: '24px',
+                    background: colors.border,
+                    margin: '0 4px',
+                  }}
+                />
+                <DateDisplay
+                  currentDate={currentDate}
+                  currentView={currentView}
+                  onDateChange={setCurrentDate}
+                  compact={headerCompact}
+                />
+              </>
+            )}
           </Header>
         }
         visible={headerVisible}
@@ -307,9 +331,15 @@ export function AppShell() {
 
       {/* Main content area */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <Sidebar state={sidebarState} onChange={setSidebarState} onRefreshCalendar={forceRefresh} />
+        <Sidebar
+          state={sidebarState}
+          onChange={setSidebarState}
+          onRefreshCalendar={forceRefresh}
+          activeFeature={activeFeature}
+          onFeatureChange={setActiveFeature}
+        />
         <main style={{ flex: 1, overflowY: 'auto', padding: `${spacing.xl}px` }}>
-          {renderView()}
+          {activeFeature === 'calendar' ? renderView() : <ChoresView members={familyMembers} />}
         </main>
       </div>
 

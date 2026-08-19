@@ -3,10 +3,15 @@ import { RefreshCw } from 'lucide-react'
 import type { SidebarState } from '@/features/dashboard/hooks/useSidebar'
 import { NAV_ITEMS } from '@/shared/config/navigation'
 
+/** Which feature is currently active. */
+export type ActiveFeature = 'calendar' | 'chores'
+
 interface SidebarProps {
   state: SidebarState
   onChange: (state: SidebarState) => void
   onRefreshCalendar?: () => void
+  activeFeature?: ActiveFeature
+  onFeatureChange?: (feature: ActiveFeature) => void
 }
 
 const SIDEBAR_FULL = 224 // w-56 = 14rem = 224px
@@ -14,7 +19,13 @@ const SIDEBAR_COLLAPSED = 64 // w-16 = 4rem = 64px
 const SIDEBAR_HIDDEN = 0
 const DRAG_THRESHOLD = 5 // pixels to distinguish click from drag
 
-export function Sidebar({ state, onChange, onRefreshCalendar }: SidebarProps) {
+export function Sidebar({
+  state,
+  onChange,
+  onRefreshCalendar,
+  activeFeature = 'calendar',
+  onFeatureChange,
+}: SidebarProps) {
   const navRef = useRef<HTMLElement>(null)
   const isDragging = useRef(false)
   const dragStartX = useRef(0)
@@ -166,41 +177,54 @@ export function Sidebar({ state, onChange, onRefreshCalendar }: SidebarProps) {
 
       {/* Nav Items */}
       <div className="flex-1 flex flex-col gap-1 pt-4">
-        {NAV_ITEMS.map((item, i) => (
-          <div
-            key={item.label}
-            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors whitespace-nowrap overflow-hidden ${
-              i === 0 ? 'font-semibold' : 'hover:bg-bg-hover'
-            }`}
-            style={{
-              borderRadius: '10px',
-              margin: '0 8px',
-              background: i === 0 ? 'var(--dt-primary-light)' : 'transparent',
-              color: i === 0 ? 'var(--dt-primary)' : 'var(--dt-text-secondary)',
-            }}
-          >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            <span
-              data-sidebar-label
-              className={`transition-opacity duration-150 ${isCollapsed || isHidden ? 'opacity-0 pointer-events-none' : ''}`}
+        {NAV_ITEMS.map((item) => {
+          const itemFeature = item.label.toLowerCase() as ActiveFeature
+          const isActive = itemFeature === activeFeature
+
+          return (
+            <div
+              key={item.label}
+              className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors whitespace-nowrap overflow-hidden ${
+                isActive ? 'font-semibold' : 'hover:bg-bg-hover'
+              }`}
+              style={{
+                borderRadius: '10px',
+                margin: '0 8px',
+                background: isActive ? 'var(--dt-primary-light)' : 'transparent',
+                color: isActive ? 'var(--dt-primary)' : 'var(--dt-text-secondary)',
+              }}
+              onClick={() => onFeatureChange?.(itemFeature)}
             >
-              {item.label}
-            </span>
-            {/* Refresh icon next to Calendar link (full state only) */}
-            {i === 0 && !isHidden && !isCollapsed && onRefreshCalendar && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRefreshCalendar()
-                }}
-                className="ml-auto p-1 hover:bg-primary-light-hover rounded transition-colors"
-                title="Refresh calendar"
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              <span
+                data-sidebar-label
+                className={`transition-opacity duration-150 ${isCollapsed || isHidden ? 'opacity-0 pointer-events-none' : ''}`}
               >
-                <RefreshCw className="w-3.5 h-3.5" style={{ color: 'var(--dt-primary-ring)' }} />
-              </button>
-            )}
-          </div>
-        ))}
+                {item.label}
+              </span>
+              {/* Refresh icon next to Calendar link (full state only) */}
+              {itemFeature === 'calendar' &&
+                isActive &&
+                !isHidden &&
+                !isCollapsed &&
+                onRefreshCalendar && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRefreshCalendar()
+                    }}
+                    className="ml-auto p-1 hover:bg-primary-light-hover rounded transition-colors"
+                    title="Refresh calendar"
+                  >
+                    <RefreshCw
+                      className="w-3.5 h-3.5"
+                      style={{ color: 'var(--dt-primary-ring)' }}
+                    />
+                  </button>
+                )}
+            </div>
+          )
+        })}
       </div>
     </nav>
   )

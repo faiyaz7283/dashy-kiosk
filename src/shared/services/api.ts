@@ -288,9 +288,7 @@ export async function updateInstanceStatus(
  *
  * @param name - Category display name.
  */
-export async function createCategory(
-  name: string,
-): Promise<Record<string, unknown>> {
+export async function createCategory(name: string): Promise<Record<string, unknown>> {
   return postWithRetry(`${API_BASE}${ENDPOINTS.chores.url}/categories`, { name })
 }
 
@@ -299,9 +297,7 @@ export async function createCategory(
  *
  * @param name - Tag display name.
  */
-export async function createTag(
-  name: string,
-): Promise<Record<string, unknown>> {
+export async function createTag(name: string): Promise<Record<string, unknown>> {
   return postWithRetry(`${API_BASE}${ENDPOINTS.chores.url}/tags`, { name })
 }
 
