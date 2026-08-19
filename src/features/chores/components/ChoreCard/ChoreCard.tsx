@@ -9,6 +9,7 @@
 import { useState } from 'react'
 import type { ChoreInstance, MasterChore, FamilyMember } from '@/types'
 import { getStatusColor, getStatusLabel } from '@/domain/chores/utils'
+import { getMemberColorPalette } from '@/shared/utils/memberColors'
 import { colors, spacing, radii, typography } from '@/theme/tokens'
 
 /** Props for the ChoreCard component. */
@@ -34,6 +35,18 @@ function resolveMemberName(memberKey: string | null, members: FamilyMember[]): s
   if (!memberKey) return ''
   const member = members.find((m) => m.key === memberKey)
   return member?.name ?? 'Unknown'
+}
+
+/**
+ * Resolves the primary member key for an instance (for color coding).
+ *
+ * Priority: completed_by \> claimed_by \> assigned_to.
+ *
+ * @param instance - The chore instance.
+ * @returns The member key of the primary actor, or null.
+ */
+function resolvePrimaryMemberKey(instance: ChoreInstance): string | null {
+  return instance.completed_by ?? instance.claimed_by ?? instance.assigned_to
 }
 
 /**
@@ -70,6 +83,14 @@ export function ChoreCard({ instance, masterChore, members, onClick }: ChoreCard
   const statusColor = getStatusColor(instance.status)
   const statusLabel = getStatusLabel(instance.status)
 
+  // Resolve member color for the left border
+  const primaryMemberKey = resolvePrimaryMemberKey(instance)
+  const primaryMember = primaryMemberKey
+    ? members.find((m) => m.key === primaryMemberKey)
+    : undefined
+  const memberPalette = primaryMember ? getMemberColorPalette(primaryMember.color) : undefined
+  const borderColor = memberPalette?.avatar ?? colors.border
+
   const attribution = (() => {
     if (instance.completed_by) {
       return `Completed by ${resolveMemberName(instance.completed_by, members)}`
@@ -96,7 +117,7 @@ export function ChoreCard({ instance, masterChore, members, onClick }: ChoreCard
       onMouseLeave={() => setHovered(false)}
       style={{
         ...styles.card,
-        borderLeftColor: statusColor,
+        borderLeftColor: borderColor,
         transform: hovered ? 'scale(1.01)' : 'scale(1)',
         cursor: onClick ? 'pointer' : 'default',
       }}

@@ -21,6 +21,8 @@ vi.mock('@/features/chores/hooks/useChores', () => ({
 vi.mock('@/features/chores/hooks/useChoreActions', () => ({
   useChoreActions: () => ({
     createMaster: vi.fn(),
+    updateMaster: vi.fn(),
+    deleteMaster: vi.fn(),
     claimInstance: vi.fn(),
     assignInstance: vi.fn(),
     updateStatus: vi.fn(),

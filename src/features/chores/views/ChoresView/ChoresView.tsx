@@ -2,22 +2,31 @@
  * ChoresView — top-level view for the chores feature.
  *
  * Fetches chores data via useChores hook, composes the ChoreBoard
- * with family members, and handles loading/error states.
+ * with family members, and handles loading/error states. Manages
+ * modal state for both create and edit modes.
  */
 
-import { useState } from 'react'
-import type { ChoreInstance, FamilyMember } from '@/types'
+import { useState, useEffect } from 'react'
+import type { ChoreInstance, FamilyMember, MasterChore } from '@/types'
 import { useChores } from '@/features/chores/hooks/useChores'
 import { useChoreActions } from '@/features/chores/hooks/useChoreActions'
 import { ChoreBoard } from '@/features/chores/components/ChoreBoard'
 import { ChoreModal } from '@/features/chores/components/ChoreModal'
-import type { ChoreFormData } from '@/features/chores/components/ChoreModal'
+import type {
+  ChoreFormData,
+  ChoreModalMode,
+  ChoreModalInitialData,
+} from '@/features/chores/components/ChoreModal'
 import { colors } from '@/theme/tokens'
 
 /** Props for the ChoresView component. */
 export interface ChoresViewProps {
   /** Family members for column rendering. */
   members: FamilyMember[]
+  /** When true, opens the create chore modal. Reset to false after opening. */
+  openCreateModal?: boolean
+  /** Callback when the create modal trigger has been consumed. */
+  onCreateModalConsumed?: () => void
 }
 
 /**
@@ -26,25 +35,71 @@ export interface ChoresViewProps {
  * @param props - Component props.
  * @returns The chores view with board and modal.
  */
-export function ChoresView({ members }: ChoresViewProps) {
+export function ChoresView({ members, openCreateModal, onCreateModalConsumed }: ChoresViewProps) {
   const { data, loading, error, refetch } = useChores()
   const actions = useChoreActions(refetch)
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<ChoreModalMode>('create')
+  const [editingChore, setEditingChore] = useState<MasterChore | null>(null)
+  const [editInitialData, setEditInitialData] = useState<ChoreModalInitialData | undefined>(
+    undefined,
+  )
 
-  /** Handle clicking a chore card — opens modal with instance details. */
-  const handleChoreClick = (_instance: ChoreInstance) => {
+  /** Open create modal when triggered from sidebar. */
+  useEffect(() => {
+    if (openCreateModal) {
+      setModalMode('create')
+      setEditingChore(null)
+      setEditInitialData(undefined)
+      setModalOpen(true)
+      onCreateModalConsumed?.()
+    }
+  }, [openCreateModal, onCreateModalConsumed])
+
+  /** Handle clicking a chore card — opens edit modal with chore data. */
+  const handleChoreClick = (instance: ChoreInstance) => {
+    if (!data) return
+    const masterChore = data.master_chores.find((mc) => mc.id === instance.master_chore_id)
+    if (!masterChore) return
+
+    setModalMode('edit')
+    setEditingChore(masterChore)
+    setEditInitialData({
+      name: masterChore.name,
+      category_id: masterChore.category.id,
+      tag_ids: masterChore.tags.map((t) => t.id),
+      difficulty: masterChore.difficulty,
+      frequency: masterChore.frequency,
+      estimated_minutes: masterChore.estimated_minutes,
+      due_time: masterChore.due_time,
+      due_date: masterChore.due_date,
+      expiration_behavior: masterChore.expiration_behavior,
+    })
     setModalOpen(true)
   }
 
   /** Handle closing the modal. */
   const handleCloseModal = () => {
     setModalOpen(false)
+    setEditingChore(null)
+    setEditInitialData(undefined)
   }
 
-  /** Handle submitting the create chore form. */
+  /** Handle submitting the create or edit chore form. */
   const handleSubmitChore = async (formData: ChoreFormData) => {
-    await actions.createMaster(formData)
+    if (modalMode === 'edit' && editingChore) {
+      await actions.updateMaster(editingChore.id, formData)
+    } else {
+      await actions.createMaster(formData)
+    }
+    handleCloseModal()
+  }
+
+  /** Handle deleting the chore being edited. */
+  const handleDeleteChore = async () => {
+    if (!editingChore) return
+    await actions.deleteMaster(editingChore.id)
     handleCloseModal()
   }
 
@@ -81,6 +136,9 @@ export function ChoresView({ members }: ChoresViewProps) {
         onCreateCategory={actions.createCategory}
         onCreateTag={actions.createTag}
         currentMemberId={members[0]?.key ?? ''}
+        mode={modalMode}
+        {...(editInitialData ? { initialData: editInitialData } : {})}
+        {...(modalMode === 'edit' ? { onDelete: handleDeleteChore } : {})}
       />
     </div>
   )

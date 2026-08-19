@@ -207,6 +207,73 @@ async function postWithRetry<T>(
   throw lastError || new Error('Failed to post after retries')
 }
 
+/**
+ * PUT with exponential backoff retry.
+ *
+ * @param url - Full URL to send the PUT request to.
+ * @param body - Request body (will be JSON-serialized).
+ * @param maxRetries - Maximum number of retry attempts (default: 3).
+ * @param delayMs - Initial delay in milliseconds (default: 2000).
+ * @returns Parsed JSON response.
+ */
+async function putWithRetry<T>(
+  url: string,
+  body: unknown,
+  maxRetries = 3,
+  delayMs = 2000,
+): Promise<T> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`)
+      }
+      return response.json()
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs * Math.pow(2, attempt)))
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to put after retries')
+}
+
+/**
+ * DELETE with exponential backoff retry.
+ *
+ * @param url - Full URL to send the DELETE request to.
+ * @param maxRetries - Maximum number of retry attempts (default: 3).
+ * @param delayMs - Initial delay in milliseconds (default: 2000).
+ */
+async function deleteWithRetry(url: string, maxRetries = 3, delayMs = 2000): Promise<void> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, { method: 'DELETE' })
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`)
+      }
+      return
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs * Math.pow(2, attempt)))
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to delete after retries')
+}
+
 // ---------------------------------------------------------------------------
 // Chores API
 // ---------------------------------------------------------------------------
@@ -314,4 +381,27 @@ export async function approveMasterChore(
   return postWithRetry(`${API_BASE}${ENDPOINTS.chores.url}/masters/${choreId}/approve`, {
     approver_id: approverId,
   })
+}
+
+/**
+ * Update an existing master chore template.
+ *
+ * @param choreId - The master chore ID to update.
+ * @param data - Updated master chore fields.
+ * @returns The updated master chore.
+ */
+export async function updateMasterChore(
+  choreId: string,
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  return putWithRetry(`${API_BASE}${ENDPOINTS.chores.url}/masters/${choreId}`, data)
+}
+
+/**
+ * Delete a master chore template.
+ *
+ * @param choreId - The master chore ID to delete.
+ */
+export async function deleteMasterChore(choreId: string): Promise<void> {
+  return deleteWithRetry(`${API_BASE}${ENDPOINTS.chores.url}/masters/${choreId}`)
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Plus } from 'lucide-react'
 import type { SidebarState } from '@/features/dashboard/hooks/useSidebar'
 import { NAV_ITEMS } from '@/shared/config/navigation'
 
@@ -10,6 +10,7 @@ interface SidebarProps {
   state: SidebarState
   onChange: (state: SidebarState) => void
   onRefreshCalendar?: () => void
+  onAddChore?: () => void
   activeFeature?: ActiveFeature
   onFeatureChange?: (feature: ActiveFeature) => void
 }
@@ -23,6 +24,7 @@ export function Sidebar({
   state,
   onChange,
   onRefreshCalendar,
+  onAddChore,
   activeFeature = 'calendar',
   onFeatureChange,
 }: SidebarProps) {
@@ -222,6 +224,19 @@ export function Sidebar({
                     />
                   </button>
                 )}
+              {/* Add chore icon next to Chores link (full state only) */}
+              {itemFeature === 'chores' && isActive && !isHidden && !isCollapsed && onAddChore && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onAddChore()
+                  }}
+                  className="ml-auto p-1 hover:bg-primary-light-hover rounded transition-colors"
+                  title="Add new chore"
+                >
+                  <Plus className="w-3.5 h-3.5" style={{ color: 'var(--dt-primary-ring)' }} />
+                </button>
+              )}
             </div>
           )
         })}

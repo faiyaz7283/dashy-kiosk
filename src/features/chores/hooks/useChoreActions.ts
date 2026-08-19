@@ -9,6 +9,8 @@
 import { useCallback } from 'react'
 import {
   createMasterChore,
+  updateMasterChore as apiUpdateMasterChore,
+  deleteMasterChore as apiDeleteMasterChore,
   claimInstance as apiClaimInstance,
   assignInstance as apiAssignInstance,
   updateInstanceStatus as apiUpdateInstanceStatus,
@@ -23,6 +25,10 @@ import type { ChoreFormData } from '@/features/chores/components/ChoreModal'
 export interface UseChoreActionsReturn {
   /** Create a new master chore template. */
   createMaster: (data: ChoreFormData) => Promise<void>
+  /** Update an existing master chore template. */
+  updateMaster: (choreId: string, data: ChoreFormData) => Promise<void>
+  /** Delete a master chore template. */
+  deleteMaster: (choreId: string) => Promise<void>
   /** Claim an open pool instance for a member. */
   claimInstance: (instanceId: string, memberId: string) => Promise<void>
   /** Assign an instance to a member. */
@@ -50,6 +56,22 @@ export function useChoreActions(refetch: () => void): UseChoreActionsReturn {
   const createMaster = useCallback(
     async (data: ChoreFormData) => {
       await createMasterChore(data as unknown as Record<string, unknown>)
+      refetch()
+    },
+    [refetch],
+  )
+
+  const updateMaster = useCallback(
+    async (choreId: string, data: ChoreFormData) => {
+      await apiUpdateMasterChore(choreId, data as unknown as Record<string, unknown>)
+      refetch()
+    },
+    [refetch],
+  )
+
+  const deleteMaster = useCallback(
+    async (choreId: string) => {
+      await apiDeleteMasterChore(choreId)
       refetch()
     },
     [refetch],
@@ -105,6 +127,8 @@ export function useChoreActions(refetch: () => void): UseChoreActionsReturn {
 
   return {
     createMaster,
+    updateMaster,
+    deleteMaster,
     claimInstance,
     assignInstance,
     updateStatus,

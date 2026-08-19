@@ -47,6 +47,7 @@ export function AppShell() {
   const [backendReady, setBackendReady] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [activeFeature, setActiveFeature] = useState<ActiveFeature>('calendar')
+  const [showCreateChore, setShowCreateChore] = useState(false)
 
   const {
     currentView,
@@ -335,11 +336,20 @@ export function AppShell() {
           state={sidebarState}
           onChange={setSidebarState}
           onRefreshCalendar={forceRefresh}
+          onAddChore={() => setShowCreateChore(true)}
           activeFeature={activeFeature}
           onFeatureChange={setActiveFeature}
         />
         <main style={{ flex: 1, overflowY: 'auto', padding: `${spacing.xl}px` }}>
-          {activeFeature === 'calendar' ? renderView() : <ChoresView members={familyMembers} />}
+          {activeFeature === 'calendar' ? (
+            renderView()
+          ) : (
+            <ChoresView
+              members={familyMembers}
+              openCreateModal={showCreateChore}
+              onCreateModalConsumed={() => setShowCreateChore(false)}
+            />
+          )}
         </main>
       </div>
 

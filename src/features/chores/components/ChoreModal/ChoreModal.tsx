@@ -40,6 +40,31 @@ export interface ChoreFormData {
   created_by: string
 }
 
+/** Modal mode — determines title, button labels, and available actions. */
+export type ChoreModalMode = 'create' | 'edit'
+
+/** Initial data for pre-filling the form in edit mode. */
+export interface ChoreModalInitialData {
+  /** Chore name. */
+  name: string
+  /** Selected category ID. */
+  category_id: string
+  /** Selected tag IDs. */
+  tag_ids: string[]
+  /** Difficulty level (1–5). */
+  difficulty: number
+  /** How often instances are generated. */
+  frequency: ChoreFrequency
+  /** Estimated time in minutes, or null. */
+  estimated_minutes: number | null
+  /** Due time-of-day (ISO string), or null. */
+  due_time: string | null
+  /** Due date (ISO string), or null. */
+  due_date: string | null
+  /** What happens when the period expires. */
+  expiration_behavior: ExpirationBehavior
+}
+
 /** Props for the ChoreModal component. */
 export interface ChoreModalProps {
   /** Whether the modal is visible. */
@@ -58,6 +83,12 @@ export interface ChoreModalProps {
   onCreateTag: (name: string) => void
   /** Member ID of the current user (creator). */
   currentMemberId: string
+  /** Modal mode — 'create' for new chores, 'edit' for existing. */
+  mode?: ChoreModalMode
+  /** Pre-filled form data for edit mode. */
+  initialData?: ChoreModalInitialData
+  /** Delete handler for edit mode. */
+  onDelete?: () => void
 }
 
 /** All frequency options. */
@@ -91,6 +122,9 @@ export function ChoreModal({
   onCreateCategory,
   onCreateTag,
   currentMemberId,
+  mode = 'create',
+  initialData,
+  onDelete,
 }: ChoreModalProps) {
   const uiScale = useUiScale()
 
@@ -108,7 +142,7 @@ export function ChoreModal({
   const [showNewCategory, setShowNewCategory] = useState(false)
   const [showNewTag, setShowNewTag] = useState(false)
 
-  /** Reset form when modal opens/closes. */
+  /** Reset or pre-fill form when modal opens/closes. */
   useEffect(() => {
     if (!isOpen) {
       setName('')
@@ -124,8 +158,24 @@ export function ChoreModal({
       setNewTagName('')
       setShowNewCategory(false)
       setShowNewTag(false)
+    } else if (mode === 'edit' && initialData) {
+      setName(initialData.name)
+      setCategoryId(initialData.category_id)
+      setSelectedTagIds(initialData.tag_ids)
+      setDifficulty(initialData.difficulty)
+      setFrequency(initialData.frequency)
+      setEstimatedMinutes(
+        initialData.estimated_minutes !== null ? String(initialData.estimated_minutes) : '',
+      )
+      setDueTime(initialData.due_time ?? '')
+      setDueDate(initialData.due_date ?? '')
+      setExpirationBehavior(initialData.expiration_behavior)
+      setNewCategoryName('')
+      setNewTagName('')
+      setShowNewCategory(false)
+      setShowNewTag(false)
     }
-  }, [isOpen])
+  }, [isOpen, mode, initialData])
 
   /** Handle form submission. */
   const handleSubmit = useCallback(
@@ -199,8 +249,8 @@ export function ChoreModal({
       >
         {/* Header */}
         <div style={styles.modalHeader}>
-          <h2 style={styles.modalTitle}>New Chore</h2>
-          <button onClick={onClose} style={styles.closeButton}>
+          <h2 style={styles.modalTitle}>{mode === 'edit' ? 'Edit Chore' : 'New Chore'}</h2>
+          <button onClick={onClose} style={styles.closeButton} aria-label="Close modal">
             <X size={18} />
           </button>
         </div>
@@ -399,10 +449,20 @@ export function ChoreModal({
             </select>
           </div>
 
-          {/* Submit */}
-          <button type="submit" style={styles.submitBtn}>
-            Create Chore
-          </button>
+          {/* Action buttons */}
+          <div style={styles.actionRow}>
+            {mode === 'edit' && onDelete && (
+              <button type="button" onClick={onDelete} style={styles.deleteBtn}>
+                Delete
+              </button>
+            )}
+            <button type="button" onClick={onClose} style={styles.cancelBtn}>
+              Cancel
+            </button>
+            <button type="submit" style={styles.submitBtn}>
+              {mode === 'edit' ? 'Save Changes' : 'Create Chore'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -539,8 +599,36 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     transition: 'all 0.15s',
   },
-  submitBtn: {
+  actionRow: {
+    display: 'flex',
+    gap: `${spacing.sm}px`,
     marginTop: `${spacing.sm}px`,
+  },
+  deleteBtn: {
+    padding: `${spacing.md}px ${spacing.lg}px`,
+    borderRadius: `${radii.lg}px`,
+    border: 'none',
+    background: colors.danger,
+    color: colors.white,
+    fontSize: `${typography.pillText.size}px`,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'opacity 0.15s',
+  },
+  cancelBtn: {
+    flex: 1,
+    padding: `${spacing.md}px`,
+    borderRadius: `${radii.lg}px`,
+    border: 'none',
+    background: colors.border,
+    color: colors.textSecondary,
+    fontSize: `${typography.pillText.size}px`,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'opacity 0.15s',
+  },
+  submitBtn: {
+    flex: 1,
     padding: `${spacing.md}px`,
     borderRadius: `${radii.lg}px`,
     border: 'none',
@@ -549,6 +637,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: `${typography.pillText.size}px`,
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'background 0.15s',
+    transition: 'opacity 0.15s',
   },
 }

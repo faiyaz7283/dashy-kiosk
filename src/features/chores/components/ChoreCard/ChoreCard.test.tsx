@@ -173,4 +173,56 @@ describe('ChoreCard', () => {
       unmount()
     }
   })
+
+  it('uses default border color when no member is assigned', () => {
+    const { container } = render(
+      <ChoreCard instance={mockInstance} masterChore={mockMasterChore} members={mockMembers} />,
+    )
+    const card = container.firstChild as HTMLElement
+    // Unclaimed instance — should use default border color (var(--dt-border))
+    expect(card.style.borderLeftColor).toBe('var(--dt-border)')
+  })
+
+  it('uses member color for border when instance is claimed', () => {
+    const claimedInstance = { ...mockInstance, status: 'claimed' as const, claimed_by: 'faiyaz' }
+    const { container } = render(
+      <ChoreCard instance={claimedInstance} masterChore={mockMasterChore} members={mockMembers} />,
+    )
+    const card = container.firstChild as HTMLElement
+    // Faiyaz's color is #4A90E2 — jsdom converts hex to rgb
+    expect(card.style.borderLeftColor).toBe('rgb(74, 144, 226)')
+  })
+
+  it('uses member color for border when instance is assigned', () => {
+    const assignedInstance = {
+      ...mockInstance,
+      status: 'assigned' as const,
+      assigned_to: 'trisha',
+      assigned_by: 'faiyaz',
+    }
+    const { container } = render(
+      <ChoreCard instance={assignedInstance} masterChore={mockMasterChore} members={mockMembers} />,
+    )
+    const card = container.firstChild as HTMLElement
+    // Trisha's color is #E24A8D — jsdom converts hex to rgb
+    expect(card.style.borderLeftColor).toBe('rgb(226, 74, 141)')
+  })
+
+  it('uses completed_by member color for border when completed', () => {
+    const completedInstance = {
+      ...mockInstance,
+      status: 'completed' as const,
+      completed_by: 'trisha',
+    }
+    const { container } = render(
+      <ChoreCard
+        instance={completedInstance}
+        masterChore={mockMasterChore}
+        members={mockMembers}
+      />,
+    )
+    const card = container.firstChild as HTMLElement
+    // Trisha's color is #E24A8D — jsdom converts hex to rgb
+    expect(card.style.borderLeftColor).toBe('rgb(226, 74, 141)')
+  })
 })

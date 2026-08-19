@@ -1,2 +1,2 @@
 export { ChoreModal } from './ChoreModal'
-export type { ChoreFormData } from './ChoreModal'
+export type { ChoreFormData, ChoreModalMode, ChoreModalInitialData } from './ChoreModal'

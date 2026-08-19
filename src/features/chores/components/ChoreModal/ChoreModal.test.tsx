@@ -39,9 +39,14 @@ describe('ChoreModal', () => {
     expect(screen.queryByText('New Chore')).not.toBeInTheDocument()
   })
 
-  it('renders modal title when open', () => {
+  it('renders "New Chore" title in create mode', () => {
     render(<ChoreModal {...defaultProps} />)
     expect(screen.getByText('New Chore')).toBeInTheDocument()
+  })
+
+  it('renders "Edit Chore" title in edit mode', () => {
+    render(<ChoreModal {...defaultProps} mode="edit" />)
+    expect(screen.getByText('Edit Chore')).toBeInTheDocument()
   })
 
   it('renders all form fields', () => {
@@ -78,8 +83,7 @@ describe('ChoreModal', () => {
 
   it('calls onClose when close button is clicked', () => {
     render(<ChoreModal {...defaultProps} />)
-    const closeButton = screen.getByRole('button', { name: '' })
-    // The X button (close)
+    const closeButton = screen.getByLabelText('Close modal')
     fireEvent.click(closeButton)
     expect(defaultProps.onClose).toHaveBeenCalled()
   })
@@ -103,8 +107,61 @@ describe('ChoreModal', () => {
     expect(screen.getByText('+ Add Tag')).toBeInTheDocument()
   })
 
-  it('renders submit button', () => {
+  it('renders "Create Chore" submit button in create mode', () => {
     render(<ChoreModal {...defaultProps} />)
     expect(screen.getByText('Create Chore')).toBeInTheDocument()
+  })
+
+  it('renders "Save Changes" submit button in edit mode', () => {
+    render(<ChoreModal {...defaultProps} mode="edit" />)
+    expect(screen.getByText('Save Changes')).toBeInTheDocument()
+  })
+
+  it('renders Cancel button in both modes', () => {
+    const { unmount } = render(<ChoreModal {...defaultProps} />)
+    expect(screen.getByText('Cancel')).toBeInTheDocument()
+    unmount()
+
+    render(<ChoreModal {...defaultProps} mode="edit" />)
+    expect(screen.getByText('Cancel')).toBeInTheDocument()
+  })
+
+  it('renders Delete button only in edit mode with onDelete', () => {
+    const { unmount } = render(<ChoreModal {...defaultProps} />)
+    expect(screen.queryByText('Delete')).not.toBeInTheDocument()
+    unmount()
+
+    render(<ChoreModal {...defaultProps} mode="edit" onDelete={vi.fn()} />)
+    expect(screen.getByText('Delete')).toBeInTheDocument()
+  })
+
+  it('calls onDelete when Delete button is clicked', () => {
+    const onDelete = vi.fn()
+    render(<ChoreModal {...defaultProps} mode="edit" onDelete={onDelete} />)
+    fireEvent.click(screen.getByText('Delete'))
+    expect(onDelete).toHaveBeenCalled()
+  })
+
+  it('pre-fills form data in edit mode', () => {
+    render(
+      <ChoreModal
+        {...defaultProps}
+        mode="edit"
+        initialData={{
+          name: 'Test Chore',
+          category_id: 'cat-1',
+          tag_ids: ['tag-1'],
+          difficulty: 4,
+          frequency: 'daily',
+          estimated_minutes: 30,
+          due_time: '14:00',
+          due_date: '2026-08-20',
+          expiration_behavior: 'carry_over',
+        }}
+      />,
+    )
+
+    const nameInput = screen.getByDisplayValue('Test Chore')
+    expect(nameInput).toBeInTheDocument()
   })
 })
