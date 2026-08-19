@@ -204,34 +204,31 @@ export function Sidebar({
               >
                 {item.label}
               </span>
-              {/* Refresh icon next to Calendar link (full state only) */}
-              {itemFeature === 'calendar' &&
-                isActive &&
-                !isHidden &&
-                !isCollapsed &&
-                onRefreshCalendar && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onRefreshCalendar()
-                    }}
-                    className="ml-auto p-1 hover:bg-primary-light-hover rounded transition-colors"
-                    title="Refresh calendar"
-                  >
-                    <RefreshCw
-                      className="w-3.5 h-3.5"
-                      style={{ color: 'var(--dt-primary-ring)' }}
-                    />
-                  </button>
-                )}
-              {/* Add chore icon next to Chores link (full state only) */}
-              {itemFeature === 'chores' && isActive && !isHidden && !isCollapsed && onAddChore && (
+              {/* Refresh icon next to Calendar link (visible in full and collapsed states) */}
+              {itemFeature === 'calendar' && !isHidden && onRefreshCalendar && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRefreshCalendar()
+                  }}
+                  className={`p-1 hover:bg-primary-light-hover rounded transition-colors ${
+                    isCollapsed ? '' : 'ml-auto'
+                  }`}
+                  title="Refresh calendar"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" style={{ color: 'var(--dt-primary-ring)' }} />
+                </button>
+              )}
+              {/* Add chore icon next to Chores link (visible in full and collapsed states) */}
+              {itemFeature === 'chores' && !isHidden && onAddChore && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     onAddChore()
                   }}
-                  className="ml-auto p-1 hover:bg-primary-light-hover rounded transition-colors"
+                  className={`p-1 hover:bg-primary-light-hover rounded transition-colors ${
+                    isCollapsed ? '' : 'ml-auto'
+                  }`}
                   title="Add new chore"
                 >
                   <Plus className="w-3.5 h-3.5" style={{ color: 'var(--dt-primary-ring)' }} />
