@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open *)",
+      "Read(//Users/admin/dashy/dashy-kiosk-v2/mockups/**)",
+      "Bash(git show *)",
+      "computer_use__get_window_state",
+      "Bash(docker exec *)"
+    ]
+  },
+  "$version": 4
+}

@@ -3,7 +3,28 @@
 This file is read by all AI coding agents (Kimi Code, Claude Code, Qwen Code, Warp, etc.).
 It contains **hard behavior rules**, not project background. For project knowledge, hardware details, architecture, and deployment history, see `README.md`.
 
-## 1. pnpm Only (NON-NEGOTIABLE)
+## 1. Frontend Tech Stack (Latest Stable)
+
+All dependencies pinned to latest stable versions as of August 2026. Verify before upgrading.
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| **tailwindcss** | ^4.3.3 | Utility-first CSS framework |
+| **@tailwindcss/vite** | ^4.3.3 | Vite plugin for Tailwind v4 |
+| **@headlessui/react** | ^2.2.10 | Unstyled accessible UI primitives |
+| **react** | ^19.2.8 | UI library |
+| **react-dom** | ^19.2.8 | React DOM renderer |
+| **lucide-react** | ^1.31.0 | SVG icon library |
+| **vite** | ^8.2.0 | Build tool and dev server |
+| **typescript** | ^6.0.3 | Type system |
+| **vitest** | ^4.1.10 | Test runner |
+| **pnpm** | 11.22.0 | Package manager |
+
+**Mockup CDN:** Use `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4` (v4). Do NOT use `https://cdn.tailwindcss.com` (serves v3).
+
+**Dark mode in mockups:** Use `@custom-variant dark (&:where(.dark, .dark *))` in the `@theme` block. Toggle via `document.documentElement.classList.toggle('dark')`.
+
+## 2. pnpm Only (NON-NEGOTIABLE)
 
 Use **pnpm** as the sole package manager. Never use npm, yarn, or any other package manager. All pnpm commands run inside Docker containers via the orchestrator's Makefile targets (see section 2).
 
@@ -69,6 +90,36 @@ All four must pass before you tell the user the task is complete.
 - **Reusable logic goes in `src/shared/hooks/`** — not inside components.
 - **Shared types go in `src/types/`**.
 - **No emojis in source or UI** — use SVG icons.
+
+## 5b. Styling — Tailwind Only (NON-NEGOTIABLE)
+
+**Tailwind utility classes only.** No inline `style="..."` with `var(--dt-*)`. No `const styles` objects. No CSS Modules. No styled-components.
+
+**Why:** The frontend architecture audit (`docs/frontend-architecture-audit.md`) found three inconsistent styling patterns (inline styles, const styles objects, Tailwind) used simultaneously. This was resolved: Tailwind is the single approach going forward.
+
+**Rules:**
+- All layout, spacing, colors, typography, and hover states use Tailwind utility classes
+- Design tokens are consumed via the `@theme` block in `src/index.css` — e.g., `bg-bg`, `text-text-primary`, `border-border`, `bg-primary-light`
+- Catalyst UI patterns for primitives (Button, Badge, Dialog, Sidebar, etc.) — copy from `/Users/admin/Downloads/TailwindPLUS/catalyst-ui-kit/typescript/` and adapt colors via the mapping table in the mockup skill
+- **Mockups must also use Tailwind classes** — approved mockup classes transfer directly to React implementation. No inline styles in mockups.
+- Dark mode: use Tailwind's `dark:` variant. Theme toggling adds/removes the `.dark` class on `<html>`.
+
+**Forbidden patterns:**
+```tsx
+// FORBIDDEN: inline style with CSS var
+<div style={{ background: 'var(--dt-bg)', color: 'var(--dt-text-primary)' }}>
+
+// FORBIDDEN: const styles object
+const styles = { card: { background: colors.bg, padding: `${spacing.md}px` } }
+
+// FORBIDDEN: inline style with token import
+<div style={{ background: colors.white, padding: `${spacing.lg}px` }}>
+```
+
+**Approved pattern:**
+```tsx
+<div className="bg-bg text-text-primary p-4">
+```
 
 ## 6. Architecture & design principles
 

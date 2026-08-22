@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashy — 01 Layout Shell</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --color-primary: var(--dt-primary);
+            --color-primary-hover: var(--dt-primary-hover);
+            --color-primary-light: var(--dt-primary-light);
+            --color-primary-light-hover: var(--dt-primary-light-hover);
+            --color-primary-ring: var(--dt-primary-ring);
+            --color-bg: var(--dt-bg);
+            --color-bg-hover: var(--dt-bg-hover);
+            --color-white: var(--dt-white);
+            --color-text-primary: var(--dt-text-primary);
+            --color-text-secondary: var(--dt-text-secondary);
+            --color-text-muted: var(--dt-text-muted);
+            --color-text-faint: var(--dt-text-faint);
+            --color-text-disabled: var(--dt-text-disabled);
+            --color-border: var(--dt-border);
+            --color-border-light: var(--dt-border-light);
+            --color-border-dark: var(--dt-border-dark);
+            --color-success: var(--dt-success);
+            --color-danger: var(--dt-danger);
+            --color-warning: var(--dt-warning);
+            --color-faiyaz: var(--dt-member-faiyaz);
+            --color-trisha: var(--dt-member-trisha);
+            --color-arya: var(--dt-member-arya);
+            --color-raya: var(--dt-member-raya);
+            --shadow-view-btn: var(--dt-shadow-view-btn);
+            --shadow-sidebar: var(--dt-shadow-sidebar);
+        }
+
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
+    <link rel="stylesheet" href="tokens.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+
+        /* Minimal mockup-only styles (transitions, drag handle positioning) */
+        .sidebar { transition: width 0.25s ease; }
+        .drag-handle { transition: background 0.15s; }
+        .nav-item { transition: background 0.15s; }
+        .nav-action { transition: background 0.15s; }
+        .view-btn { transition: all 0.15s; }
+        .theme-btn { transition: background 0.15s; }
+
+        .collapsed .nav-label { display: none; }
+        .collapsed .nav-action { margin-left: 0; }
+    </style>
+</head>
+<body class="bg-bg text-text-primary font-sans">
+
+    <!-- App shell: header + status bar span full width, sidebar sits between them -->
+    <div id="appShell" class="flex flex-col h-full">
+
+        <!-- ══════════════════════════════════════════════
+             HEADER — full width at top
+             ══════════════════════════════════════════════ -->
+        <header class="flex items-center justify-between flex-shrink-0 bg-white border-b border-border px-6 py-3 gap-2">
+
+            <!-- Left: Date + Clock + Weather -->
+            <div class="flex items-center gap-3">
+                <h1 class="text-base font-semibold text-text-primary whitespace-nowrap m-0">
+                    Tue, Aug 19th
+                </h1>
+                <span class="text-sm font-normal text-text-muted tabular-nums whitespace-nowrap">
+                    2:34 PM
+                </span>
+                <div class="flex items-center gap-1 text-[#4b5563] whitespace-nowrap">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <span class="text-sm font-medium">83°</span>
+                </div>
+            </div>
+
+            <!-- Right: Family pills + Density badge + View switcher + Today + Date picker -->
+            <div class="flex items-center gap-2 flex-wrap min-w-0">
+
+                <!-- Family pills -->
+                <div class="flex items-center gap-1 overflow-hidden flex-nowrap">
+                    <div class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 flex-shrink-0">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white bg-faiyaz">F</span>
+                        <span class="text-[11px] font-medium text-blue-800">Faiyaz</span>
+                        <span class="text-[10px] font-normal text-blue-800 opacity-70">3</span>
+                    </div>
+                    <div class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-pink-200 bg-pink-50 flex-shrink-0">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white bg-trisha">T</span>
+                        <span class="text-[11px] font-medium text-pink-800">Trisha</span>
+                        <span class="text-[10px] font-normal text-pink-800 opacity-70">2</span>
+                    </div>
+                    <div class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-green-200 bg-green-50 flex-shrink-0">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white bg-arya">A</span>
+                        <span class="text-[11px] font-medium text-green-800">Arya</span>
+                        <span class="text-[10px] font-normal text-green-800 opacity-70">1</span>
+                    </div>
+                    <div class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 flex-shrink-0">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white bg-raya">R</span>
+                        <span class="text-[11px] font-medium text-amber-800">Raya</span>
+                        <span class="text-[10px] font-normal text-amber-800 opacity-70">0</span>
+                    </div>
+                </div>
+
+                <!-- Density badge -->
+                <span class="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-300 text-amber-900">
+                    3 events
+                </span>
+
+                <!-- Separator -->
+                <div class="w-px h-6 bg-border mx-1"></div>
+
+                <!-- View switcher (Catalyst segmented control pattern) -->
+                <div class="flex bg-bg-hover rounded-lg p-0.5 gap-0.5">
+                    <button class="view-btn px-0 py-1.5 w-14 text-[13px] font-medium text-text-muted bg-transparent border-none rounded-md cursor-pointer text-center hover:text-text-secondary">Day</button>
+                    <button class="view-btn px-0 py-1.5 w-14 text-[13px] font-semibold text-primary bg-white rounded-md cursor-pointer text-center shadow-view-btn">Week</button>
+                    <button class="view-btn px-0 py-1.5 w-14 text-[13px] font-medium text-text-muted bg-transparent border-none rounded-md cursor-pointer text-center hover:text-text-secondary">Month</button>
+                    <button class="view-btn px-0 py-1.5 w-14 text-[13px] font-medium text-text-muted bg-transparent border-none rounded-md cursor-pointer text-center hover:text-text-secondary">Year</button>
+                </div>
+
+                <!-- Separator -->
+                <div class="w-px h-6 bg-border mx-1"></div>
+
+                <!-- Today button -->
+                <button class="px-4 py-1.5 text-[13px] font-semibold text-text-muted bg-white border border-border rounded-lg cursor-pointer hover:bg-bg-hover">Today</button>
+
+                <!-- Separator -->
+                <div class="w-px h-6 bg-border mx-1"></div>
+
+                <!-- Date picker trigger -->
+                <button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-text-secondary border border-border bg-white cursor-pointer hover:bg-bg-hover">
+                    <svg class="w-3.5 h-3.5 text-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>Aug 17 – 23, 2026</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ══════════════════════════════════════════════
+             MIDDLE ROW: Sidebar + Main content
+             ══════════════════════════════════════════════ -->
+        <div class="flex flex-1 min-h-0">
+
+            <!-- Sidebar -->
+            <div id="sidebar" class="sidebar flex flex-col h-full relative w-56 min-w-16 bg-bg border-r border-border">
+
+                <!-- Nav Items -->
+                <div class="flex-1 flex flex-col gap-1 pt-4">
+                    <!-- Calendar -->
+                    <div class="nav-item active flex items-center gap-3 px-3 py-2.5 mx-2 rounded-[10px] cursor-pointer whitespace-nowrap overflow-hidden bg-primary-light text-primary font-semibold text-sm" onclick="setActiveNav(this)">
+                        <svg class="nav-icon w-5 h-5 flex-shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span class="nav-label">Calendar</span>
+                        <button class="nav-action ml-auto p-1 rounded-md cursor-pointer hover:bg-primary-light-hover flex items-center justify-center" title="Refresh calendar" onclick="event.stopPropagation()">
+                            <svg class="w-3.5 h-3.5 text-primary-ring" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Chores -->
+                    <div class="nav-item flex items-center gap-3 px-3 py-2.5 mx-2 rounded-[10px] cursor-pointer whitespace-nowrap overflow-hidden text-text-secondary text-sm hover:bg-bg-hover" onclick="setActiveNav(this)">
+                        <svg class="nav-icon w-5 h-5 flex-shrink-0 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        <span class="nav-label">Chores</span>
+                        <button class="nav-action ml-auto p-1 rounded-md cursor-pointer hover:bg-primary-light-hover flex items-center justify-center" title="Add new chore" onclick="event.stopPropagation()">
+                            <svg class="w-3.5 h-3.5 text-primary-ring" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Drag handle -->
+                <div class="drag-handle absolute right-0 top-[40%] -translate-y-1/2 translate-x-full w-4 h-14 cursor-grab flex flex-col items-center justify-center gap-[3px] z-20 bg-bg border border-border-dark border-l-0 rounded-r-lg shadow-sidebar" title="Drag to resize">
+                    <span class="w-2 h-0.5 rounded-full bg-text-faint"></span>
+                    <span class="w-2 h-0.5 rounded-full bg-text-faint"></span>
+                    <span class="w-2 h-0.5 rounded-full bg-text-faint"></span>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <main class="flex-1 overflow-hidden p-6 bg-bg">
+                <div class="flex items-center justify-center h-full rounded-xl border-2 border-dashed border-border bg-white">
+                    <div class="text-center">
+                        <svg class="w-12 h-12 text-text-disabled mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <p class="text-sm text-text-faint">Content area — calendar/chores views render here</p>
+                        <p class="text-xs text-text-disabled mt-1">1920 × 1080 target viewport</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             STATUS BAR — full width at bottom
+             ══════════════════════════════════════════════ -->
+        <footer class="flex items-center justify-between flex-shrink-0 px-4 h-7 bg-bg border-t border-border text-xs text-text-faint">
+
+            <!-- Left: Settings -->
+            <button class="theme-btn p-1.5 rounded-md cursor-pointer flex items-center justify-center border-none bg-transparent text-text-secondary hover:bg-bg-hover" title="Settings" aria-label="Settings">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </button>
+
+            <!-- Center: Countdowns -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-success"></span>
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span class="inline-block min-w-[72px] text-left tabular-nums">in 1m 32s</span>
+                </div>
+                <div class="w-px h-4 bg-gradient-to-b from-transparent via-border-dark to-transparent"></div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-success"></span>
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <span class="inline-block min-w-[72px] text-left tabular-nums">in 7m 45s</span>
+                </div>
+            </div>
+
+            <!-- Right: Theme toggle -->
+            <button class="theme-btn p-1.5 rounded-md cursor-pointer flex items-center justify-center border-none bg-transparent text-text-secondary hover:bg-bg-hover" id="statusThemeBtn" title="Toggle dark mode" aria-label="Toggle dark mode" onclick="document.documentElement.classList.toggle('dark')">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            sidebar.style.width = isCollapsed ? '224px' : '64px';
+            sidebar.classList.toggle('collapsed', !isCollapsed);
+        }
+
+        function setActiveNav(el) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active', 'bg-primary-light', 'text-primary', 'font-semibold');
+                item.classList.add('text-text-secondary', 'hover:bg-bg-hover');
+                item.querySelector('.nav-icon')?.classList.remove('text-primary');
+                item.querySelector('.nav-icon')?.classList.add('text-text-secondary');
+            });
+            el.classList.add('active', 'bg-primary-light', 'text-primary', 'font-semibold');
+            el.classList.remove('text-text-secondary', 'hover:bg-bg-hover');
+            el.querySelector('.nav-icon')?.classList.add('text-primary');
+            el.querySelector('.nav-icon')?.classList.remove('text-text-secondary');
+        }
+    </script>
+</body>
+</html>
