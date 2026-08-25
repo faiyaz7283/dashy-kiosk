@@ -9,9 +9,9 @@ Perform a manual code review **before running automated quality gates** (lint/ty
 
 ## When to use
 
-- After completing implementation
+- Automatically invoked by `/quality-gate` (step 0)
+- Can also be run standalone after completing implementation
 - After running `/self-review`
-- Before running `/quality-gate`
 - Before presenting code to the user
 
 ## Code Review Checklist
@@ -161,13 +161,17 @@ grep -r "style={{" src/ | grep -v test
 
 ## After Code Review
 
-1. Run `/quality-gate` for automated checks
+When invoked standalone:
+1. Run `/quality-gate` for automated checks (which will re-invoke this skill)
 2. Present code to user
+
+When invoked by `/quality-gate`:
+- Continue to the automated checks (lint, typecheck, test, build)
 
 ## Notes
 
 - This is a **manual review** — automated tools can't catch everything
-- Run after `/self-review`
-- Run before `/quality-gate`
+- Automatically invoked by `/quality-gate` (step 0)
+- Can also be run standalone after `/self-review`
 - If violations are found, they are part of the current phase — do not defer
 - All commands run inside Docker containers via Makefile targets

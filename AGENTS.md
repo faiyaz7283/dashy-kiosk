@@ -102,28 +102,18 @@ The skill will guide you through:
 
 **If violations are found:** Fix them before presenting the code. Do not present code with known violations.
 
-### 4b. Code Review Gate (Before Quality Gates)
+### 4b. Quality Gates (NON-NEGOTIABLE)
 
-**Before running automated quality gates, you MUST invoke the `/code-review-gate` skill.** This performs a manual code review that catches issues automated tools miss.
+**After self-review, you MUST invoke the `/quality-gate` skill.** This runs a manual code review (via `/code-review-gate`) followed by automated quality checks.
 
-The skill will guide you through:
-- Pattern violation checks (duplicated logic, prop drilling, hardcoded values)
-- Code quality checks (shared components/hooks, magic numbers, DRY principle)
-- Component structure review
+The skill will:
+1. Invoke `/code-review-gate` for manual review (pattern violations, code quality, AGENTS.md compliance)
+2. `make lint-kiosk` (oxlint)
+3. `make typecheck-kiosk` (tsc --noEmit)
+4. `make test-kiosk` (vitest)
+5. `make build-kiosk` (vite build)
 
-**If violations are found:** Fix them before proceeding to quality gates.
-
-### 4c. Quality Gates (NON-NEGOTIABLE)
-
-**After completing the code review gate, you MUST invoke the `/quality-gate` skill.** This runs the automated quality checks.
-
-The skill will run:
-1. `make lint-kiosk` (oxlint)
-2. `make typecheck-kiosk` (tsc --noEmit)
-3. `make test-kiosk` (vitest)
-4. `make build-kiosk` (vite build)
-
-All four must pass before you tell the user the task is complete.
+All steps must pass before you tell the user the task is complete.
 
 ## 5. Git workflow
 

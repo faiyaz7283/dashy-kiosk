@@ -126,13 +126,12 @@ Common fixes:
 
 ## After Self-Review
 
-1. Run `/code-review-gate` for manual review
-2. Run `/quality-gate` for automated checks
-3. Present code to user
+1. Run `/quality-gate` (which includes code review + automated checks)
+2. Present code to user
 
 ## Notes
 
 - This checklist is **mandatory** before presenting code
 - Run after `/pre-implementation-checklist` (if you ran it)
-- Run before `/code-review-gate`
+- Run before `/quality-gate`
 - All commands run inside Docker containers via Makefile targets

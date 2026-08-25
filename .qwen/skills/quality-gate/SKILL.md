@@ -1,22 +1,28 @@
 ---
 name: quality-gate
-description: Run the frontend quality gate — lint, typecheck, test, build — all four must pass before declaring any change complete.
+description: Run the frontend quality gate — code review, lint, typecheck, test, build — all must pass before declaring any change complete.
 ---
 
 # Frontend Quality Gate
 
-Run the full frontend quality gate to verify correctness of any change.
+Run the full frontend quality gate to verify correctness of any change. This includes a manual code review step followed by automated checks.
 
 ## When to use
 
 - After completing any frontend code change
 - Before declaring a task complete
 - Before committing or pushing changes
-- After running `/code-review-gate`
+- After running `/self-review`
 
 ## Steps
 
-Run all four commands in sequence from the orchestrator root. All must pass.
+Run all steps in sequence from the orchestrator root. All must pass.
+
+### 0. Code Review Gate
+
+**First, invoke the `/code-review-gate` skill.** This performs a manual code review that catches issues automated tools miss — pattern violations, duplicated logic, prop drilling, hardcoded values, inline styles, and code quality issues.
+
+Do not proceed to automated checks until the code review gate passes.
 
 ### 1. Lint
 
@@ -67,7 +73,7 @@ Produces the production bundle via Vite. Catches build-time errors, missing impo
 
 ## Passing criteria
 
-All four steps must complete with exit code 0. If any step fails, fix the issues before declaring the task complete.
+All steps (code review + four automated checks) must pass. If any step fails, fix the issues before declaring the task complete.
 
 ## Notes
 
