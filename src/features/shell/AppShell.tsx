@@ -17,12 +17,12 @@ import { useState, useCallback } from 'react'
 import { useUiScale } from '@/shared/hooks/useUiScale'
 import { useAutoHide } from '@/shared/hooks/useAutoHide'
 import { useSidebarState } from '@/shared/hooks/useSidebarState'
-import { useTheme } from '@/shared/hooks/useTheme'
+import { useTheme, type ThemeMode } from '@/shared/hooks/useTheme'
 import { useViewNavigation } from '@/shared/hooks/useViewNavigation'
 import { useFamilyData } from '@/shared/hooks/useFamilyData'
-import { useCalendarData } from '@/features/calendar/hooks/useCalendarData'
 import { useWeatherData } from '@/features/weather/hooks/useWeatherData'
 import { useChoresData } from '@/features/chores/hooks/useChoresData'
+import { CalendarDataProvider, useCalendarContext } from '@/features/calendar/context'
 import { Header } from './Header'
 import { Sidebar, type Feature } from './Sidebar'
 import { StatusBar } from './StatusBar'
@@ -31,7 +31,7 @@ import { WeekView } from '@/features/calendar/views/WeekView'
 import { MonthView } from '@/features/calendar/views/MonthView'
 import { YearView } from '@/features/calendar/views/YearView'
 import { ChoresView } from '@/features/chores/views/ChoresView'
-import type { ChoreInstance } from '@/types'
+import type { ChoreInstance, CalendarView } from '@/types'
 import type { CreateEntryPoint } from '@/features/chores/components/ChoreCreateModal'
 
 /**
@@ -55,9 +55,74 @@ export default function AppShell() {
 
   // Data hooks (must come after currentView/currentDate are declared)
   const { members } = useFamilyData()
-  const { events, lastRefresh: calendarLastRefresh, refetch: refetchCalendar } = useCalendarData(currentView, currentDate)
   const { lastRefresh: weatherLastRefresh } = useWeatherData()
   const { data: choresData } = useChoresData()
+
+  return (
+    <CalendarDataProvider currentView={currentView} currentDate={currentDate}>
+      <AppShellContent
+        activeFeature={activeFeature}
+        setActiveFeature={setActiveFeature}
+        isSidebarExpanded={isSidebarExpanded}
+        toggleSidebar={toggleSidebar}
+        themeMode={themeMode}
+        cycleTheme={cycleTheme}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        currentDate={currentDate}
+        navigatePrevious={navigatePrevious}
+        navigateNext={navigateNext}
+        navigateToday={navigateToday}
+        members={members}
+        weatherLastRefresh={weatherLastRefresh}
+        choresData={choresData}
+      />
+    </CalendarDataProvider>
+  )
+}
+
+/**
+ * Inner AppShell component that has access to calendar context.
+ *
+ * Separated from AppShell to allow CalendarDataProvider to wrap it.
+ */
+interface AppShellContentProps {
+  activeFeature: Feature
+  setActiveFeature: (feature: Feature) => void
+  isSidebarExpanded: boolean
+  toggleSidebar: () => void
+  themeMode: ThemeMode
+  cycleTheme: () => void
+  currentView: CalendarView
+  setCurrentView: (view: CalendarView) => void
+  currentDate: Temporal.PlainDate
+  navigatePrevious: () => void
+  navigateNext: () => void
+  navigateToday: () => void
+  members: any[]
+  weatherLastRefresh: number | null
+  choresData: any
+}
+
+function AppShellContent({
+  activeFeature,
+  setActiveFeature,
+  isSidebarExpanded,
+  toggleSidebar,
+  themeMode,
+  cycleTheme,
+  currentView,
+  setCurrentView,
+  currentDate,
+  navigatePrevious,
+  navigateNext,
+  navigateToday,
+  members,
+  weatherLastRefresh,
+  choresData,
+}: AppShellContentProps) {
+  // Calendar data from context
+  const { events, lastRefresh: calendarLastRefresh, refetch: refetchCalendar } = useCalendarContext()
 
   // Chores modal state
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -72,7 +137,7 @@ export default function AppShell() {
   // Feature navigation
   const handleFeatureChange = useCallback((feature: Feature) => {
     setActiveFeature(feature)
-  }, [])
+  }, [setActiveFeature])
 
   // Chores modal handlers
   const handleAddChore = useCallback((memberId?: string) => {

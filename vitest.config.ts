@@ -18,11 +18,7 @@ export default defineConfig({
       VITE_API_URL: 'http://localhost:8000',
     },
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        maxForks: 1,
-        execArgv: ['--max-old-space-size=4096'],
-      },
-    },
+    maxForks: 1,
+    execArgv: ['--max-old-space-size=4096'],
   },
 })
