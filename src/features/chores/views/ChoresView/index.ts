@@ -1,1 +1,0 @@
-export { ChoresView } from './ChoresView'

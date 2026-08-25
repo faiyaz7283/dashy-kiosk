@@ -1,1 +1,0 @@
-export { ChoreBoard } from './ChoreBoard'
