@@ -7,6 +7,7 @@
  */
 
 import { ENDPOINTS } from '@/shared/api/endpoints'
+import { parseApiError } from '@/shared/errors'
 import type {
   ChoresData,
   MasterChore,
@@ -21,18 +22,6 @@ import type {
 const BASE = ENDPOINTS.chores.url
 
 /**
- * Parse error response body for detailed error message.
- */
-async function parseErrorResponse(response: Response): Promise<string> {
-  try {
-    const body = await response.json()
-    return body.detail || body.message || response.statusText
-  } catch {
-    return response.statusText || 'Unknown error'
-  }
-}
-
-/**
  * Fetch all chores data (categories, tags, masters, instances).
  *
  * @returns Complete chores data payload.
@@ -40,8 +29,7 @@ async function parseErrorResponse(response: Response): Promise<string> {
 export async function fetchChores(): Promise<ChoresData> {
   const response = await fetch(BASE)
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Chores API error: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -61,8 +49,7 @@ export async function createMasterChore(
     body: JSON.stringify(data),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to create master chore: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -84,8 +71,7 @@ export async function updateMasterChore(
     body: JSON.stringify(data),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to update master chore: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -100,8 +86,7 @@ export async function deleteMasterChore(choreId: string): Promise<void> {
     method: 'DELETE',
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to delete master chore: ${message}`)
+    throw await parseApiError(response)
   }
 }
 
@@ -122,8 +107,7 @@ export async function claimInstance(
     body: JSON.stringify({ member_id: memberId }),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to claim instance: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -147,8 +131,7 @@ export async function assignInstance(
     body: JSON.stringify({ assignee_id: assigneeId, assigner_id: assignerId }),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to assign instance: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -174,8 +157,7 @@ export async function updateInstanceStatus(
     body: JSON.stringify({ status, actor_id: actorId, is_adult: isAdult }),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to update instance status: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -199,8 +181,7 @@ export async function signoffInstance(
     body: JSON.stringify({ signoff_member_id: signoffMemberId }),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to sign off instance: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -218,8 +199,7 @@ export async function createCategory(name: string): Promise<ChoreCategory> {
     body: JSON.stringify({ name }),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to create category: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -237,8 +217,7 @@ export async function createTag(name: string): Promise<ChoreTag> {
     body: JSON.stringify({ name }),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to create tag: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
@@ -260,8 +239,7 @@ export async function approveMasterChore(
     body: JSON.stringify({ approver_id: approverId }),
   })
   if (!response.ok) {
-    const message = await parseErrorResponse(response)
-    throw new Error(`Failed to approve master chore: ${message}`)
+    throw await parseApiError(response)
   }
   return response.json()
 }
