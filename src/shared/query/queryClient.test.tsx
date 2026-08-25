@@ -4,10 +4,21 @@
  * Validates QueryClient exports and default options.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render } from '@testing-library/react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './queryClient'
+import { createTestQueryClient } from '@/test/test-utils'
+
+let testQueryClient: ReturnType<typeof createTestQueryClient>
+
+beforeEach(() => {
+  testQueryClient = createTestQueryClient()
+})
+
+afterEach(() => {
+  testQueryClient.clear()
+})
 
 describe('queryClient', () => {
   it('exports a QueryClient instance', () => {
@@ -49,7 +60,7 @@ describe('queryClient', () => {
 describe('QueryClientProvider integration', () => {
   it('wraps app without errors', () => {
     const { container } = render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={testQueryClient}>
         <div>Test App</div>
       </QueryClientProvider>,
     )
