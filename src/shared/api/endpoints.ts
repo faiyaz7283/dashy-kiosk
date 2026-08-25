@@ -22,8 +22,6 @@ export interface EndpointConfig {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE'
   /** Auto-refresh interval in milliseconds (0 = no auto-refresh). */
   refreshInterval: number
-  /** Cache TTL in milliseconds (0 = no caching). */
-  cacheTtl: number
 }
 
 /**
@@ -37,31 +35,26 @@ export const ENDPOINTS = {
     url: `${API_BASE}/health`,
     method: 'GET',
     refreshInterval: 0,
-    cacheTtl: 0,
   },
   calendar: {
     url: `${API_BASE}/api/v1/calendar`,
     method: 'GET',
     refreshInterval: 120_000, // 2 minutes
-    cacheTtl: 120_000, // 2 minutes
   },
   weather: {
     url: `${API_BASE}/api/v1/weather`,
     method: 'GET',
     refreshInterval: 600_000, // 10 minutes
-    cacheTtl: 0, // No client-side caching (backend handles it)
   },
   family: {
     url: `${API_BASE}/api/v1/family`,
     method: 'GET',
     refreshInterval: 0, // Fetch once on mount
-    cacheTtl: 0,
   },
   chores: {
     url: `${API_BASE}/api/v1/chores`,
     method: 'GET',
     refreshInterval: 120_000, // 2 minutes
-    cacheTtl: 60_000, // 1 minute
   },
 } as const satisfies Record<string, EndpointConfig>
 
