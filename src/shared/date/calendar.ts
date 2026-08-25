@@ -165,7 +165,7 @@ export function formatRelativeDay(
   date: Temporal.PlainDate,
   referenceDate: Temporal.PlainDate = today(),
 ): { dayLabel: string; dateLabel: string } {
-  const locale = themeConfig.dateFormat.locale
+  const locale = `${themeConfig.dateFormat.locale}-u-ca-iso8601`
   const dateLabel = date.toLocaleString(locale, {
     month: 'short',
     day: 'numeric',
@@ -189,7 +189,7 @@ export function formatRelativeDay(
  * @returns The short weekday name (e.g., "Mon").
  */
 export function getShortWeekday(date: Temporal.PlainDate): string {
-  const locale = themeConfig.dateFormat.locale
+  const locale = `${themeConfig.dateFormat.locale}-u-ca-iso8601`
   return date.toLocaleString(locale, { weekday: 'short' })
 }
 

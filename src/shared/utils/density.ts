@@ -13,7 +13,7 @@
  */
 
 import { themeConfig, type DensityLevel } from '@/theme/config'
-import type { CalendarEvent } from '@/domain/calendar/types'
+import type { CalendarEvent } from '@/types/calendar'
 import { eventDate, getMonthKey, getWeekKey } from '@/shared/date'
 
 /**

@@ -10,13 +10,14 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import type { CalendarView } from '@/domain/calendar/types'
+import type { CalendarView } from '@/types/calendar'
 import { today } from '@/shared/date'
 
 const VIEW_STORAGE_KEY = 'dashy-calendar-view'
 const VIEW_STORAGE_VERSION_KEY = 'dashy-calendar-view-version'
 const CURRENT_VIEW_STORAGE_VERSION = '2'
 
+/** Return type of the useViewNavigation hook. */
 export interface UseViewNavigationResult {
   /** The active calendar view (day/week/month/year). */
   currentView: CalendarView

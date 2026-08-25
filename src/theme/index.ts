@@ -1,4 +1,7 @@
+/**
+ * Barrel export for theme configuration.
+ *
+ * Provides centralized access to all theme tokens and configuration.
+ */
+
 export * from './tokens'
-export * from './config'
-export * from './ThemeContext'
-export * from './ThemeToggle'

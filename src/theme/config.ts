@@ -73,9 +73,9 @@ export const themeConfig = {
      * Relative density thresholds (for year/month/week views).
      *
      * `ratio = (count - min) / (max - min)` among non-zero counts.
-     * - ratio \< lowThreshold → 'low'
-     * - ratio \< mediumThreshold → 'medium'
-     * - ratio \>= mediumThreshold → 'high'
+     * - ratio < lowThreshold → 'low'
+     * - ratio < mediumThreshold → 'medium'
+     * - ratio >= mediumThreshold → 'high'
      */
     relativeLowThreshold: 0.33,
     relativeMediumThreshold: 0.66,

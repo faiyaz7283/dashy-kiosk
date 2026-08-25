@@ -5,11 +5,18 @@
  * Adding a new endpoint requires only: add entry here + define response type.
  */
 
+/** API base URL from environment variable. */
+const API_BASE = import.meta.env.VITE_API_URL
+
+if (!API_BASE) {
+  throw new Error('VITE_API_URL environment variable is required')
+}
+
 /**
  * Endpoint configuration.
  */
 export interface EndpointConfig {
-  /** Endpoint URL path (relative to API_BASE). */
+  /** Full endpoint URL (API_BASE + path). */
   url: string
   /** HTTP method. */
   method: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -27,31 +34,31 @@ export interface EndpointConfig {
  */
 export const ENDPOINTS = {
   health: {
-    url: '/health',
+    url: `${API_BASE}/health`,
     method: 'GET',
     refreshInterval: 0,
     cacheTtl: 0,
   },
   calendar: {
-    url: '/api/v1/calendar',
+    url: `${API_BASE}/api/v1/calendar`,
     method: 'GET',
     refreshInterval: 120_000, // 2 minutes
     cacheTtl: 120_000, // 2 minutes
   },
   weather: {
-    url: '/api/v1/weather',
+    url: `${API_BASE}/api/v1/weather`,
     method: 'GET',
     refreshInterval: 600_000, // 10 minutes
     cacheTtl: 0, // No client-side caching (backend handles it)
   },
   family: {
-    url: '/api/v1/family',
+    url: `${API_BASE}/api/v1/family`,
     method: 'GET',
     refreshInterval: 0, // Fetch once on mount
     cacheTtl: 0,
   },
   chores: {
-    url: '/api/v1/chores',
+    url: `${API_BASE}/api/v1/chores`,
     method: 'GET',
     refreshInterval: 120_000, // 2 minutes
     cacheTtl: 60_000, // 1 minute

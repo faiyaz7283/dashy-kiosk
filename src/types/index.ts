@@ -1,40 +1,23 @@
 /**
- * Global type barrel.
+ * Barrel export for all domain types.
  *
- * Re-exports domain-specific types from their respective modules.
- * Import from `\@/types` for convenience, or import directly from
- * `\@/domain/calendar/types` or `\@/domain/weather/types` for domain-specific code.
+ * Re-exports types from individual domain type files for convenient
+ * cross-feature imports via `@/types`.
  */
 
-// Family domain types
-export type { FamilyMember } from '@/domain/family/types'
-
-// Calendar domain types
+export type { CalendarEvent, TimedCalendarEvent, AllDayCalendarEvent, CalendarView } from './calendar'
+export type { FamilyMember } from './family'
 export type {
-  CalendarView,
-  AttendeeStatus,
-  Attendee,
-  CalendarEvent,
-  WeekCalendar,
-} from '@/domain/calendar/types'
-
-// Weather domain types
-export type {
-  WeatherCondition,
-  WeatherCurrent,
-  HourlyForecast,
-  DailyForecast,
-  WeatherResponse,
-} from '@/domain/weather/types'
-
-// Chores domain types
-export type {
-  ChoresData,
-  ChoreInstance,
-  MasterChore,
   ChoreCategory,
   ChoreTag,
+  MasterChore,
+  ChoreInstance,
+  ChoresData,
   ChoreFrequency,
   ExpirationBehavior,
+  MasterChoreStatus,
   InstanceStatus,
-} from '@/domain/chores/types'
+  CreateMasterChoreRequest,
+  UpdateMasterChoreRequest,
+} from './chores'
+export type { WeatherResponse, WeatherCurrent, WeatherCondition, HourlyForecast, DailyForecast } from './weather'

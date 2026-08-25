@@ -54,7 +54,7 @@ export function getOrdinalSuffix(day: number): string {
  * ```
  */
 export function formatHeaderDate(date: Temporal.PlainDate): string {
-  const locale = themeConfig.dateFormat.locale
+  const locale = `${themeConfig.dateFormat.locale}-u-ca-iso8601`
   const formatted = date.toLocaleString(locale, {
     weekday: 'short',
     month: 'short',
@@ -81,7 +81,7 @@ export function formatHeaderDate(date: Temporal.PlainDate): string {
  * ```
  */
 export function formatTime(time: Temporal.PlainTime): string {
-  const locale = themeConfig.dateFormat.locale
+  const locale = `${themeConfig.dateFormat.locale}-u-ca-iso8601`
   return time.toLocaleString(locale, {
     hour: 'numeric',
     minute: '2-digit',
@@ -106,7 +106,7 @@ export function formatDateTime(
   dt: Temporal.PlainDateTime,
   options: Intl.DateTimeFormatOptions,
 ): string {
-  const locale = themeConfig.dateFormat.locale
+  const locale = `${themeConfig.dateFormat.locale}-u-ca-iso8601`
   return dt.toLocaleString(locale, options)
 }
 
@@ -130,7 +130,7 @@ export function formatDateParts(
   date: Temporal.PlainDate,
   options: Intl.DateTimeFormatOptions,
 ): string {
-  const locale = themeConfig.dateFormat.locale
+  const locale = `${themeConfig.dateFormat.locale}-u-ca-iso8601`
   return date.toLocaleString(locale, options)
 }
 
@@ -154,7 +154,7 @@ export function formatDateWithOrdinal(
   date: Temporal.PlainDate,
   options: Intl.DateTimeFormatOptions,
 ): string {
-  const locale = themeConfig.dateFormat.locale
+  const locale = `${themeConfig.dateFormat.locale}-u-ca-iso8601`
   const formatted = date.toLocaleString(locale, options)
   // Replace the numeric day with an ordinal version
   const day = date.day

@@ -10,7 +10,7 @@
  * so callers never need to guess whether they have a date, time, or datetime.
  */
 
-import type { CalendarEvent, WeekCalendar } from '@/domain/calendar/types'
+import type { CalendarEvent, WeekCalendar } from '@/types/calendar'
 
 /**
  * Strips timezone designators from an ISO datetime string.
@@ -59,6 +59,7 @@ export interface RawCalendarEvent {
     display_name: string
     status: 'accepted' | 'declined' | 'tentative' | 'needsAction'
     color: string
+    color_key: string | null
   }>
   recurring_event_id?: string | null
   is_recurring_instance?: boolean

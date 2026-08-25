@@ -1,126 +1,176 @@
 /**
- * useChoreActions — mutation hook for chore operations.
+ * Hook for chore mutation actions.
  *
- * Provides functions for creating master chores, claiming/assigning
- * instances, updating statuses, creating categories/tags, and approving
- * masters. Each function calls the API and then triggers a refetch.
+ * Provides typed wrappers around all chores API mutation functions.
+ * Each action triggers a refetch after completion to keep data in sync.
  */
 
 import { useCallback } from 'react'
 import {
   createMasterChore,
-  updateMasterChore as apiUpdateMasterChore,
-  deleteMasterChore as apiDeleteMasterChore,
-  claimInstance as apiClaimInstance,
-  assignInstance as apiAssignInstance,
-  updateInstanceStatus as apiUpdateInstanceStatus,
-  createCategory as apiCreateCategory,
-  createTag as apiCreateTag,
-  approveMasterChore as apiApproveMasterChore,
-} from '@/shared/services/api'
-import type { InstanceStatus } from '@/types'
-import type { ChoreFormData } from '@/features/chores/components/ChoreModal'
+  updateMasterChore,
+  deleteMasterChore,
+  claimInstance,
+  assignInstance,
+  updateInstanceStatus,
+  signoffInstance,
+  createCategory,
+  createTag,
+  approveMasterChore,
+} from '../api/choresApi'
+import type {
+  MasterChore,
+  ChoreInstance,
+  ChoreCategory,
+  ChoreTag,
+  InstanceStatus,
+  CreateMasterChoreRequest,
+  UpdateMasterChoreRequest,
+} from '@/types/chores'
 
-/** Return type of the useChoreActions hook. */
+/** Return type of useChoreActions. */
 export interface UseChoreActionsReturn {
   /** Create a new master chore template. */
-  createMaster: (data: ChoreFormData) => Promise<void>
+  createMaster: (data: CreateMasterChoreRequest) => Promise<MasterChore>
   /** Update an existing master chore template. */
-  updateMaster: (choreId: string, data: ChoreFormData) => Promise<void>
-  /** Delete a master chore template. */
+  updateMaster: (
+    choreId: string,
+    data: UpdateMasterChoreRequest,
+  ) => Promise<MasterChore>
+  /** Soft-delete a master chore template. */
   deleteMaster: (choreId: string) => Promise<void>
-  /** Claim an open pool instance for a member. */
-  claimInstance: (instanceId: string, memberId: string) => Promise<void>
+  /** Claim an open-pool instance for a member. */
+  claimInstance: (instanceId: string, memberId: string) => Promise<ChoreInstance>
   /** Assign an instance to a member. */
-  assignInstance: (instanceId: string, assigneeId: string, assignerId: string) => Promise<void>
-  /** Update the status of an instance. */
-  updateStatus: (instanceId: string, status: InstanceStatus, actorId: string) => Promise<void>
-  /** Create a new category. */
-  createCategory: (name: string) => Promise<void>
-  /** Create a new tag. */
-  createTag: (name: string) => Promise<void>
+  assignInstance: (
+    instanceId: string,
+    assigneeId: string,
+    assignerId: string,
+  ) => Promise<ChoreInstance>
+  /** Update an instance's status. */
+  updateInstanceStatus: (
+    instanceId: string,
+    status: InstanceStatus,
+    actorId: string,
+    isAdult?: boolean,
+  ) => Promise<ChoreInstance>
+  /** Sign off on a kid-completed instance. */
+  signoffInstance: (
+    instanceId: string,
+    signoffMemberId: string,
+  ) => Promise<ChoreInstance>
+  /** Create a new chore category. */
+  createCategory: (name: string) => Promise<ChoreCategory>
+  /** Create a new chore tag. */
+  createTag: (name: string) => Promise<ChoreTag>
   /** Approve a pending master chore. */
-  approveMaster: (choreId: string, approverId: string) => Promise<void>
+  approveMaster: (choreId: string, approverId: string) => Promise<MasterChore>
 }
 
 /**
- * Provides mutation functions for chore operations.
+ * Provides chore mutation actions with automatic refetch.
  *
- * Each function performs the API call and then triggers a refetch
- * to update the data.
- *
- * @param refetch - Function to refetch chores data after mutations.
- * @returns Mutation functions.
+ * @param refetch - Function to trigger a data refetch after mutations.
+ * @returns All chore mutation actions.
  */
-export function useChoreActions(refetch: () => void): UseChoreActionsReturn {
+export function useChoreActions(
+  refetch: () => void,
+): UseChoreActionsReturn {
   const createMaster = useCallback(
-    async (data: ChoreFormData) => {
-      await createMasterChore(data as unknown as Record<string, unknown>)
+    async (data: CreateMasterChoreRequest) => {
+      const result = await createMasterChore(data)
       refetch()
+      return result
     },
     [refetch],
   )
 
   const updateMaster = useCallback(
-    async (choreId: string, data: ChoreFormData) => {
-      await apiUpdateMasterChore(choreId, data as unknown as Record<string, unknown>)
+    async (choreId: string, data: UpdateMasterChoreRequest) => {
+      const result = await updateMasterChore(choreId, data)
       refetch()
+      return result
     },
     [refetch],
   )
 
   const deleteMaster = useCallback(
     async (choreId: string) => {
-      await apiDeleteMasterChore(choreId)
+      await deleteMasterChore(choreId)
       refetch()
     },
     [refetch],
   )
 
-  const claimInstance = useCallback(
+  const claimInstanceAction = useCallback(
     async (instanceId: string, memberId: string) => {
-      await apiClaimInstance(instanceId, memberId)
+      const result = await claimInstance(instanceId, memberId)
       refetch()
+      return result
     },
     [refetch],
   )
 
-  const assignInstance = useCallback(
+  const assignInstanceAction = useCallback(
     async (instanceId: string, assigneeId: string, assignerId: string) => {
-      await apiAssignInstance(instanceId, assigneeId, assignerId)
+      const result = await assignInstance(instanceId, assigneeId, assignerId)
       refetch()
+      return result
     },
     [refetch],
   )
 
-  const updateStatus = useCallback(
-    async (instanceId: string, status: InstanceStatus, actorId: string) => {
-      await apiUpdateInstanceStatus(instanceId, status, actorId)
+  const updateInstanceStatusAction = useCallback(
+    async (
+      instanceId: string,
+      status: InstanceStatus,
+      actorId: string,
+      isAdult = true,
+    ) => {
+      const result = await updateInstanceStatus(
+        instanceId,
+        status,
+        actorId,
+        isAdult,
+      )
       refetch()
+      return result
     },
     [refetch],
   )
 
-  const createCategory = useCallback(
+  const signoffInstanceAction = useCallback(
+    async (instanceId: string, signoffMemberId: string) => {
+      const result = await signoffInstance(instanceId, signoffMemberId)
+      refetch()
+      return result
+    },
+    [refetch],
+  )
+
+  const createCategoryAction = useCallback(
     async (name: string) => {
-      await apiCreateCategory(name)
+      const result = await createCategory(name)
       refetch()
+      return result
     },
     [refetch],
   )
 
-  const createTag = useCallback(
+  const createTagAction = useCallback(
     async (name: string) => {
-      await apiCreateTag(name)
+      const result = await createTag(name)
       refetch()
+      return result
     },
     [refetch],
   )
 
   const approveMaster = useCallback(
     async (choreId: string, approverId: string) => {
-      await apiApproveMasterChore(choreId, approverId)
+      const result = await approveMasterChore(choreId, approverId)
       refetch()
+      return result
     },
     [refetch],
   )
@@ -129,11 +179,12 @@ export function useChoreActions(refetch: () => void): UseChoreActionsReturn {
     createMaster,
     updateMaster,
     deleteMaster,
-    claimInstance,
-    assignInstance,
-    updateStatus,
-    createCategory,
-    createTag,
+    claimInstance: claimInstanceAction,
+    assignInstance: assignInstanceAction,
+    updateInstanceStatus: updateInstanceStatusAction,
+    signoffInstance: signoffInstanceAction,
+    createCategory: createCategoryAction,
+    createTag: createTagAction,
     approveMaster,
   }
 }

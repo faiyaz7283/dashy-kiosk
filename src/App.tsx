@@ -1,22 +1,13 @@
 /**
  * Root application component.
  *
- * Wraps the AppShell in an ErrorBoundary to catch render crashes.
- * All layout, data fetching, and view management lives in AppShell.
+ * Renders the AppShell layout which provides the full-viewport structure
+ * (header, sidebar, status bar, content area). The AppShell applies UI
+ * scaling and serves as the container for all feature views.
  */
 
-import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
-import { AppShell } from '@/features/dashboard/AppShell'
+import AppShell from '@/features/shell/AppShell'
 
-/**
- * Application entry point.
- *
- * @returns The root component tree.
- */
-export function App() {
-  return (
-    <ErrorBoundary>
-      <AppShell />
-    </ErrorBoundary>
-  )
+export default function App() {
+  return <AppShell />
 }

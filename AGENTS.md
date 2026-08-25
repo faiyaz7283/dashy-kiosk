@@ -3,9 +3,25 @@
 This file is read by all AI coding agents (Kimi Code, Claude Code, Qwen Code, Warp, etc.).
 It contains **hard behavior rules**, not project background. For project knowledge, hardware details, architecture, and deployment history, see `README.md`.
 
+**Detailed guides:**
+- [Styling Guide](docs/guides/styling.md) — Tailwind rules, hardcoded values, common patterns
+- [Workflow Guide](docs/guides/workflow.md) — Pre-implementation checklist, self-review, code review gate
+
+## 0. NO OLD CODE RULE (NON-NEGOTIABLE)
+
+**This is a ground-up rewrite. The old kiosk (`../dashy-kiosk/`) exists only as a running reference at `dashy.local`.**
+
+- **Never** read, copy, or import from `../dashy-kiosk/src/`
+- **Never** reference old component paths, old type definitions, or old utility functions
+- **Never** replicate old styling patterns (inline styles, `const styles` objects, CSS Modules)
+- **Never** use old dependency versions — all deps must be latest stable
+- If you need API contracts, type shapes, or business logic rules, **ask the user** — do not look them up in old code
+- All components are built **from approved mockups only**
+- The old kiosk's tests, logic, and patterns inform *what* to build, not *how* to build it
+
 ## 1. Frontend Tech Stack (Latest Stable)
 
-All dependencies pinned to latest stable versions as of August 2026. Verify before upgrading.
+All dependencies pinned to latest stable versions. Verify before upgrading.
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -14,36 +30,30 @@ All dependencies pinned to latest stable versions as of August 2026. Verify befo
 | **@headlessui/react** | ^2.2.10 | Unstyled accessible UI primitives |
 | **react** | ^19.2.8 | UI library |
 | **react-dom** | ^19.2.8 | React DOM renderer |
-| **lucide-react** | ^1.31.0 | SVG icon library |
-| **vite** | ^8.2.0 | Build tool and dev server |
-| **typescript** | ^6.0.3 | Type system |
-| **vitest** | ^4.1.10 | Test runner |
+| **lucide-react** | ^1.33.0 | SVG icon library |
+| **vite** | ^8.2.1 | Build tool and dev server |
+| **typescript** | ^7.0.2 | Type system |
+| **vitest** | ^4.1.11 | Test runner |
+| **oxlint** | ^1.79.0 | Linter (replaces ESLint + typescript-eslint) |
+| **oxfmt** | ^0.64.0 | Formatter (replaces Prettier) |
 | **pnpm** | 11.22.0 | Package manager |
 
 **Mockup CDN:** Use `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4` (v4). Do NOT use `https://cdn.tailwindcss.com` (serves v3).
 
-**Dark mode in mockups:** Use `@custom-variant dark (&:where(.dark, .dark *))` in the `@theme` block. Toggle via `document.documentElement.classList.toggle('dark')`.
-
 ## 2. pnpm Only (NON-NEGOTIABLE)
 
-Use **pnpm** as the sole package manager. Never use npm, yarn, or any other package manager. All pnpm commands run inside Docker containers via the orchestrator's Makefile targets (see section 2).
+Use **pnpm** as the sole package manager. Never use npm, yarn, or any other package manager. All pnpm commands run inside Docker containers via the orchestrator's Makefile targets.
 
-## 2. Docker-first development (NON-NEGOTIABLE)
+## 3. Docker-first development (NON-NEGOTIABLE)
 
 **Never run development tools directly on the host machine.** All commands must run inside Docker containers via the orchestrator's Makefile targets.
-
-### How it works
-
-- The orchestrator repo (`dashy/`) has Makefile targets that run `docker compose exec` to execute commands inside the kiosk container
-- This kiosk repo's local Makefile is executed **inside the container** by the orchestrator
-- Always use the orchestrator's Makefile targets (e.g., `make lint-kiosk` from the `dashy/` directory)
 
 ### Forbidden on the host
 
 Never run these directly on the local machine:
 
 - `pnpm`, `npm`, `yarn`, `node`, `npx`
-- This repo's local `make` targets (they're designed to run inside the container)
+- `tsc`, `oxlint`, `oxfmt`, `vitest`
 
 ### Approved commands
 
@@ -63,18 +73,59 @@ Use the orchestrator's `make` targets (from the `dashy/` directory):
 
 If a command you want is missing from the orchestrator's Makefile, add a target there — do not bypass Docker.
 
-## 3. Verify before declaring done
+## 3a. Pre-Implementation Checklist (NON-NEGOTIABLE)
 
-For any frontend change (run from the orchestrator `dashy/` directory):
+**Before writing ANY implementation code, you MUST invoke the `/pre-implementation-checklist` skill.** This is not optional — it's a mandatory workflow step.
 
-1. `make lint-kiosk`
-2. `make typecheck-kiosk`
-3. `make test-kiosk`
-4. `make build-kiosk`
+The skill will guide you through:
+- AGENTS.md compliance check
+- Duplication detection (search for existing components/hooks)
+- Prop drilling check (3+ levels → use Context API)
+- Hardcoded values check (use tokens, not magic numbers)
+- Testing requirements
+
+**Why this is mandatory:** We've had multiple incidents where code was written with violations despite having rules documented. This skill forces you to check before coding, not after.
+
+## 4. Verify before declaring done
+
+### 4a. Self-Review (NON-NEGOTIABLE)
+
+**Before presenting code to the user, you MUST invoke the `/self-review` skill.** This is your responsibility — do not wait for the user to catch violations.
+
+The skill will guide you through:
+- Re-reading relevant AGENTS.md sections
+- Searching for duplicated logic across views
+- Verifying no prop drilling
+- Verifying no hardcoded values
+- Verifying shared components/hooks are used
+- Verifying tests exist
+
+**If violations are found:** Fix them before presenting the code. Do not present code with known violations.
+
+### 4b. Code Review Gate (Before Quality Gates)
+
+**Before running automated quality gates, you MUST invoke the `/code-review-gate` skill.** This performs a manual code review that catches issues automated tools miss.
+
+The skill will guide you through:
+- Pattern violation checks (duplicated logic, prop drilling, hardcoded values)
+- Code quality checks (shared components/hooks, magic numbers, DRY principle)
+- Component structure review
+
+**If violations are found:** Fix them before proceeding to quality gates.
+
+### 4c. Quality Gates (NON-NEGOTIABLE)
+
+**After completing the code review gate, you MUST invoke the `/quality-gate` skill.** This runs the automated quality checks.
+
+The skill will run:
+1. `make lint-kiosk` (oxlint)
+2. `make typecheck-kiosk` (tsc --noEmit)
+3. `make test-kiosk` (vitest)
+4. `make build-kiosk` (vite build)
 
 All four must pass before you tell the user the task is complete.
 
-## 4. Git workflow
+## 5. Git workflow
 
 - Work on the `development` branch. `main` is for stable releases.
 - Do not run `git commit`, `git push`, `git reset`, `git rebase`, or other git mutations unless the user explicitly asks.
@@ -82,7 +133,7 @@ All four must pass before you tell the user the task is complete.
 - Keep commits atomic and write messages that describe "why," not just "what."
 - Include `Co-Authored-By: Qwen <noreply@qwen.ai>` in AI-assisted commits.
 
-## 5. Frontend code standards
+## 6. Frontend code standards
 
 - **TypeScript required** — all new components must be `.tsx`. Avoid `any`; if unavoidable, add a comment explaining why.
 - **One component per folder** — each component lives in its own folder under `src/features/` with `Component.tsx`, `Component.test.tsx`, and `index.ts` barrel export.
@@ -91,37 +142,49 @@ All four must pass before you tell the user the task is complete.
 - **Shared types go in `src/types/`**.
 - **No emojis in source or UI** — use SVG icons.
 
-## 5b. Styling — Tailwind Only (NON-NEGOTIABLE)
+## 7. Styling — Tailwind Only (NON-NEGOTIABLE)
 
 **Tailwind utility classes only.** No inline `style="..."` with `var(--dt-*)`. No `const styles` objects. No CSS Modules. No styled-components.
 
-**Why:** The frontend architecture audit (`docs/frontend-architecture-audit.md`) found three inconsistent styling patterns (inline styles, const styles objects, Tailwind) used simultaneously. This was resolved: Tailwind is the single approach going forward.
+See [Styling Guide](docs/guides/styling.md#tailwind-only-non-negotiable) for detailed rules and examples.
 
-**Rules:**
-- All layout, spacing, colors, typography, and hover states use Tailwind utility classes
-- Design tokens are consumed via the `@theme` block in `src/index.css` — e.g., `bg-bg`, `text-text-primary`, `border-border`, `bg-primary-light`
-- Catalyst UI patterns for primitives (Button, Badge, Dialog, Sidebar, etc.) — copy from `/Users/admin/Downloads/TailwindPLUS/catalyst-ui-kit/typescript/` and adapt colors via the mapping table in the mockup skill
-- **Mockups must also use Tailwind classes** — approved mockup classes transfer directly to React implementation. No inline styles in mockups.
-- Dark mode: use Tailwind's `dark:` variant. Theme toggling adds/removes the `.dark` class on `<html>`.
+**Quick reference:**
+- All layout, spacing, colors, typography use Tailwind utility classes
+- Design tokens consumed via `@theme` block in `src/index.css`
+- Dark mode: use Tailwind's `dark:` variant
+- Mockups must also use Tailwind classes
 
-**Forbidden patterns:**
-```tsx
-// FORBIDDEN: inline style with CSS var
-<div style={{ background: 'var(--dt-bg)', color: 'var(--dt-text-primary)' }}>
+## 7b. Mockups Are Living References (NON-NEGOTIABLE)
 
-// FORBIDDEN: const styles object
-const styles = { card: { background: colors.bg, padding: `${spacing.md}px` } }
+Approved mockup files in `mockups/` are **living design references** — they always reflect the current approved visual design.
 
-// FORBIDDEN: inline style with token import
-<div style={{ background: colors.white, padding: `${spacing.lg}px` }}>
-```
+- When modifying a component's visual style in React, **update the corresponding mockup to match**
+- Mockups are the source of truth for approved visual design
+- File naming: `mockups/<component-name>.html`
 
-**Approved pattern:**
-```tsx
-<div className="bg-bg text-text-primary p-4">
-```
+## 7c. No Hardcoded Values — Ask Before Hardcoding (NON-NEGOTIABLE)
 
-## 6. Architecture & design principles
+**Hardcoding is a code smell. Never hardcode values without explicit user approval.**
+
+See [Styling Guide](docs/guides/styling.md#no-hardcoded-values--ask-before-hardcoding-non-negotiable) for detailed rules and examples.
+
+**Quick reference:**
+- Shell dimensions use CSS custom properties (`--shell-header-height`, etc.)
+- Colors use design tokens (`bg-primary`, `text-text-muted`, etc.)
+- If you're about to write a magic number or pixel value — **stop and ask**
+
+## 7d. Common Patterns — When to Extract (NON-NEGOTIABLE)
+
+**When to extract shared components, hooks, and when to use Context API.**
+
+See [Styling Guide](docs/guides/styling.md#common-patterns--when-to-extract-non-negotiable) for detailed rules and examples.
+
+**Quick reference:**
+- Same markup in 2+ views → Extract to shared component
+- Same logic in 2+ components → Extract to shared hook
+- Props passed through 3+ levels → Use Context API
+
+## 8. Architecture & design principles
 
 - **Configurable, not hardcoded** — family members, colors, API keys, and similar data come from `.env` or config files.
 - **Frontend-first for UI work** — build the UI with mock data, define the API contract, then build the backend to match.
@@ -129,14 +192,14 @@ const styles = { card: { background: colors.bg, padding: `${spacing.md}px` } }
 - **Floating layers** — popups/modals portal to `document.body` and apply the `useUiScale` factor to their content wrapper only.
 - **Latest stable versions** — do not pin to old versions without a documented compatibility reason.
 
-## 7. Code style
+## 9. Code style
 
 - Match the existing file's style, naming, and comment density.
 - Minimal changes. No opportunistic refactors.
-- ESLint + Prettier enforced via `make lint` / `make format`.
+- Oxlint + Oxfmt enforced via `make lint` / `make format`.
 - No `console.log` except `console.warn`/`console.error`.
 
-## 8. Universal coding standards
+## 10. Universal coding standards
 
 These standards apply to **all code** in the project. Every agent must follow them.
 
@@ -172,7 +235,7 @@ These standards apply to **all code** in the project. Every agent must follow th
 - Code review (human or agent) catches what linters miss
 - All new code must comply; existing code upgraded during migration phases
 
-## 9. Testing
+## 11. Testing
 
 - **Three-tier testing strategy:**
   1. **Unit tests** — domain logic, pure functions (fast, deterministic)
@@ -182,6 +245,6 @@ These standards apply to **all code** in the project. Every agent must follow th
 - Tests live alongside components: `Component.test.tsx`
 - All new features need tests before declaring done
 
-## 10. When in doubt
+## 12. When in doubt
 
-If you are about to run a command and are unsure whether it violates the pnpm-only rule, stop and ask the user. It is better to confirm than to introduce the wrong package manager.
+If you are about to run a command and are unsure whether it violates the pnpm-only rule or the no-old-code rule, stop and ask the user. It is better to confirm than to introduce the wrong pattern.

@@ -1,24 +1,67 @@
+/**
+ * Generic data fetching hook with auto-refresh and silent background updates.
+ *
+ * v2 improvement over v1: splits loading into two states:
+ * - `isLoading` — true only during the initial fetch (shows skeleton)
+ * - `isRefreshing` — true during background refreshes (silent, no skeleton flash)
+ *
+ * Background refreshes update `data` in place via React reconciliation —
+ * no component unmount, no user interaction interrupted. Errors during
+ * refresh keep the last successful `data` visible.
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 
-interface UseApiResult<T> {
+/** Return type of the useApi hook. */
+export interface UseApiResult<T> {
+  /** Fetched data, or null if not yet loaded. */
   data: T | null
-  loading: boolean
+  /** True only during the initial fetch (first load). */
+  isLoading: boolean
+  /** True during background refreshes (silent — data stays visible). */
+  isRefreshing: boolean
+  /** Error message from the last failed fetch, or null. */
   error: string | null
+  /** Manually trigger a refetch. */
   refetch: () => void
+  /** Timestamp (ms) of the last successful fetch. */
   lastRefresh: number | null
 }
 
-interface UseApiOptions {
-  refetchInterval?: number // milliseconds, 0 = no auto-refresh
-  errorRetryInterval?: number // milliseconds, retry faster on error (default: 10s)
+/** Configuration options for the useApi hook. */
+export interface UseApiOptions {
+  /** Auto-refresh interval in milliseconds. 0 = no auto-refresh. */
+  refetchInterval?: number
+  /** Retry interval when in error state (default: 10s). */
+  errorRetryInterval?: number
 }
 
-export function useApi<T>(fetchFn: () => Promise<T>, options: UseApiOptions = {}): UseApiResult<T> {
+/**
+ * Generic data fetching hook with auto-refresh and silent background updates.
+ *
+ * @param fetchFn - Async function that returns the data.
+ * @param options - Configuration for refresh intervals.
+ * @returns Data, loading states, error, and refetch trigger.
+ *
+ * @example
+ * ```ts
+ * const { data, isLoading, isRefreshing, error } = useApi(
+ *   () => fetch('/api/v1/weather').then(r => r.json()),
+ *   { refetchInterval: 600_000 }
+ * )
+ * ```
+ */
+export function useApi<T>(
+  fetchFn: () => Promise<T>,
+  options: UseApiOptions = {},
+): UseApiResult<T> {
   const [data, setData] = useState<T | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastRefresh, setLastRefresh] = useState<number | null>(null)
   const fetchFnRef = useRef(fetchFn)
+  const isFirstLoad = useRef(true)
 
   // Keep ref in sync with latest fetchFn
   useEffect(() => {
@@ -26,16 +69,26 @@ export function useApi<T>(fetchFn: () => Promise<T>, options: UseApiOptions = {}
   }, [fetchFn])
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    const isInitial = isFirstLoad.current
+
+    if (isInitial) {
+      setIsLoading(true)
+    } else {
+      setIsRefreshing(true)
+    }
+
     try {
       const result = await fetchFnRef.current()
       setData(result)
+      setError(null)
       setLastRefresh(Date.now())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
+      // On error during refresh, keep last successful data visible
     } finally {
-      setLoading(false)
+      setIsLoading(false)
+      setIsRefreshing(false)
+      isFirstLoad.current = false
     }
   }, [])
 
@@ -62,5 +115,5 @@ export function useApi<T>(fetchFn: () => Promise<T>, options: UseApiOptions = {}
     return () => clearInterval(interval)
   }, [fetchData, options.refetchInterval, options.errorRetryInterval, error])
 
-  return { data, loading, error, refetch: fetchData, lastRefresh }
+  return { data, isLoading, isRefreshing, error, refetch: fetchData, lastRefresh }
 }

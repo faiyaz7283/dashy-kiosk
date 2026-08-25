@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------------
- * Dashy Design Tokens — Shared across all mockups
+ * Dashy Design Tokens — Shared across all v2 mockups
  *
- * Copied from src/index.css. Both light (default) and dark ([data-theme='dark'])
- * palettes. Mockups reference these via var(--dt-*) and Tailwind CDN utilities.
+ * Copied from src/index.css. Both light (default) and dark (.dark) palettes.
+ * Mockups reference these via var(--dt-*) and Tailwind CDN utilities.
  * --------------------------------------------------------------------------- */
 
 :root {

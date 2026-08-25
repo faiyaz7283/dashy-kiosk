@@ -1,12 +1,12 @@
 @import 'tailwindcss';
 
 /* ---------------------------------------------------------------------------
- * Design tokens as CSS custom properties.
+ * Dashy Design Tokens
  *
- * Single source of truth for all visual values. Components reference these
- * via inline styles (var(--dt-*)) or Tailwind utility classes generated
- * from the @theme block below.
+ * All --dt-* custom properties define the light/dark theme palette.
+ * The @theme block below maps them to Tailwind utility classes.
  * --------------------------------------------------------------------------- */
+
 :root {
   /* Colors — brand / primary */
   --dt-primary: #4f46e5;
@@ -19,6 +19,7 @@
   --dt-white: #ffffff;
   --dt-bg: #f9fafb;
   --dt-bg-hover: #f3f4f6;
+  --dt-bg-sidebar: #ffffff;
 
   /* Colors — text */
   --dt-text-primary: #1f2937;
@@ -72,13 +73,15 @@
   --dt-shadow-fab: 0 4px 12px rgba(79, 70, 229, 0.4);
   --dt-shadow-fab-hover: 0 6px 16px rgba(79, 70, 229, 0.5);
   --dt-shadow-sidebar: 2px 0 4px rgba(0, 0, 0, 0.06);
+
+  /* Shell dimensions */
+  --shell-header-height: 57px;
+  --shell-status-bar-height: 28px;
+  --shell-sidebar-expanded: 224px;
+  --shell-sidebar-collapsed: 64px;
 }
 
-/* ---------------------------------------------------------------------------
- * Dark mode color palette
- * Applied when data-theme="dark" is set on the document root
- * --------------------------------------------------------------------------- */
-[data-theme='dark'] {
+.dark {
   /* Colors — brand / primary */
   --dt-primary: #6366f1;
   --dt-primary-hover: #818cf8;
@@ -90,6 +93,7 @@
   --dt-white: #1e293b;
   --dt-bg: #0f172a;
   --dt-bg-hover: #1e293b;
+  --dt-bg-sidebar: #1e293b;
 
   /* Colors — text */
   --dt-text-primary: #f1f5f9;
@@ -126,13 +130,13 @@
   --dt-density-medium: #854d0e;
   --dt-density-high: #991b1b;
 
-  /* Family member colors (slightly brighter for dark backgrounds) */
+  /* Family member colors (brighter for dark backgrounds) */
   --dt-member-faiyaz: #60a5fa;
   --dt-member-trisha: #f472b6;
   --dt-member-arya: #4ade80;
   --dt-member-raya: #fbbf24;
 
-  /* Shadows (darker, more subtle for dark mode) */
+  /* Shadows */
   --dt-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
   --dt-shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
   --dt-shadow-side-nav: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -146,132 +150,93 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Tailwind theme — connects design tokens to Tailwind utility classes.
- *
- * Colors reference CSS custom properties so Tailwind utilities automatically
- * adapt to theme changes (light/dark/auto).
+ * Tailwind @theme — maps CSS custom properties to utility classes
  * --------------------------------------------------------------------------- */
+
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
-
-  /* Brand / primary */
   --color-primary: var(--dt-primary);
   --color-primary-hover: var(--dt-primary-hover);
   --color-primary-light: var(--dt-primary-light);
   --color-primary-light-hover: var(--dt-primary-light-hover);
   --color-primary-ring: var(--dt-primary-ring);
-
-  /* Surfaces */
   --color-bg: var(--dt-bg);
   --color-bg-hover: var(--dt-bg-hover);
-
-  /* Text */
+  --color-white: var(--dt-white);
   --color-text-primary: var(--dt-text-primary);
   --color-text-secondary: var(--dt-text-secondary);
   --color-text-muted: var(--dt-text-muted);
   --color-text-faint: var(--dt-text-faint);
   --color-text-disabled: var(--dt-text-disabled);
-
-  /* Borders */
   --color-border: var(--dt-border);
   --color-border-light: var(--dt-border-light);
   --color-border-dark: var(--dt-border-dark);
-
-  /* Status */
   --color-success: var(--dt-success);
   --color-danger: var(--dt-danger);
   --color-warning: var(--dt-warning);
-  --color-danger-bg: var(--dt-danger-bg);
-  --color-danger-text: var(--dt-danger-text);
-
-  /* Family member colors */
   --color-faiyaz: var(--dt-member-faiyaz);
   --color-trisha: var(--dt-member-trisha);
   --color-arya: var(--dt-member-arya);
   --color-raya: var(--dt-member-raya);
 
+  /* Density */
+  --color-density-none: var(--dt-density-none);
+  --color-density-low: var(--dt-density-low);
+  --color-density-medium: var(--dt-density-medium);
+  --color-density-high: var(--dt-density-high);
+
+  /* Chores status */
+  --color-chores-open: var(--dt-chores-open);
+  --color-chores-claimed: var(--dt-chores-claimed);
+  --color-chores-assigned: var(--dt-chores-assigned);
+  --color-chores-in-progress: var(--dt-chores-in-progress);
+  --color-chores-pending: var(--dt-chores-pending-signoff);
+  --color-chores-completed: var(--dt-chores-completed);
+  --color-chores-overdue: var(--dt-chores-overdue);
+  --color-chores-expiring-soon: var(--dt-chores-expiring-soon);
+
+  /* Surfaces & status */
+  --color-bg-sidebar: var(--dt-bg-sidebar);
+  --color-danger-bg: var(--dt-danger-bg);
+  --color-danger-text: var(--dt-danger-text);
+
   /* Shadows */
+  --shadow-view-btn: var(--dt-shadow-view-btn);
+  --shadow-sidebar: var(--dt-shadow-sidebar);
   --shadow-card: var(--dt-shadow-card);
   --shadow-card-hover: var(--dt-shadow-card-hover);
+  --shadow-side-nav: var(--dt-shadow-side-nav);
+  --shadow-side-nav-hover: var(--dt-shadow-side-nav-hover);
   --shadow-popup: var(--dt-shadow-popup);
   --shadow-modal: var(--dt-shadow-modal);
   --shadow-fab: var(--dt-shadow-fab);
   --shadow-fab-hover: var(--dt-shadow-fab-hover);
-  --shadow-sidebar: var(--dt-shadow-sidebar);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+ * Utility classes
+ * --------------------------------------------------------------------------- */
+
+/**
+ * Hidden scrollbar utility — allows scroll but hides scrollbar UI.
+ * Used in WeekView day cards for smooth scrolling without visual clutter.
+ */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
 
 /* ---------------------------------------------------------------------------
- * Hover utility classes.
- *
- * Replace imperative e.currentTarget.style.* mutations with declarative CSS.
- * Uses !important to override inline styles set by the component's style prop.
+ * Base styles
  * --------------------------------------------------------------------------- */
 
-/* Card lift on hover — shadow + translateY */
-.hover-lift {
-  transition:
-    box-shadow 0.15s,
-    transform 0.1s;
-}
-.hover-lift:hover {
-  box-shadow: var(--dt-shadow-card-hover) !important;
-  transform: translateY(-1px) !important;
-}
-
-/* Background color change on hover */
-.hover-bg {
-  transition: background 0.15s;
-}
-.hover-bg:hover {
-  background: var(--dt-bg-hover) !important;
-}
-
-/* Side navigation arrow button hover */
-.hover-arrow {
-  transition: all 0.15s;
-}
-.hover-arrow:hover {
-  color: var(--dt-primary) !important;
-  border-color: var(--dt-primary) !important;
-  box-shadow: var(--dt-shadow-side-nav-hover) !important;
-  opacity: 1 !important;
-  transform: scale(1.1) !important;
-}
-
-/* Date display trigger button hover */
-.hover-date-trigger {
-  transition: all 0.15s;
-}
-.hover-date-trigger:hover {
-  border-color: var(--dt-border-dark) !important;
-  background: var(--dt-bg) !important;
-}
-
-/* Picker navigation button hover (background + text color) */
-.hover-picker-btn {
-  transition: all 0.1s;
-}
-.hover-picker-btn:hover {
-  background: var(--dt-bg-hover) !important;
-  color: var(--dt-text-muted) !important;
-}
-
-/* Picker month navigation button hover (background only) */
-.hover-picker-month {
-  transition: background 0.15s;
-}
-.hover-picker-month:hover {
-  background: var(--dt-bg-hover) !important;
-}
-
-/* ---------------------------------------------------------------------------
- * Animations
- * --------------------------------------------------------------------------- */
-@keyframes skeleton-pulse {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
