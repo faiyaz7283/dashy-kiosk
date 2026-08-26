@@ -17,14 +17,14 @@ export function isAdult(member: FamilyMember): boolean {
     return false
   }
 
-  const dob = new Date(member.date_of_birth)
-  const today = new Date()
+  const dob = Temporal.PlainDate.from(member.date_of_birth)
+  const today = Temporal.Now.plainDateISO()
 
-  let age = today.getFullYear() - dob.getFullYear()
-  const monthDiff = today.getMonth() - dob.getMonth()
+  let age = today.year - dob.year
+  const monthDiff = today.monthNumber - dob.monthNumber
 
   // Adjust age if birthday hasn't occurred yet this year
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.day < dob.day)) {
     age--
   }
 

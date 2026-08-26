@@ -44,3 +44,5 @@ export {
   getShortWeekday,
   eventDate,
 } from './calendar'
+
+export { useConfig, convertUtcToTimezone, formatUtcTime, formatUtcDate } from './timezone'

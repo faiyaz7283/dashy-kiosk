@@ -56,6 +56,11 @@ export const ENDPOINTS = {
     method: 'GET',
     refreshInterval: 120_000, // 2 minutes
   },
+  config: {
+    url: `${API_BASE}/api/v1/config`,
+    method: 'GET',
+    refreshInterval: 0, // Fetch once on mount
+  },
 } as const satisfies Record<string, EndpointConfig>
 
 /**

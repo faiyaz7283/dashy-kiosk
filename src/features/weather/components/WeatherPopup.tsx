@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { WeatherIcon } from './WeatherIcon'
 import type { DailyForecast } from '@/types/weather'
+import { parseWeatherTime } from '@/shared/date/parse'
 
 /** Props for the WeatherPopup component. */
 export interface WeatherPopupProps {
@@ -230,9 +231,10 @@ function HourlyChart({ hourly }: HourlyChartProps) {
       <div className="flex items-end justify-between gap-1 px-1">
         {samples.map((hour, idx) => {
           const heightPercent = ((hour.temperature - minTemp) / range) * 60 + 25
-          const hourDate = new Date(hour.time)
-          const hourLabel = hourDate.toLocaleTimeString('en-US', {
+          const hourTime = parseWeatherTime(hour.time)
+          const hourLabel = hourTime.toLocaleString('en-US', {
             hour: 'numeric',
+            minute: '2-digit',
             hour12: true,
           })
 
