@@ -6,7 +6,6 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { SegmentedControl } from './SegmentedControl'
 
 const options = [
@@ -41,22 +40,6 @@ describe('SegmentedControl', () => {
     )
     expect(screen.getByText('Claimed')).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByText('Open')).toHaveAttribute('aria-checked', 'false')
-  })
-
-  it('calls onChange when option clicked', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    render(
-      <SegmentedControl
-        label="Assignment"
-        options={options}
-        value="open"
-        onChange={onChange}
-      />
-    )
-
-    await user.click(screen.getByText('Claimed'))
-    expect(onChange).toHaveBeenCalledWith('claimed')
   })
 
   it('renders label when provided', () => {

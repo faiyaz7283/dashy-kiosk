@@ -227,11 +227,31 @@ These standards apply to **all code** in the project. Every agent must follow th
 
 ## 11. Testing
 
-- **Three-tier testing strategy:**
-  1. **Unit tests** — domain logic, pure functions (fast, deterministic)
-  2. **Component tests** — React Testing Library for component rendering and interaction
-  3. **Integration tests** — full feature flows with mocked API
-- **vitest** for test runner, **@testing-library/react** for component tests
+### Philosophy
+
+**Test the code, not the browser.** If a human can verify it by looking at the kiosk, don't automate it in a test.
+
+### What to test
+
+- **Pure functions** — utils, formatters, date math, error parsing
+- **Hooks** — data fetching logic, state management, localStorage persistence, side effects
+- **Component rendering** — correct output given props (right text, data, CSS classes, ARIA attributes)
+- **CSS enforcement** — `toHaveClass` / `toHaveStyle` assertions for Tailwind class correctness
+
+### What NOT to test
+
+- User interaction flows (click → verify DOM change → click again)
+- Integration tests that render multiple features and navigate between them
+- Form filling, dropdown interactions, hover popups, navigation flows
+- Full-app smoke tests
+
+### Rules
+
+- No `userEvent` or `fireEvent` in tests — interactions are verified manually
+- No `waitFor` unless testing async data fetching in hooks
+- No integration test files — each test file tests one component/hook/module
+- CSS class assertions (`toHaveClass`, `toHaveStyle`) are encouraged for shared components
+- **vitest** for test runner, **@testing-library/react** for render tests
 - Tests live alongside components: `Component.test.tsx`
 - All new features need tests before declaring done
 

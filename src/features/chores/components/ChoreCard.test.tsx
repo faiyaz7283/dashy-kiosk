@@ -192,23 +192,6 @@ describe('ChoreCard', () => {
     expect(screen.getByText('Completed by trisha')).toBeInTheDocument()
   })
 
-  it('calls onClick when clicked', async () => {
-    const { userEvent } = await import('@testing-library/user-event')
-    const user = userEvent.setup()
-    const onClick = vi.fn()
-    render(
-      <ChoreCard
-        instance={mockInstance}
-        masterChore={mockMasterChore}
-        categories={mockCategories}
-        colorMap={mockColorMap}
-        onClick={onClick}
-      />
-    )
-    await user.click(screen.getByText('Wipe Counter'))
-    expect(onClick).toHaveBeenCalled()
-  })
-
   it('shows "Uncategorized" when category not found', () => {
     const masterWithUnknownCategory = {
       ...mockMasterChore,

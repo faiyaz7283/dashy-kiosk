@@ -2,7 +2,7 @@
  * Tests for CalendarDataContext — verifies provider behavior and context consumption.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CalendarDataProvider, useCalendarContext } from './CalendarDataContext'
@@ -70,6 +70,10 @@ describe('CalendarDataContext', () => {
   beforeEach(() => {
     queryClient = createTestQueryClient()
     mockFetch.mockReset()
+  })
+
+  afterEach(() => {
+    queryClient.clear()
   })
 
   it('throws error when useCalendarContext is used outside provider', () => {

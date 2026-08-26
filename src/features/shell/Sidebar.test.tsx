@@ -58,20 +58,4 @@ describe('Sidebar', () => {
     expect(screen.getByTitle('Collapse sidebar')).toBeInTheDocument()
   })
 
-  it('calls onFeatureChange when nav item clicked', async () => {
-    const { userEvent } = await import('@testing-library/user-event')
-    const user = userEvent.setup()
-    const onFeatureChange = vi.fn()
-    render(
-      <Sidebar
-        activeFeature="calendar"
-        onFeatureChange={onFeatureChange}
-        isExpanded={true}
-        onToggle={vi.fn()}
-      />
-    )
-
-    await user.click(screen.getByRole('button', { name: /Chores/i }))
-    expect(onFeatureChange).toHaveBeenCalledWith('chores')
-  })
 })

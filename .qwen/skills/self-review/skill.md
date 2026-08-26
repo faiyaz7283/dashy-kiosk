@@ -79,16 +79,24 @@ ls src/features/calendar/hooks/
 - [ ] Don't reinvent existing utilities
 - [ ] Use shared components/hooks where appropriate
 
-### 6. Verify Tests Exist
+### 6. Verify Tests Exist and Follow Strategy
 
 ```bash
 # Check for test files
 find src -name "*.test.tsx" -o -name "*.test.ts" | grep -E "(Component|Hook)"
+
+# Check for forbidden interaction patterns in tests
+grep -r "userEvent" src/ --include="*.test.*"
+grep -r "fireEvent" src/ --include="*.test.*"
 ```
 
 - [ ] New components need at minimum a render test
 - [ ] New hooks need unit tests
 - [ ] Tests should be co-located with implementation
+- [ ] No `userEvent` or `fireEvent` in any test — interactions are verified manually
+- [ ] No `waitFor` unless testing async data fetching in hooks
+- [ ] No integration test files — each test file tests one component/hook/module
+- [ ] CSS class assertions (`toHaveClass`, `toHaveStyle`) used for shared components
 
 ### 7. Check for Inline Styles
 

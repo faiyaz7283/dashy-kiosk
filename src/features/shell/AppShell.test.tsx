@@ -5,9 +5,19 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AppShell from './AppShell'
 import { formatHeaderDate, today } from '@/shared/date'
+
+function renderWithQueryClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+  )
+}
 
 // Mock the data hooks
 vi.mock('@/shared/hooks/useFamilyData', () => ({
@@ -63,40 +73,31 @@ vi.mock('@/shared/hooks/useClock', () => ({
 }))
 
 describe('AppShell', () => {
-  it('renders header with current date', async () => {
-    await waitFor(() => {
-      render(<AppShell />)
-    })
+  it('renders header with current date', () => {
+    renderWithQueryClient(<AppShell />)
     const expectedDate = formatHeaderDate(today())
     expect(screen.getByText(expectedDate)).toBeInTheDocument()
   })
 
-  it('renders sidebar', async () => {
-    await waitFor(() => {
-      render(<AppShell />)
-    })
+  it('renders sidebar', () => {
+    renderWithQueryClient(<AppShell />)
     expect(screen.getByRole('button', { name: /Calendar/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Chores/i })).toBeInTheDocument()
   })
 
-  it('renders status bar', async () => {
-    await waitFor(() => {
-      render(<AppShell />)
-    })
+  it('renders status bar', () => {
+    renderWithQueryClient(<AppShell />)
     expect(screen.getByTitle('Settings')).toBeInTheDocument()
   })
 
-  it('renders content area with calendar view by default', async () => {
-    await waitFor(() => {
-      render(<AppShell />)
-    })
-    // Month view is default — should show day headers
+  it('renders content area with calendar view by default', () => {
+    renderWithQueryClient(<AppShell />)
     expect(screen.getByText('Mon')).toBeInTheDocument()
     expect(screen.getByText('Sun')).toBeInTheDocument()
   })
 
   it('applies correct layout classes', () => {
-    const { container } = render(<AppShell />)
+    const { container } = renderWithQueryClient(<AppShell />)
     const root = container.firstElementChild
     expect(root).toHaveClass('h-screen', 'w-full')
   })

@@ -4,25 +4,22 @@
  * Validates React Query integration, data transformation, and loading states.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createElement, type ReactNode } from 'react'
+import { QueryClient } from '@tanstack/react-query'
+import { createTestQueryClient, createQueryClientWrapper } from '@/test/test-utils'
 import { useChoresData } from './useChoresData'
 import type { ChoresData } from '@/types/chores'
 
-/** Creates a wrapper with QueryClientProvider for testing. */
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  })
+let queryClient: QueryClient
 
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return createElement(QueryClientProvider, { client: queryClient }, children)
-  }
-}
+beforeEach(() => {
+  queryClient = createTestQueryClient()
+})
+
+afterEach(() => {
+  queryClient.clear()
+})
 
 const mockChoresData: ChoresData = {
   categories: [
@@ -83,7 +80,7 @@ describe('useChoresData', () => {
     )
 
     const { result } = renderHook(() => useChoresData(), {
-      wrapper: createWrapper(),
+      wrapper: createQueryClientWrapper(queryClient),
     })
 
     expect(result.current.isLoading).toBe(true)
@@ -98,7 +95,7 @@ describe('useChoresData', () => {
     } as Response)
 
     const { result } = renderHook(() => useChoresData(), {
-      wrapper: createWrapper(),
+      wrapper: createQueryClientWrapper(queryClient),
     })
 
     await waitFor(() => {
@@ -116,7 +113,7 @@ describe('useChoresData', () => {
     } as Response)
 
     const { result } = renderHook(() => useChoresData(), {
-      wrapper: createWrapper(),
+      wrapper: createQueryClientWrapper(queryClient),
     })
 
     await waitFor(() => {
@@ -135,7 +132,7 @@ describe('useChoresData', () => {
     } as Response)
 
     const { result } = renderHook(() => useChoresData(), {
-      wrapper: createWrapper(),
+      wrapper: createQueryClientWrapper(queryClient),
     })
 
     await waitFor(() => {
@@ -153,7 +150,7 @@ describe('useChoresData', () => {
     } as Response)
 
     const { result } = renderHook(() => useChoresData(), {
-      wrapper: createWrapper(),
+      wrapper: createQueryClientWrapper(queryClient),
     })
 
     await waitFor(() => {

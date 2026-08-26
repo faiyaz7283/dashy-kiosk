@@ -6,7 +6,6 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { DifficultySlider } from './DifficultySlider'
 
 describe('DifficultySlider', () => {
@@ -34,17 +33,4 @@ describe('DifficultySlider', () => {
     expect(input).toHaveAttribute('value', '2')
   })
 
-  it('calls onChange when value changes', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    render(
-      <DifficultySlider label="Difficulty" value={3} onChange={onChange} />
-    )
-
-    const input = screen.getByRole('slider')
-    await user.click(input)
-    // Note: userEvent doesn't simulate range input changes well,
-    // but we verify the input is interactive
-    expect(input).toBeInTheDocument()
-  })
 })

@@ -1,100 +1,80 @@
 ---
 name: add-frontend-test
-description: Workflow for adding frontend tests following Dashy's three-tier testing strategy (unit, component, integration).
+description: Workflow for adding frontend tests following Dashy's "test the code, not the browser" philosophy.
 ---
 
 # Add Frontend Test
 
-Write frontend tests following Dashy's three-tier testing strategy.
+Write frontend tests that verify code logic — not user interactions.
 
-## When to use
+## Philosophy
 
-- Adding tests for a new component, hook, or utility
-- Improving coverage for existing code
-- Verifying a bug fix with a regression test
+**Test the code, not the browser.** If a human can verify it by looking at the kiosk, don't automate it in a test.
 
-## Prerequisites
+## What to test
 
-- Understand the three test tiers and when to use each
-- Know the file location conventions (co-located vs `src/test/`)
-- Review existing tests for patterns: `src/shared/utils/recurrence.test.ts`, `src/features/calendar/components/EventItem/EventItem.test.tsx`
+| Category | What | Example |
+|----------|------|---------|
+| **Pure functions** | Utils, formatters, date math, error parsing | `formatDifficulty(3)` returns `'Medium'` |
+| **Hooks** | Data fetching, state management, localStorage, side effects | `useFamilyData()` returns members after fetch |
+| **Component rendering** | Correct output given props — text, data, CSS classes, ARIA | `<ChoreCard />` renders chore name, category, difficulty |
+| **CSS enforcement** | Tailwind classes applied correctly | `expect(el).toHaveClass('bg-primary')` |
 
-## Test tiers
+## What NOT to test
 
-| Tier | Location | Purpose | Tools |
-|------|----------|---------|-------|
-| Unit | Co-located `*.test.ts` | Pure utils, hook logic | Vitest, `renderHook` |
-| Component | Co-located `*.test.tsx` | Rendering + interaction | Vitest + Testing Library |
-| Integration | `src/test/integration/` | Full feature flows | Vitest + MSW + Testing Library |
+- ❌ User interaction flows (click → verify DOM change → click again)
+- ❌ Integration tests rendering multiple features
+- ❌ Form filling, dropdown interactions, hover popups
+- ❌ Full-app smoke tests
+- ❌ `userEvent` or `fireEvent` — interactions are verified manually
+- ❌ `waitFor` unless testing async data fetching in hooks
 
-## Conventions
+## Test file conventions
 
-- **Co-locate tests**: `ComponentName.test.tsx` lives next to `ComponentName.tsx`
-- **File pattern**: `*.test.ts` or `*.test.tsx`
+- **Co-locate**: `ComponentName.test.tsx` lives next to `ComponentName.tsx`
+- **File pattern**: `*.test.ts` (logic) or `*.test.tsx` (rendering)
 - **Use `describe`/`it` blocks** (not `test`)
-- **Arrange-Act-Assert** pattern in each test
 - **No snapshot tests** — explicit assertions only
-- **Test behavior, not implementation details** — query by text, role, or label; avoid querying by class name or data attribute
-- **Use `vi.fn()` for mocks**, `vi.mock()` for module mocks
-- **Mock data** goes in the test file (small) or `src/test/mocks/` (shared/large)
-- **Group related tests** with nested `describe` blocks (see EventItem pattern: `describe('card variant')`, `describe('interactions')`)
+- **No `userEvent` or `fireEvent`** — these simulate user interactions
+- **CSS assertions encouraged**: `toHaveClass`, `toHaveStyle`, `toHaveAttribute`
 
 ## Steps
 
-### 1. Determine the test tier
-
-Decide which tier based on what you're testing:
+### 1. Determine what you're testing
 
 - **Pure function with no React?** → Unit test (`.test.ts`)
-- **React component or hook?** → Component test (`.test.tsx`)
-- **Multi-component feature flow with API calls?** → Integration test (`src/test/integration/`)
+- **Hook with state/fetch?** → Hook test (`.test.ts`)
+- **Component rendering?** → Render test (`.test.tsx`)
 
 ### 2. Create the test file
 
-Co-locate the test file next to the source file:
+Co-locate next to the source:
 
 ```
 src/shared/utils/density.ts
 src/shared/utils/density.test.ts    ← co-located
 
-src/shared/date/format.ts
-src/shared/date/format.test.ts      ← co-located
-
-src/features/calendar/components/EventItem/EventItem.tsx
-src/features/calendar/components/EventItem/EventItem.test.tsx    ← co-located
+src/features/calendar/components/EventCard/EventCard.tsx
+src/features/calendar/components/EventCard/EventCard.test.tsx    ← co-located
 ```
 
-### 3. Write unit tests (utils)
-
-Follow the `recurrence.test.ts` pattern — import from `vitest`, use `describe`/`it`, test edge cases:
+### 3. Write unit tests (pure functions)
 
 ```typescript
 import { describe, it, expect } from 'vitest'
-import { getOrdinalSuffix } from './formatting'
+import { formatDifficulty } from './chores'
 
-describe('getOrdinalSuffix', () => {
-  it('returns st for 1, 21, 31', () => {
-    expect(getOrdinalSuffix(1)).toBe('st')
-    expect(getOrdinalSuffix(21)).toBe('st')
-    expect(getOrdinalSuffix(31)).toBe('st')
+describe('formatDifficulty', () => {
+  it('returns "Easy" for level 1', () => {
+    expect(formatDifficulty(1)).toBe('Easy')
   })
 
-  it('returns nd for 2, 22', () => {
-    expect(getOrdinalSuffix(2)).toBe('nd')
-    expect(getOrdinalSuffix(22)).toBe('nd')
+  it('clamps level below 1', () => {
+    expect(formatDifficulty(0)).toBe('Easy')
   })
 
-  it('returns rd for 3, 23', () => {
-    expect(getOrdinalSuffix(3)).toBe('rd')
-    expect(getOrdinalSuffix(23)).toBe('rd')
-  })
-
-  it('returns th for 4-20 and 24-30', () => {
-    expect(getOrdinalSuffix(4)).toBe('th')
-    expect(getOrdinalSuffix(11)).toBe('th')
-    expect(getOrdinalSuffix(12)).toBe('th')
-    expect(getOrdinalSuffix(13)).toBe('th')
-    expect(getOrdinalSuffix(24)).toBe('th')
+  it('clamps level above 5', () => {
+    expect(formatDifficulty(6)).toBe('Very Hard')
   })
 })
 ```
@@ -113,7 +93,7 @@ describe('useUiScale', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns the default scale factor', () => {
+  it('returns a positive scale factor', () => {
     const { result } = renderHook(() => useUiScale())
     expect(result.current.scaleFactor).toBeGreaterThan(0)
   })
@@ -132,134 +112,93 @@ describe('useUiScale', () => {
 })
 ```
 
-### 5. Write component tests
-
-Follow the `EventItem.test.tsx` pattern — define mock data at the top, group tests with nested `describe`:
+For data hooks with React Query, use the test utility wrapper:
 
 ```typescript
-import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
-import { ComponentName } from './ComponentName'
-import type { CalendarEvent, FamilyMember } from '@/types'
+import { createTestQueryClient, createQueryClientWrapper } from '@/test/setup'
 
-// Mock data — define at the top of the file
-const mockMembers: FamilyMember[] = [
-  {
-    name: 'Faiyaz',
-    key: 'faiyaz',
-    calendar_id: 'faiyaz@gmail.com',
-    color: '#4A90E2',
-    initial: 'F',
-  },
-]
+describe('useFamilyData', () => {
+  let queryClient: QueryClient
+  beforeEach(() => { queryClient = createTestQueryClient() })
+  afterEach(() => { queryClient.clear() })
 
-const mockEvent: CalendarEvent = {
-  id: '1',
-  title: 'Team Standup',
-  start: '2026-08-04T09:00:00',
-  end: '2026-08-04T09:30:00',
-  all_day: false,
-  members: ['faiyaz'],
-}
-
-describe('ComponentName', () => {
-  describe('rendering', () => {
-    it('renders expected content', () => {
-      render(<ComponentName event={mockEvent} members={mockMembers} />)
-      expect(screen.getByText('Team Standup')).toBeInTheDocument()
-    })
-
-    it('renders member initial', () => {
-      render(<ComponentName event={mockEvent} members={mockMembers} />)
-      expect(screen.getByText('F')).toBeInTheDocument()
-    })
-  })
-
-  describe('interactions', () => {
-    it('calls onClick handler', () => {
-      const onClick = vi.fn()
-      render(<ComponentName event={mockEvent} members={mockMembers} onClick={onClick} />)
-      fireEvent.click(screen.getByText('Team Standup'))
-      expect(onClick).toHaveBeenCalledWith(mockEvent)
-    })
-
-    it('stops click propagation', () => {
-      const onParentClick = vi.fn()
-      const onClick = vi.fn()
-      render(
-        <div onClick={onParentClick}>
-          <ComponentName event={mockEvent} members={mockMembers} onClick={onClick} />
-        </div>,
-      )
-      fireEvent.click(screen.getByText('Team Standup'))
-      expect(onClick).toHaveBeenCalledTimes(1)
-      expect(onParentClick).not.toHaveBeenCalled()
-    })
-  })
-})
-```
-
-### 6. Mock global fetch (if needed)
-
-For tests that exercise API calls, mock `fetch` globally:
-
-```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-
-describe('getWeather', () => {
-  const mockFetch = vi.fn()
-
-  beforeEach(() => {
-    vi.stubGlobal('fetch', mockFetch)
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  it('returns weather data on success', async () => {
-    mockFetch.mockResolvedValueOnce({
+  it('returns members after fetch', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ current: { temperature: 72 } }),
+      json: () => Promise.resolve(mockMembers),
+    } as Response)
+
+    const { result } = renderHook(() => useFamilyData(), {
+      wrapper: createQueryClientWrapper(queryClient),
     })
 
-    const result = await getWeather()
-    expect(result.current.temperature).toBe(72)
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+    expect(result.current.members).toEqual(mockMembers)
   })
-
-  it('throws after max retries', async () => {
-    mockFetch.mockRejectedValue(new Error('Network error'))
-    await expect(getWeather()).rejects.toThrow('Network error')
-  }, 60000) // Extended timeout for retry tests
 })
 ```
 
-### 7. Run tests and verify
+### 5. Write component render tests
+
+Verify correct output — right text, right classes, right data. No interaction simulation.
+
+```typescript
+import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { ChoreCard } from './ChoreCard'
+
+describe('ChoreCard', () => {
+  it('renders chore name', () => {
+    render(<ChoreCard instance={mockInstance} masterChore={mockMasterChore} categories={mockCategories} colorMap={mockColorMap} />)
+    expect(screen.getByText('Wipe Counter')).toBeInTheDocument()
+  })
+
+  it('renders category name', () => {
+    render(<ChoreCard instance={mockInstance} masterChore={mockMasterChore} categories={mockCategories} colorMap={mockColorMap} />)
+    expect(screen.getByText('Kitchen')).toBeInTheDocument()
+  })
+
+  it('renders completion status', () => {
+    const completedInstance = { ...mockInstance, completed_by: 'trisha', status: 'completed' as const }
+    render(<ChoreCard instance={completedInstance} masterChore={mockMasterChore} categories={mockCategories} colorMap={mockColorMap} />)
+    expect(screen.getByText('Completed by trisha')).toBeInTheDocument()
+  })
+})
+```
+
+### 6. Write CSS enforcement tests (for shared components)
+
+```typescript
+import { render } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { ContentCard } from './ContentCard'
+
+describe('ContentCard', () => {
+  it('applies correct layout classes', () => {
+    const { container } = render(<ContentCard>Content</ContentCard>)
+    const outer = container.firstElementChild
+    expect(outer).toHaveClass('flex', 'h-full', 'w-full', 'flex-col', 'p-2')
+  })
+
+  it('applies card styling to inner wrapper', () => {
+    const { container } = render(<ContentCard>Content</ContentCard>)
+    const inner = container.querySelector('[class*="bg-white"]')
+    expect(inner).toHaveClass('bg-white', 'shadow-xs', 'ring-1', 'ring-border')
+  })
+})
+```
+
+### 7. Run tests
 
 ```bash
 make test-kiosk
 ```
 
-Check specific file:
-
-```bash
-make test-kiosk  # Or: docker compose exec kiosk pnpm vitest run src/shared/utils/density.test.ts
-```
-
-### 8. Check coverage (if needed)
-
-```bash
-make test-kiosk  # Coverage is included in the output
-```
-
-**Coverage targets:**
-
-| Scope | Target |
-|-------|--------|
-| Utils and hooks | 80% |
-| Components | 70% |
-
 ## Mock data patterns
+
+Define mock data at the top of each test file. No shared fixture files.
 
 ### CalendarEvent
 
@@ -270,19 +209,6 @@ const mockEvent: CalendarEvent = {
   start: Temporal.PlainDateTime.from('2026-08-04T09:00:00'),
   end: Temporal.PlainDateTime.from('2026-08-04T09:30:00'),
   all_day: false,
-  members: ['faiyaz'],
-}
-```
-
-**All-day event:**
-
-```typescript
-const mockAllDayEvent: CalendarEvent = {
-  id: '2',
-  title: 'Birthday Party',
-  start: Temporal.PlainDate.from('2026-08-20'),
-  end: Temporal.PlainDate.from('2026-08-20'),
-  all_day: true,
   members: ['faiyaz'],
 }
 ```
@@ -299,66 +225,11 @@ const mockMember: FamilyMember = {
 }
 ```
 
-### WeatherResponse
-
-```typescript
-const mockWeather: WeatherResponse = {
-  current: {
-    temperature: 72,
-    condition: 'clear',
-    humidity: 45,
-    wind_speed: 8,
-  },
-  forecast: {
-    daily: [
-      { date: '2026-08-04', high: 78, low: 62, condition: 'partly_cloudy' },
-    ],
-    hourly: [
-      { time: '2026-08-04T09:00:00', temperature: 70, condition: 'clear' },
-    ],
-  },
-}
-```
-
 ## Checklist
 
-- [ ] Determined correct test tier (unit, component, integration)
-- [ ] Created test file co-located with source
-- [ ] Used `describe`/`it` blocks (not `test`)
-- [ ] Followed Arrange-Act-Assert pattern
-- [ ] Used explicit assertions (no snapshots)
-- [ ] Tested behavior, not implementation details
-- [ ] Added edge case tests
-- [ ] Mock data defined at top of file or in `src/test/mocks/`
+- [ ] No `userEvent` or `fireEvent` in the test
+- [ ] No `waitFor` unless testing async data fetching
+- [ ] No interaction simulation (click, hover, type, navigate)
+- [ ] Tests verify output (text, classes, attributes), not behavior flows
+- [ ] Co-located with source file
 - [ ] `make test-kiosk` passes
-- [ ] Coverage meets targets (80% utils/hooks, 70% components)
-
-## Example: Testing a new utility function
-
-Scenario: You added a `formatTemperature` function to `src/shared/utils/temperature.ts`.
-
-1. Create `src/shared/utils/temperature.test.ts` (or add to existing file)
-2. Import the function and `describe`/`it`/`expect` from vitest
-3. Write tests for each branch: Fahrenheit, Celsius, rounding, edge cases
-4. Run `make test-kiosk`
-
-## Example: Testing a new component
-
-Scenario: You created a `TaskItem` component.
-
-1. Create `TaskItem.test.tsx` next to `TaskItem.tsx`
-2. Define mock data at the top (tasks, members)
-3. Group tests: `describe('rendering')`, `describe('interactions')`, `describe('edge cases')`
-4. Use `screen.getByText()`, `screen.getByRole()`, `screen.queryByText()` for assertions
-5. Use `fireEvent` or `userEvent` for interactions
-6. Use `vi.fn()` for callback props
-7. Run `make test-kiosk`
-
-## Notes
-
-- Prefer `screen.getByRole()` over `screen.getByText()` when possible — it's more accessible
-- Use `screen.queryByText()` to assert something is **not** present (returns `null` instead of throwing)
-- For async operations, use `waitFor` or `findBy*` queries
-- Long-running retry tests need extended timeout: `it('...', async () => { ... }, 60000)`
-- Always call `vi.restoreAllMocks()` in `afterEach` to prevent test pollution
-- Integration tests with MSW are not yet set up — use component-level mocking until then
