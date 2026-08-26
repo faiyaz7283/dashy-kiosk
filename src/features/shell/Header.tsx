@@ -12,7 +12,7 @@
  * Phase 1: Structural layout with placeholder data. Phase 2+ integrates real data.
  */
 
-import { Clock, Calendar, Droplets, Wind } from 'lucide-react'
+import { Clock, Calendar, Droplets, Wind, AlertCircle } from 'lucide-react'
 import { ViewSwitcher } from './ViewSwitcher'
 import type { CalendarView } from '@/types/calendar'
 import type { Feature } from './Sidebar'
@@ -57,7 +57,7 @@ export interface HeaderProps {
  * @returns The header UI.
  */
 export function Header({ activeFeature, currentView, onViewChange, onToday, members, events, choresData }: HeaderProps) {
-  const { current: weather, forecast } = useWeatherData()
+  const { current: weather, forecast, error: weatherError } = useWeatherData()
   const { popupRef, handleMouseEnter, handleMouseMove, handleMouseLeave } = useWeatherPopup()
   const clockTime = useClock()
 
@@ -109,7 +109,7 @@ export function Header({ activeFeature, currentView, onViewChange, onToday, memb
           </div>
 
           {/* Weather summary */}
-          {weather && forecast[0] && (
+          {weather && forecast[0] ? (
             <>
               <div
                 className="relative flex items-center gap-2 cursor-pointer"
@@ -148,7 +148,12 @@ export function Header({ activeFeature, currentView, onViewChange, onToday, memb
                 />
               </div>
             </>
-          )}
+          ) : weatherError ? (
+            <div className="flex items-center gap-1.5 text-xs text-text-muted">
+              <AlertCircle className="h-3.5 w-3.5 text-error" />
+              <span>Weather unavailable</span>
+            </div>
+          ) : null}
         </div>
 
         {/* CENTER: Feature-Aware Member Pills + Total Count */}

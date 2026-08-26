@@ -78,44 +78,69 @@ export function useChoreActions(
 ): UseChoreActionsReturn {
   const createMaster = useCallback(
     async (data: CreateMasterChoreRequest) => {
-      const result = await createMasterChore(data)
-      refetch()
-      return result
+      try {
+        const result = await createMasterChore(data)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to create master chore:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const updateMaster = useCallback(
     async (choreId: string, data: UpdateMasterChoreRequest) => {
-      const result = await updateMasterChore(choreId, data)
-      refetch()
-      return result
+      try {
+        const result = await updateMasterChore(choreId, data)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to update master chore:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const deleteMaster = useCallback(
     async (choreId: string) => {
-      await deleteMasterChore(choreId)
-      refetch()
+      try {
+        await deleteMasterChore(choreId)
+        refetch()
+      } catch (error) {
+        console.error('Failed to delete master chore:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const claimInstanceAction = useCallback(
     async (instanceId: string, memberId: string) => {
-      const result = await claimInstance(instanceId, memberId)
-      refetch()
-      return result
+      try {
+        const result = await claimInstance(instanceId, memberId)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to claim instance:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const assignInstanceAction = useCallback(
     async (instanceId: string, assigneeId: string, assignerId: string) => {
-      const result = await assignInstance(instanceId, assigneeId, assignerId)
-      refetch()
-      return result
+      try {
+        const result = await assignInstance(instanceId, assigneeId, assignerId)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to assign instance:', error)
+        throw error
+      }
     },
     [refetch],
   )
@@ -127,50 +152,75 @@ export function useChoreActions(
       actorId: string,
       isAdult = true,
     ) => {
-      const result = await updateInstanceStatus(
-        instanceId,
-        status,
-        actorId,
-        isAdult,
-      )
-      refetch()
-      return result
+      try {
+        const result = await updateInstanceStatus(
+          instanceId,
+          status,
+          actorId,
+          isAdult,
+        )
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to update instance status:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const signoffInstanceAction = useCallback(
     async (instanceId: string, signoffMemberId: string) => {
-      const result = await signoffInstance(instanceId, signoffMemberId)
-      refetch()
-      return result
+      try {
+        const result = await signoffInstance(instanceId, signoffMemberId)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to signoff instance:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const createCategoryAction = useCallback(
     async (name: string) => {
-      const result = await createCategory(name)
-      refetch()
-      return result
+      try {
+        const result = await createCategory(name)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to create category:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const createTagAction = useCallback(
     async (name: string) => {
-      const result = await createTag(name)
-      refetch()
-      return result
+      try {
+        const result = await createTag(name)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to create tag:', error)
+        throw error
+      }
     },
     [refetch],
   )
 
   const approveMaster = useCallback(
     async (choreId: string, approverId: string) => {
-      const result = await approveMasterChore(choreId, approverId)
-      refetch()
-      return result
+      try {
+        const result = await approveMasterChore(choreId, approverId)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to approve master chore:', error)
+        throw error
+      }
     },
     [refetch],
   )

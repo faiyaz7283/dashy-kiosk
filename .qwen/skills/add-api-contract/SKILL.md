@@ -291,11 +291,11 @@ All four must pass before declaring the task complete.
 - [ ] Re-exported types from `src/types/index.ts`
 - [ ] Added endpoint to ENDPOINTS registry in `src/shared/api/endpoints.ts`
 - [ ] Set appropriate `refreshInterval` (aligned with backend cache TTL)
-- [ ] Added fetch function to `src/shared/services/api.ts` using `fetchWithRetry`
-- [ ] Added TSDoc on the fetch function
-- [ ] Consumed endpoint in component via `useApi` hook
+- [ ] Added fetch function using `throw await parseApiError(response)` for non-ok responses
+- [ ] Added TSDoc on the fetch function with `@throws {ApiError}` tag
+- [ ] Consumed endpoint in component via `useQuery` hook
 - [ ] Handled loading, error, and data states in the component
-- [ ] Added tests for the fetch function
+- [ ] Added tests for the fetch function (including error cases)
 - [ ] `make lint-kiosk` passes
 - [ ] `make typecheck-kiosk` passes
 - [ ] `make test-kiosk` passes

@@ -247,6 +247,9 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
 - [ ] Test file created with `renderHook`
 - [ ] Tests use `act` for state updates
 - [ ] Cleanup in `afterEach` if using spies/mocks
+- [ ] **Data-fetching hooks:** return `error` alongside `data`/`isLoading`
+- [ ] **Data-fetching hooks:** use `parseApiError` in `queryFn` (never plain `Error`)
+- [ ] **Mutation hooks:** handle errors (try/catch or `useMutation` `onError`)
 - [ ] Wired into component
 - [ ] Quality gate passes
 

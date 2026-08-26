@@ -252,7 +252,9 @@ make build-kiosk
 - [ ] Domain types added (if needed)
 - [ ] Components created with TSDoc and tests
 - [ ] Hooks created with TSDoc and tests
-- [ ] Views created (if needed)
+- [ ] **Data-fetching hooks** return `error` and use `parseApiError`
+- [ ] **Views** render loading, error, and data states (never silently swallow errors)
+- [ ] **Mutations** handle errors with try/catch or `useMutation` `onError`
 - [ ] Wired into AppShell (if needed)
 - [ ] Navigation updated (if needed)
 - [ ] Quality gate passes

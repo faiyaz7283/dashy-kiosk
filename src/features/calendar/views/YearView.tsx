@@ -37,7 +37,7 @@ export interface YearViewProps {
  * @returns The year view UI.
  */
 export function YearView({ date, onPrevious, onNext }: YearViewProps) {
-  const { events, isLoading } = useCalendarData('year', date)
+  const { events, isLoading, error } = useCalendarData('year', date)
   const { members } = useFamilyData()
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
   const year = date.year
@@ -52,6 +52,16 @@ export function YearView({ date, onPrevious, onNext }: YearViewProps) {
       <ContentCard>
         <div className="flex h-full items-center justify-center">
           <p className="text-text-muted">Loading calendar...</p>
+        </div>
+      </ContentCard>
+    )
+  }
+
+  if (error) {
+    return (
+      <ContentCard>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-error">Failed to load calendar: {error}</p>
         </div>
       </ContentCard>
     )

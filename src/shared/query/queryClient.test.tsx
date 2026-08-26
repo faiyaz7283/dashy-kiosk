@@ -9,6 +9,7 @@ import { render } from '@testing-library/react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './queryClient'
 import { createTestQueryClient } from '@/test/test-utils'
+import { ApiError } from '@/shared/errors'
 
 let testQueryClient: ReturnType<typeof createTestQueryClient>
 
@@ -36,9 +37,28 @@ describe('queryClient', () => {
     expect(defaults.queries?.refetchOnWindowFocus).toBe(true)
   })
 
-  it('retries failed queries twice by default', () => {
+  it('retries failed queries with smart retry logic', () => {
     const defaults = queryClient.getDefaultOptions()
-    expect(defaults.queries?.retry).toBe(2)
+    const retry = defaults.queries?.retry
+    expect(typeof retry).toBe('function')
+
+    if (typeof retry === 'function') {
+      // Retries retryable errors (5xx, 429, network)
+      const serverError = new ApiError('Server error', 500)
+      expect(retry(0, serverError)).toBe(true)
+      expect(retry(1, serverError)).toBe(true)
+      expect(retry(2, serverError)).toBe(false) // Max retries reached
+
+      const networkError = new ApiError('Network error', 0)
+      expect(retry(0, networkError)).toBe(true)
+
+      // Does not retry non-retryable errors (4xx)
+      const notFoundError = new ApiError('Not found', 404)
+      expect(retry(0, notFoundError)).toBe(false)
+
+      const validationError = new ApiError('Bad request', 400)
+      expect(retry(0, validationError)).toBe(false)
+    }
   })
 
   it('uses exponential backoff for retry delay', () => {

@@ -47,7 +47,7 @@ export interface MonthViewProps {
  * @returns The month view UI.
  */
 export function MonthView({ date, onPrevious, onNext }: MonthViewProps) {
-  const { events, isLoading } = useCalendarData('month', date)
+  const { events, isLoading, error } = useCalendarData('month', date)
   const { forecast } = useWeatherData()
   const { members } = useFamilyData()
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
@@ -69,6 +69,16 @@ export function MonthView({ date, onPrevious, onNext }: MonthViewProps) {
       <ContentCard>
         <div className="flex h-full items-center justify-center">
           <p className="text-text-muted">Loading calendar...</p>
+        </div>
+      </ContentCard>
+    )
+  }
+
+  if (error) {
+    return (
+      <ContentCard>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-error">Failed to load calendar: {error}</p>
         </div>
       </ContentCard>
     )

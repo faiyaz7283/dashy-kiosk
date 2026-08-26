@@ -5,6 +5,7 @@ It contains **hard behavior rules**, not project background. For project knowled
 
 **Detailed guides:**
 - [Styling Guide](docs/guides/styling.md) — Tailwind rules, hardcoded values, common patterns
+- [Error Handling Guide](docs/guides/error-handling.md) — ApiError, useQuery errors, Error Boundary, mutation handling
 - [Workflow Guide](docs/guides/workflow.md) — Pre-implementation checklist, self-review, code review gate
 
 ## 0. NO OLD CODE RULE (NON-NEGOTIABLE)
@@ -255,6 +256,38 @@ These standards apply to **all code** in the project. Every agent must follow th
 - Tests live alongside components: `Component.test.tsx`
 - All new features need tests before declaring done
 
-## 12. When in doubt
+## 12. Error Handling (NON-NEGOTIABLE)
+
+**Never silently swallow errors. Every error must be structured, logged, and surfaced to the user.**
+
+See [Error Handling Guide](docs/guides/error-handling.md) for detailed patterns and examples.
+
+**Quick reference:**
+- **All fetch functions** must use `throw await parseApiError(response)` — never `throw new Error(statusText)`
+- **Every `useQuery` consumer** must destructure `error` and render error UI when `isError` is true
+- **All mutations** must handle errors — try/catch or `useMutation` `onError`
+- **Top-level Error Boundary** wraps the entire app in `main.tsx`
+- **`queryClient` retry** must check `ApiError.isRetryable` — don't retry 400s
+- **Global error handler** in `main.tsx` catches unhandled promise rejections
+- **Log errors at the boundary** — `console.error` in error handlers, never silent `catch {}`
+
+**Forbidden patterns:**
+```tsx
+// FORBIDDEN: Ignoring error from a data hook
+const { events, isLoading } = useCalendarContext()  // error silently dropped
+
+// FORBIDDEN: Plain Error with lost context
+throw new Error('API error: ' + response.statusText)
+
+// FORBIDDEN: Silent catch
+catch { return null }  // Error is lost
+
+// FORBIDDEN: Fire-and-forget mutation
+const handleSave = async (data) => {
+  await createMaster(data)  // Unhandled rejection if this fails
+}
+```
+
+## 13. When in doubt
 
 If you are about to run a command and are unsure whether it violates the pnpm-only rule or the no-old-code rule, stop and ask the user. It is better to confirm than to introduce the wrong pattern.

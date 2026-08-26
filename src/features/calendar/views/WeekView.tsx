@@ -50,7 +50,7 @@ export interface WeekViewProps {
  * @returns The week view UI.
  */
 export function WeekView({ date, onPrevious, onNext }: WeekViewProps) {
-  const { events, isLoading } = useCalendarData('week', date)
+  const { events, isLoading, error } = useCalendarData('week', date)
   const { forecast } = useWeatherData()
   const { members } = useFamilyData()
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
@@ -85,6 +85,16 @@ export function WeekView({ date, onPrevious, onNext }: WeekViewProps) {
       <ContentCard>
         <div className="flex h-full items-center justify-center">
           <p className="text-text-muted">Loading calendar...</p>
+        </div>
+      </ContentCard>
+    )
+  }
+
+  if (error) {
+    return (
+      <ContentCard>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-error">Failed to load calendar: {error}</p>
         </div>
       </ContentCard>
     )
