@@ -140,15 +140,6 @@ function AppShellContent({
   }, [setActiveFeature])
 
   // Chores modal handlers
-  const handleAddChore = useCallback((memberId?: string) => {
-    if (memberId) {
-      setCreateEntryPoint({ type: 'member', memberId })
-    } else {
-      setCreateEntryPoint({ type: 'open-pool' })
-    }
-    setShowCreateModal(true)
-  }, [])
-
   const handleSidebarAddChore = useCallback(() => {
     setCreateEntryPoint({ type: 'sidebar' })
     setShowCreateModal(true)
@@ -156,10 +147,6 @@ function AppShellContent({
 
   const handleCloseCreateModal = useCallback(() => {
     setShowCreateModal(false)
-  }, [])
-
-  const handleChoreClick = useCallback((instance: ChoreInstance) => {
-    setEditingInstance(instance)
   }, [])
 
   const handleCloseEditModal = useCallback(() => {
@@ -249,8 +236,6 @@ function AppShellContent({
             editingInstance={editingInstance}
             onCloseCreateModal={handleCloseCreateModal}
             onCloseEditModal={handleCloseEditModal}
-            onAddChore={handleAddChore}
-            onChoreClick={handleChoreClick}
           />
         )}
       </main>

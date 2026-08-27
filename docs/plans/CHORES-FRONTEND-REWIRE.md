@@ -647,8 +647,8 @@ _All mockups approved. No pending items._
 - [x] `make typecheck-kiosk` passed
 - [x] `make test-kiosk` passed (345 tests, 36 files)
 - [x] `make build-kiosk` passed
-- [ ] Git commit: `feat(chores): add master chore create/edit modal`
-- [ ] Git push to `development`
+- [x] Git commit: `feat(chores): add master chore create/edit modal` (`27c4239`)
+- [x] Git push to `development`
 
 **Summary:**
 - `MasterChoreModal` supports create/edit modes with full form: Name, Category (Combobox), Tags (TagInput), Difficulty (slider + dots), Recurrence Pattern (conditional fields per frequency), Est. minutes, Due time/date, Expiration behavior, End date, Max occurrences, Collaborative toggle
@@ -665,7 +665,7 @@ _All mockups approved. No pending items._
 
 ### 3.6 Instance Interaction (`mockups/instance-interaction.html`)
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** `mockups/instance-interaction.html` (approved)
 
 **Scope:**
@@ -683,13 +683,25 @@ _All mockups approved. No pending items._
 - `src/features/chores/views/ChoresBoard.tsx` — wire card click to open popup
 
 **Verification:**
-- [ ] `/code-review-gate` passed (MUST run before commit)
-- [ ] `make lint-kiosk` passed
-- [ ] `make typecheck-kiosk` passed
-- [ ] `make test-kiosk` passed
-- [ ] `make build-kiosk` passed
+- [x] `/code-review-gate` passed (MUST run before commit)
+- [x] `make lint-kiosk` passed
+- [x] `make typecheck-kiosk` passed
+- [x] `make test-kiosk` passed (371 tests, 37 files)
+- [x] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add instance interaction popup`
 - [ ] Git push to `development`
+
+**Summary:**
+- `InstanceInteraction` popup shows instance details with status-specific actions: Active→Start, In Progress→Complete, Overdue→Complete Now, Missed→disabled, Open Pool→Claim
+- Status badge with colored dot + label (static class maps)
+- Details: recurrence, period date (weekday + month + day), due time (color-coded for overdue/missed), assignment info (member avatar + name + context), est. time, started time (in_progress only)
+- "View Template" link (callback prop — navigation wired in Phase 3.7)
+- Close button (top-right corner) + overlay click to close
+- Missed instances render with `opacity-75`
+- ChoresBoard: card clicks now open InstanceInteraction popup internally (removed onChoreClick/onAddChore props — association picker still uses internal state)
+- ChoresView/AppShell: removed unused onChoreClick/onAddChore prop chain
+- 26 new tests covering all 5 status variants, open pool, assignment display, conditional rendering
+- Code review: no violations. Unused formatUtcDate import removed. Test colorMap typed as PaletteKey.
 
 ---
 

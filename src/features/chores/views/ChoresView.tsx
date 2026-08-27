@@ -26,10 +26,6 @@ export interface ChoresViewProps {
   onCloseCreateModal: () => void
   /** Callback to close the edit modal. */
   onCloseEditModal: () => void
-  /** Callback when add chore is requested from a board column. */
-  onAddChore: (memberId?: string) => void
-  /** Callback when a chore card is clicked for editing. */
-  onChoreClick: (instance: ChoreInstance) => void
 }
 
 /**
@@ -45,8 +41,6 @@ export function ChoresView({
   editingInstance,
   onCloseCreateModal,
   onCloseEditModal,
-  onAddChore,
-  onChoreClick,
 }: ChoresViewProps) {
   const { data, isLoading, isRefreshing, error, refetch } = useChoresData()
 
@@ -63,8 +57,6 @@ export function ChoresView({
         isLoading={isLoading}
         isRefreshing={isRefreshing}
         error={error}
-        onChoreClick={onChoreClick}
-        onAddChore={onAddChore}
       />
 
       {showCreateModal && data && (

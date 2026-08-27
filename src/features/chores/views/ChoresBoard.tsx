@@ -22,6 +22,7 @@ import {
 import { ContentCard } from '@/shared/components/ContentCard'
 import { ChoreCard } from '../components/ChoreCard'
 import { AssociationPickerModal } from '../components/AssociationPickerModal'
+import { InstanceInteraction } from '../components/InstanceInteraction'
 import {
   isOpenPoolInstance,
   getMemberInstances,
@@ -53,10 +54,6 @@ export interface ChoresBoardProps {
   isRefreshing: boolean
   /** Error message, if any. */
   error: string | null
-  /** Callback when a chore card is clicked. */
-  onChoreClick?: (instance: ChoreInstance) => void
-  /** Callback when the add button is clicked in a column. */
-  onAddChore?: (memberId?: string) => void
   /** Callback when Start action is triggered on an instance. */
   onStartInstance?: (instance: ChoreInstance) => void
   /** Callback when Complete action is triggered on an instance. */
@@ -74,12 +71,11 @@ export function ChoresBoard({
   data,
   isLoading,
   error,
-  onChoreClick,
-  onAddChore: _onAddChore,
   onStartInstance,
   onCompleteInstance,
 }: ChoresBoardProps) {
   const [pickerTarget, setPickerTarget] = useState<FamilyMember | null | undefined>(undefined)
+  const [selectedInstance, setSelectedInstance] = useState<ChoreInstance | null>(null)
 
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
 
@@ -161,7 +157,7 @@ export function ChoresBoard({
                   masterChore={master}
                   categories={categories}
                   colorMap={colorMap}
-                  onClick={() => onChoreClick?.(instance)}
+                  onClick={() => setSelectedInstance(instance)}
                   onStart={() => onStartInstance?.(instance)}
                   onComplete={() => onCompleteInstance?.(instance)}
                 />
@@ -192,7 +188,7 @@ export function ChoresBoard({
                       masterChore={master}
                       categories={categories}
                       colorMap={colorMap}
-                      onClick={() => onChoreClick?.(instance)}
+                      onClick={() => setSelectedInstance(instance)}
                       onStart={() => onStartInstance?.(instance)}
                       onComplete={() => onCompleteInstance?.(instance)}
                     />
@@ -215,6 +211,34 @@ export function ChoresBoard({
             onAssociationCreated={handleClosePicker}
           />
         )}
+
+        {/* Instance interaction popup */}
+        {selectedInstance && (() => {
+          const master = getMasterChore(selectedInstance)
+          if (!master) return null
+          return (
+            <InstanceInteraction
+              instance={selectedInstance}
+              masterChore={master}
+              categories={categories}
+              members={members}
+              colorMap={colorMap}
+              onClose={() => setSelectedInstance(null)}
+              onStart={() => {
+                onStartInstance?.(selectedInstance)
+                setSelectedInstance(null)
+              }}
+              onComplete={() => {
+                onCompleteInstance?.(selectedInstance)
+                setSelectedInstance(null)
+              }}
+              onClaim={() => {
+                // Claim is handled by parent — for now just close
+                setSelectedInstance(null)
+              }}
+            />
+          )
+        })()}
       </div>
     </ContentCard>
   )
