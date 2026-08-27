@@ -763,7 +763,7 @@ _All mockups approved. No pending items._
 
 ### 3.8 Cleanup
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** N/A (cleanup work)
 
 **Scope:**
@@ -775,23 +775,55 @@ _All mockups approved. No pending items._
 - Update tests
 
 **Files:**
-- `src/features/chores/components/ChoreCreateModal.tsx` — delete
-- `src/features/chores/components/ChoreEditModal.tsx` — delete
-- `src/features/chores/components/ChoreCreateModal.test.tsx` — delete (if exists)
-- `src/features/chores/components/ChoreEditModal.test.tsx` — delete (if exists)
+- `src/features/chores/components/ChoreCreateModal.tsx` — deleted
+- `src/features/chores/components/ChoreEditModal.tsx` — deleted
 
 **Verification:**
-- [ ] `/code-review-gate` passed (MUST run before commit)
-- [ ] `make lint-kiosk` passed
-- [ ] `make typecheck-kiosk` passed
-- [ ] `make test-kiosk` passed
-- [ ] `make build-kiosk` passed
+- [x] `/code-review-gate` passed (MUST run before commit)
+- [x] `make lint-kiosk` passed
+- [x] `make typecheck-kiosk` passed
+- [x] `make test-kiosk` passed (394 tests, 38 files)
+- [x] `make build-kiosk` passed
 - [ ] Git commit: `refactor(chores): remove deprecated modals and clean up`
 - [ ] Git push to `development`
 
+**Summary:**
+- Deleted `ChoreCreateModal.tsx` (replaced by `MasterChoreModal` + `AssociationPickerModal`)
+- Deleted `ChoreEditModal.tsx` (replaced by `InstanceInteraction` popup)
+- No test files existed for these deprecated modals
+- No lingering imports or type references — clean removal
+- All quality gates pass: lint (0 errors), typecheck, 394 tests, build
+
 ---
 
-**Phase 3 completion summary:** _[To be filled after completion]_
+**Phase 3 completion summary:**
+
+All 8 sub-phases complete. The chores frontend is fully rewired to the new association-driven architecture.
+
+**New components created:**
+- `MasterChoreCard` — management card with checkbox, status badge, labeled rows, action buttons
+- `MasterChoreModal` — create/edit form with conditional recurrence fields, Combobox, TagInput, DifficultyDots
+- `AssociationPickerModal` — assign master chores to members/pool from manage views
+- `InstanceInteraction` — popup with 5 status variants, context-aware actions, assignment details
+- `HeaderLeft` — shared date/clock/weather section (extracted from Header)
+- `HeaderChores` — view toggle + bulk actions + Create Master button
+
+**Views rewired:**
+- `ChoresBoard` — kanban board with member columns, per-column metrics, card click → InstanceInteraction popup
+- `CurrentChores` — management grid for active/inactive masters with selection
+- `ArchivedChores` — management grid for archived masters with selection
+- `ChoresView` — simplified to view router (board/current/archived) + MasterChoreModal
+
+**Shell integration:**
+- `AppShell` owns chores view state, selection, bulk actions, modal management
+- `Header` conditionally renders calendar vs chores controls
+- Sidebar `+` switches to chores manage-current view
+
+**Deleted:**
+- `ChoreCreateModal.tsx` (replaced by MasterChoreModal + AssociationPickerModal)
+- `ChoreEditModal.tsx` (replaced by InstanceInteraction)
+
+**Test coverage:** 394 tests across 38 files. All quality gates pass (lint, typecheck, test, build).
 
 ---
 
