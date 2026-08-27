@@ -32,9 +32,10 @@ import { DayView } from '@/features/calendar/views/DayView'
 import { WeekView } from '@/features/calendar/views/WeekView'
 import { MonthView } from '@/features/calendar/views/MonthView'
 import { YearView } from '@/features/calendar/views/YearView'
+import { findFirstAdult } from '@/shared/utils/family'
 import { ChoresView } from '@/features/chores/views/ChoresView'
 import type { CalendarView } from '@/types'
-import type { MasterChore } from '@/types/chores'
+import type { ChoreInstance, MasterChore } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
 
 /**
@@ -128,6 +129,42 @@ function AppShellContent({
 }: AppShellContentProps) {
   const { events, lastRefresh: calendarLastRefresh, refetch: refetchCalendar } = useCalendarContext()
   const choreActions = useChoreActions(refetchChores)
+
+  // Instance action handlers
+  const actorId = useMemo(() => {
+    const adult = findFirstAdult(members)
+    return adult?.key ?? members[0]?.key ?? 'unknown'
+  }, [members])
+
+  const handleStartInstance = useCallback(
+    async (instance: ChoreInstance) => {
+      try {
+        await choreActions.updateInstanceStatus(instance.id, 'in_progress', actorId)
+      } catch (error) {
+        console.error('Failed to start instance:', error)
+      }
+    },
+    [choreActions, actorId],
+  )
+
+  const handleCompleteInstance = useCallback(
+    async (instance: ChoreInstance) => {
+      try {
+        await choreActions.updateInstanceStatus(instance.id, 'completed', actorId)
+      } catch (error) {
+        console.error('Failed to complete instance:', error)
+      }
+    },
+    [choreActions, actorId],
+  )
+
+  const handleViewTemplate = useCallback(
+    (master: MasterChore) => {
+      setEditingMaster(master)
+      setShowMasterModal(true)
+    },
+    [],
+  )
 
   // Chores view state
   const [choresViewMode, setChoresViewMode] = useState<ChoresViewMode>('board')
@@ -366,6 +403,9 @@ function AppShellContent({
             onToggleStatus={handleToggleStatus}
             onArchive={handleArchive}
             onRestore={handleRestore}
+            onStartInstance={handleStartInstance}
+            onCompleteInstance={handleCompleteInstance}
+            onViewTemplate={handleViewTemplate}
             showMasterModal={showMasterModal}
             editingMaster={editingMaster}
             onCloseMasterModal={handleCloseMasterModal}

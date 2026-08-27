@@ -58,6 +58,8 @@ export interface ChoresBoardProps {
   onStartInstance?: (instance: ChoreInstance) => void
   /** Callback when Complete action is triggered on an instance. */
   onCompleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when View Template is clicked (opens edit modal). */
+  onViewTemplate?: (masterChore: MasterChore) => void
 }
 
 /**
@@ -73,6 +75,7 @@ export function ChoresBoard({
   error,
   onStartInstance,
   onCompleteInstance,
+  onViewTemplate,
 }: ChoresBoardProps) {
   const [pickerTarget, setPickerTarget] = useState<FamilyMember | null | undefined>(undefined)
   const [selectedInstance, setSelectedInstance] = useState<ChoreInstance | null>(null)
@@ -234,6 +237,10 @@ export function ChoresBoard({
               }}
               onClaim={() => {
                 // Claim is handled by parent — for now just close
+                setSelectedInstance(null)
+              }}
+              onViewTemplate={() => {
+                onViewTemplate?.(master)
                 setSelectedInstance(null)
               }}
             />

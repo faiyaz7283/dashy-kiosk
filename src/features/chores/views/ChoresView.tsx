@@ -15,7 +15,7 @@ import { CurrentChores } from './CurrentChores'
 import { ArchivedChores } from './ArchivedChores'
 import { MasterChoreModal } from '../components/MasterChoreModal'
 import type { ChoresViewMode } from '@/features/shell/HeaderChores'
-import type { ChoresData, MasterChore } from '@/types/chores'
+import type { ChoresData, ChoreInstance, MasterChore } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
 
 /** Props for the ChoresView component. */
@@ -42,6 +42,12 @@ export interface ChoresViewProps {
   onArchive: (master: MasterChore) => void
   /** Callback when Restore is clicked on a master chore card. */
   onRestore: (master: MasterChore) => void
+  /** Callback when Start action is triggered on an instance. */
+  onStartInstance?: (instance: ChoreInstance) => void
+  /** Callback when Complete action is triggered on an instance. */
+  onCompleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when View Template is clicked (opens edit modal). */
+  onViewTemplate?: (masterChore: MasterChore) => void
   /** Whether the master chore modal is open. */
   showMasterModal: boolean
   /** The master chore being edited (null for create mode). */
@@ -72,6 +78,9 @@ export function ChoresView({
   onToggleStatus,
   onArchive,
   onRestore,
+  onStartInstance,
+  onCompleteInstance,
+  onViewTemplate,
   showMasterModal,
   editingMaster,
   onCloseMasterModal,
@@ -87,6 +96,9 @@ export function ChoresView({
           isLoading={isLoading}
           isRefreshing={false}
           error={error}
+          {...(onStartInstance ? { onStartInstance } : {})}
+          {...(onCompleteInstance ? { onCompleteInstance } : {})}
+          {...(onViewTemplate ? { onViewTemplate } : {})}
         />
       )}
 

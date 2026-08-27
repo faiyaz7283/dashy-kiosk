@@ -144,10 +144,12 @@ export function InstanceInteraction({
   // Format period date (e.g., "Monday, Aug 25")
   const periodDate = useMemo(() => {
     if (!instance.period_start) return null
-    const date = Temporal.Instant.from(instance.period_start).toZonedDateTimeISO(timezone)
-    const plainDate = date.toPlainDate()
+    // period_start is a date string (YYYY-MM-DD), may have trailing Z
+    // Strip timezone designator for PlainDate parsing
+    const dateStr = instance.period_start.replace(/Z$/, '')
+    const plainDate = Temporal.PlainDate.from(dateStr)
     return formatDateParts(plainDate, { weekday: 'long', month: 'short', day: 'numeric' })
-  }, [instance.period_start, timezone])
+  }, [instance.period_start])
 
   // Format due time
   const dueTimeFormatted = useMemo(() => {
