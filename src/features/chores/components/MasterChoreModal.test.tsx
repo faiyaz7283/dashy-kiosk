@@ -73,6 +73,7 @@ const defaultProps = {
   members: mockMembers,
   onClose: vi.fn(),
   onSuccess: vi.fn(),
+  refetch: vi.fn(),
 }
 
 type ModalOverrides = {
@@ -83,6 +84,7 @@ type ModalOverrides = {
   members?: FamilyMember[]
   onClose?: () => void
   onSuccess?: () => void
+  refetch?: () => void
 }
 
 function renderModal(overrides: ModalOverrides = {}) {

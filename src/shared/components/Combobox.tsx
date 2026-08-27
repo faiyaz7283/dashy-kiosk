@@ -93,7 +93,7 @@ export function Combobox({
             leaveTo="opacity-0"
             afterLeave={() => setQuery('')}
           >
-            <HeadlessCombobox.Options className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-lg border border-border bg-white shadow-lg dark:bg-bg">
+            <HeadlessCombobox.Options className="absolute left-0 right-0 top-full z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-white shadow-lg dark:bg-bg">
               {filteredOptions.length === 0 && !showCreate ? (
                 <div className="px-3 py-2 text-sm text-text-muted">No options found.</div>
               ) : (
