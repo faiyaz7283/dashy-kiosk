@@ -6,8 +6,25 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Header } from './Header'
 import { formatHeaderDate } from '@/shared/date'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+})
+
+function renderWithProviders(ui: React.ReactElement) {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  )
+}
 
 // Mock the hooks
 vi.mock('@/shared/hooks/useClock', () => ({
@@ -54,18 +71,18 @@ describe('Header', () => {
   }
 
   it('renders date', () => {
-    render(<Header {...defaultProps} />)
+    renderWithProviders(<Header {...defaultProps} />)
     const expectedDate = formatHeaderDate(Temporal.Now.plainDateISO())
     expect(screen.getByText(expectedDate)).toBeInTheDocument()
   })
 
   it('renders clock', () => {
-    render(<Header {...defaultProps} />)
+    renderWithProviders(<Header {...defaultProps} />)
     expect(screen.getByText('6:30 PM')).toBeInTheDocument()
   })
 
   it('renders weather summary', () => {
-    render(<Header {...defaultProps} />)
+    renderWithProviders(<Header {...defaultProps} />)
     // Use getAllByText since weather text appears in both header and popup
     expect(screen.getAllByText('72°').length).toBeGreaterThan(0)
     expect(screen.getAllByText('70°').length).toBeGreaterThan(0)
@@ -73,7 +90,7 @@ describe('Header', () => {
   })
 
   it('renders view switcher when calendar feature is active', () => {
-    render(<Header {...defaultProps} activeFeature="calendar" />)
+    renderWithProviders(<Header {...defaultProps} activeFeature="calendar" />)
     expect(screen.getByText('Day')).toBeInTheDocument()
     expect(screen.getByText('Week')).toBeInTheDocument()
     expect(screen.getByText('Month')).toBeInTheDocument()
@@ -81,7 +98,7 @@ describe('Header', () => {
   })
 
   it('hides view switcher when chores feature is active', () => {
-    render(<Header {...defaultProps} activeFeature="chores" />)
+    renderWithProviders(<Header {...defaultProps} activeFeature="chores" />)
     expect(screen.queryByText('Day')).not.toBeInTheDocument()
     expect(screen.queryByText('Week')).not.toBeInTheDocument()
     expect(screen.queryByText('Month')).not.toBeInTheDocument()
@@ -89,25 +106,25 @@ describe('Header', () => {
   })
 
   it('renders Today button when calendar feature is active', () => {
-    render(<Header {...defaultProps} activeFeature="calendar" />)
+    renderWithProviders(<Header {...defaultProps} activeFeature="calendar" />)
     const todayButton = screen.getByRole('button', { name: 'Today' })
     expect(todayButton).toBeInTheDocument()
   })
 
   it('hides Today button when chores feature is active', () => {
-    render(<Header {...defaultProps} activeFeature="chores" />)
+    renderWithProviders(<Header {...defaultProps} activeFeature="chores" />)
     // Look for the Today button specifically (not just any text containing "Today")
     const todayButton = screen.queryByRole('button', { name: 'Today' })
     expect(todayButton).not.toBeInTheDocument()
   })
 
   it('renders date picker button when calendar feature is active', () => {
-    render(<Header {...defaultProps} activeFeature="calendar" />)
+    renderWithProviders(<Header {...defaultProps} activeFeature="calendar" />)
     expect(screen.getByTitle('Date picker')).toBeInTheDocument()
   })
 
   it('hides date picker button when chores feature is active', () => {
-    render(<Header {...defaultProps} activeFeature="chores" />)
+    renderWithProviders(<Header {...defaultProps} activeFeature="chores" />)
     expect(screen.queryByTitle('Date picker')).not.toBeInTheDocument()
   })
 })

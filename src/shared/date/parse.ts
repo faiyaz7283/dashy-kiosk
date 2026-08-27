@@ -8,9 +8,12 @@
  *
  * Each parser is typed to return the correct Temporal type for its domain concept,
  * so callers never need to guess whether they have a date, time, or datetime.
+ *
+ * All times are converted to the configured timezone (from useConfig hook).
  */
 
 import type { CalendarEvent, WeekCalendar } from '@/types/calendar'
+import { convertUtcToTimezone } from './timezone'
 
 /**
  * Strips timezone designators from an ISO datetime string.
@@ -130,26 +133,47 @@ export function parseForecastDate(dateStr: string): Temporal.PlainDate {
 }
 
 /**
- * Parses a weather time string to a PlainTime.
+ * Parses a weather time string to a PlainTime in the configured timezone.
  *
  * Handles two formats from the backend:
- * - `"HH:MM"` — simple time (sunrise/sunset from some adapters)
- * - `"YYYY-MM-DDTHH:MM:SS"` — full ISO datetime (OWM adapter timestamp conversion)
+ * - `"HH:MM"` — simple time in UTC (sunrise/sunset)
+ * - `"YYYY-MM-DDTHH:MM:SS+00:00"` — full ISO datetime in UTC (hourly forecast)
  *
  * @param timeStr - Time string in HH:MM or ISO datetime format.
- * @returns The parsed PlainTime.
+ * @param timezone - IANA timezone identifier (e.g., "America/New_York").
+ * @returns The parsed PlainTime in the configured timezone.
  *
  * @example
  * ```ts
- * parseWeatherTime('06:30')                     // PlainTime(06:30)
- * parseWeatherTime('2026-08-08T14:00:00')       // PlainTime(14:00)
+ * parseWeatherTime('06:30', 'America/New_York')                     // PlainTime(02:30) - UTC to EDT
+ * parseWeatherTime('2026-08-08T14:00:00+00:00', 'America/New_York') // PlainTime(10:00) - UTC to EDT
  * ```
  */
-export function parseWeatherTime(timeStr: string): Temporal.PlainTime {
+export function parseWeatherTime(timeStr: string, timezone: string): Temporal.PlainTime {
   if (timeStr.includes('T')) {
-    return Temporal.PlainDateTime.from(stripTimezone(timeStr)).toPlainTime()
+    // Full ISO datetime - convert UTC to configured timezone
+    const zoned = convertUtcToTimezone(timeStr, timezone)
+    return zoned.toPlainTime()
+  } else {
+    // Simple HH:MM format - treat as UTC and convert to configured timezone
+    const [hours, minutes] = timeStr.split(':').map(Number)
+    const utcTime = Temporal.PlainTime.from({ hour: hours, minute: minutes })
+    
+    // Create a ZonedDateTime for today in UTC with this time
+    const todayUtc = Temporal.Now.zonedDateTimeISO('UTC')
+    const utcZoned = todayUtc.with({
+      hour: utcTime.hour,
+      minute: utcTime.minute,
+      second: 0,
+      millisecond: 0,
+      microsecond: 0,
+      nanosecond: 0,
+    })
+    
+    // Convert to target timezone
+    const localZoned = utcZoned.withTimeZone(timezone)
+    return localZoned.toPlainTime()
   }
-  return Temporal.PlainTime.from(timeStr)
 }
 
 /**
@@ -168,26 +192,27 @@ export function parseQueryDate(dateStr: string): Temporal.PlainDate {
  * Parses a raw calendar event from the API into a typed CalendarEvent.
  *
  * Converts the string start/end fields to the appropriate Temporal type
- * based on the `all_day` flag. This is the boundary between the API's
- * wire format and the type-safe domain model.
+ * based on the `all_day` flag. For timed events, converts UTC times to
+ * the configured timezone.
  *
  * @param raw - The raw event from the API.
- * @returns A typed CalendarEvent with Temporal date/time fields.
+ * @param timezone - IANA timezone identifier (e.g., "America/New_York").
+ * @returns A typed CalendarEvent with Temporal date/time fields in local timezone.
  *
  * @example
  * ```ts
  * const event = parseCalendarEvent({
  *   id: '123',
  *   title: 'Meeting',
- *   start: '2026-08-08T14:00:00',
- *   end: '2026-08-08T15:00:00',
+ *   start: '2026-08-08T14:00:00Z',
+ *   end: '2026-08-08T15:00:00Z',
  *   all_day: false,
  *   members: ['alice']
- * })
- * // event.start is Temporal.PlainDateTime
+ * }, 'America/New_York')
+ * // event.start is Temporal.PlainDateTime in local timezone
  * ```
  */
-export function parseCalendarEvent(raw: RawCalendarEvent): CalendarEvent {
+export function parseCalendarEvent(raw: RawCalendarEvent, timezone: string): CalendarEvent {
   const isAllDay = raw.all_day === true
 
   if (isAllDay) {
@@ -199,13 +224,15 @@ export function parseCalendarEvent(raw: RawCalendarEvent): CalendarEvent {
     }
   }
 
+  // Convert UTC times to configured timezone
+  const startZoned = convertUtcToTimezone(raw.start, timezone)
+  const endZoned = convertUtcToTimezone(raw.end, timezone)
+
   return {
     ...raw,
     all_day: false,
-    start: Temporal.PlainDateTime.from(stripTimezone(raw.start)),
-    end: Temporal.PlainDateTime.from(stripTimezone(raw.end)),
-    startIso: raw.start,
-    endIso: raw.end,
+    start: startZoned.toPlainDateTime(),
+    end: endZoned.toPlainDateTime(),
   }
 }
 
@@ -213,14 +240,16 @@ export function parseCalendarEvent(raw: RawCalendarEvent): CalendarEvent {
  * Parses a raw week calendar response from the API into a typed WeekCalendar.
  *
  * Converts all events and the week boundaries to Temporal types.
+ * For timed events, converts UTC times to the configured timezone.
  *
  * @param raw - The raw response from the API.
- * @returns A typed WeekCalendar with Temporal date fields.
+ * @param timezone - IANA timezone identifier (e.g., "America/New_York").
+ * @returns A typed WeekCalendar with Temporal date fields in local timezone.
  */
-export function parseWeekCalendar(raw: RawWeekCalendar): WeekCalendar {
+export function parseWeekCalendar(raw: RawWeekCalendar, timezone: string): WeekCalendar {
   return {
     week_start: Temporal.PlainDate.from(raw.week_start),
     week_end: Temporal.PlainDate.from(raw.week_end),
-    events: raw.events.map(parseCalendarEvent),
+    events: raw.events.map(e => parseCalendarEvent(e, timezone)),
   }
 }

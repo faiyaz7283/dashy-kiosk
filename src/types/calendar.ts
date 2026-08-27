@@ -72,14 +72,10 @@ export interface AllDayCalendarEvent extends CalendarEventBase {
 export interface TimedCalendarEvent extends CalendarEventBase {
   /** Discriminator: false or undefined for timed events. */
   all_day?: false
-  /** Event start date+time (PlainDateTime — includes hour/minute). */
+  /** Event start date+time in local timezone (PlainDateTime — includes hour/minute). */
   start: Temporal.PlainDateTime
-  /** Event end date+time (PlainDateTime — includes hour/minute). */
+  /** Event end date+time in local timezone (PlainDateTime — includes hour/minute). */
   end: Temporal.PlainDateTime
-  /** Original UTC ISO string for timezone conversion. */
-  startIso: string
-  /** Original UTC ISO string for timezone conversion. */
-  endIso: string
 }
 
 /**

@@ -17,8 +17,8 @@ const mockCalendarResponse = {
     {
       id: 'evt-1',
       title: 'Test Event',
-      start: '2025-01-15T10:00:00',
-      end: '2025-01-15T11:00:00',
+      start: '2025-01-15T10:00:00+00:00',
+      end: '2025-01-15T11:00:00+00:00',
       all_day: false,
       members: ['alice'],
       location: null,
@@ -28,6 +28,10 @@ const mockCalendarResponse = {
       attendees: [],
     },
   ],
+}
+
+const mockConfigResponse = {
+  timezone: 'America/New_York',
 }
 
 function createTestQueryClient() {
@@ -93,10 +97,15 @@ describe('CalendarDataContext', () => {
   })
 
   it('provides calendar data to consumers', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockCalendarResponse),
-    })
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockConfigResponse),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockCalendarResponse),
+      })
 
     renderWithProviders(<TestConsumer />, queryClient)
 
@@ -113,12 +122,17 @@ describe('CalendarDataContext', () => {
   })
 
   it('handles fetch errors gracefully', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      statusText: 'Internal Server Error',
-      json: () => Promise.resolve({ detail: 'Database connection failed' }),
-    })
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockConfigResponse),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: () => Promise.resolve({ detail: 'Database connection failed' }),
+      })
 
     renderWithProviders(<TestConsumer />, queryClient)
 
@@ -131,10 +145,15 @@ describe('CalendarDataContext', () => {
   })
 
   it('computes correct date range for week view', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ events: [] }),
-    })
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockConfigResponse),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ events: [] }),
+      })
 
     const currentDate = Temporal.PlainDate.from('2025-01-15') // Wednesday
     const currentView: CalendarView = 'week'
@@ -151,9 +170,10 @@ describe('CalendarDataContext', () => {
       expect(mockFetch).toHaveBeenCalled()
     })
 
-    const fetchCall = mockFetch.mock.calls[0]![0]
+    // Find the calendar fetch call (second call, after config)
+    const calendarFetchCall = mockFetch.mock.calls[1]?.[0]
     // Week view should fetch Monday to Sunday
-    expect(fetchCall).toContain('start_date=2025-01-13') // Monday
-    expect(fetchCall).toContain('end_date=2025-01-19') // Sunday
+    expect(calendarFetchCall).toContain('start_date=2025-01-13') // Monday
+    expect(calendarFetchCall).toContain('end_date=2025-01-19') // Sunday
   })
 })

@@ -27,6 +27,8 @@ import {
 import { WeatherIcon } from './WeatherIcon'
 import type { DailyForecast } from '@/types/weather'
 import { parseWeatherTime } from '@/shared/date/parse'
+import { useConfig } from '@/shared/date/timezone'
+import { formatTime } from '@/shared/date/format'
 
 /** Props for the WeatherPopup component. */
 export interface WeatherPopupProps {
@@ -48,6 +50,11 @@ export interface WeatherPopupProps {
  */
 export function WeatherPopup({ forecast, dateLabel, dateSublabel }: WeatherPopupProps) {
   const hasHourly = forecast.hourly && forecast.hourly.length > 0
+  const { timezone } = useConfig()
+
+  // Parse sunrise/sunset times from UTC to local timezone
+  const sunriseTime = forecast.sunrise ? formatTime(parseWeatherTime(forecast.sunrise, timezone)) : null
+  const sunsetTime = forecast.sunset ? formatTime(parseWeatherTime(forecast.sunset, timezone)) : null
 
   return (
     <div className="w-80 rounded-xl bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.15)] ring-1 ring-border dark:bg-bg dark:shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
@@ -72,7 +79,7 @@ export function WeatherPopup({ forecast, dateLabel, dateSublabel }: WeatherPopup
         </div>
 
         {/* Hourly temperature chart (full version only) */}
-        {hasHourly && <HourlyChart hourly={forecast.hourly} />}
+        {hasHourly && <HourlyChart hourly={forecast.hourly} timezone={timezone} />}
 
         {/* Detail grid: 2 columns */}
         <div className="grid grid-cols-2 gap-2">
@@ -159,20 +166,20 @@ export function WeatherPopup({ forecast, dateLabel, dateSublabel }: WeatherPopup
         {/* Astronomy row: Sunrise, Sunset, Moon */}
         <div className="flex gap-2">
           {/* Sunrise */}
-          {forecast.sunrise && (
+          {sunriseTime && (
             <div className="flex flex-1 flex-col items-center gap-1 rounded-lg bg-bg-hover p-2 text-center">
               <Sunrise className="h-4 w-4 text-warning" />
               <div className="text-[10px] text-text-faint">Sunrise</div>
-              <div className="text-xs font-medium text-text-primary">{forecast.sunrise}</div>
+              <div className="text-xs font-medium text-text-primary">{sunriseTime}</div>
             </div>
           )}
 
           {/* Sunset */}
-          {forecast.sunset && (
+          {sunsetTime && (
             <div className="flex flex-1 flex-col items-center gap-1 rounded-lg bg-bg-hover p-2 text-center">
               <Sunset className="h-4 w-4 text-warning" />
               <div className="text-[10px] text-text-faint">Sunset</div>
-              <div className="text-xs font-medium text-text-primary">{forecast.sunset}</div>
+              <div className="text-xs font-medium text-text-primary">{sunsetTime}</div>
             </div>
           )}
 
@@ -196,6 +203,8 @@ export function WeatherPopup({ forecast, dateLabel, dateSublabel }: WeatherPopup
 interface HourlyChartProps {
   /** Hourly forecast data. */
   hourly: DailyForecast['hourly']
+  /** Timezone for converting UTC times. */
+  timezone: string
 }
 
 /**
@@ -203,10 +212,10 @@ interface HourlyChartProps {
  *
  * Shows a simplified bar chart of temperatures across the day.
  *
- * @param props - Hourly forecast data.
+ * @param props - Hourly forecast data and timezone.
  * @returns The hourly chart UI.
  */
-function HourlyChart({ hourly }: HourlyChartProps) {
+function HourlyChart({ hourly, timezone }: HourlyChartProps) {
   if (!hourly || hourly.length === 0) return null
 
   // Sample 6 evenly-spaced hours for the chart
@@ -231,12 +240,8 @@ function HourlyChart({ hourly }: HourlyChartProps) {
       <div className="flex items-end justify-between gap-1 px-1">
         {samples.map((hour, idx) => {
           const heightPercent = ((hour.temperature - minTemp) / range) * 60 + 25
-          const hourTime = parseWeatherTime(hour.time)
-          const hourLabel = hourTime.toLocaleString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          })
+          const hourTime = parseWeatherTime(hour.time, timezone)
+          const hourLabel = formatTime(hourTime)
 
           return (
             <div key={idx} className="flex flex-1 flex-col items-center gap-1">

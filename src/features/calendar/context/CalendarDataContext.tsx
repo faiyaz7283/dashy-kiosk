@@ -16,6 +16,7 @@ import { ENDPOINTS } from '@/shared/api/endpoints'
 import { parseApiError } from '@/shared/errors'
 import { parseCalendarEvent, type RawCalendarEvent } from '@/shared/date/parse'
 import { getWeekDays } from '@/shared/date/calendar'
+import { useConfig } from '@/shared/date/timezone'
 import type { CalendarEvent } from '@/types/calendar'
 import type { CalendarView } from '@/types/calendar'
 
@@ -130,6 +131,7 @@ export interface CalendarDataProviderProps {
  */
 export function CalendarDataProvider({ currentView, currentDate, children }: CalendarDataProviderProps) {
   const { startDate, endDate } = computeDateRange(currentView, currentDate)
+  const { timezone } = useConfig()
 
   const { data, isLoading, isFetching, error, refetch, dataUpdatedAt } = useQuery<CalendarApiResponse>({
     queryKey: ['calendar', startDate, endDate],
@@ -139,7 +141,7 @@ export function CalendarDataProvider({ currentView, currentDate, children }: Cal
     placeholderData: keepPreviousData,
   })
 
-  const events: CalendarEvent[] = data?.events?.map(parseCalendarEvent) ?? []
+  const events: CalendarEvent[] = data?.events?.map(e => parseCalendarEvent(e, timezone)) ?? []
 
   return (
     <CalendarDataContext.Provider

@@ -4,10 +4,40 @@
  * Validates weather popup renders weather details correctly.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WeatherPopup } from './WeatherPopup'
 import type { DailyForecast } from '@/types/weather'
+
+// Mock fetch for config endpoint
+const mockFetch = vi.fn()
+globalThis.fetch = mockFetch
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+})
+
+function renderWithProviders(ui: React.ReactElement) {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  )
+}
+
+beforeEach(() => {
+  mockFetch.mockReset()
+  // Mock config endpoint to return America/New_York timezone
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ timezone: 'America/New_York' }),
+  })
+})
 
 describe('WeatherPopup', () => {
   const mockForecast: DailyForecast = {
@@ -28,7 +58,7 @@ describe('WeatherPopup', () => {
   }
 
   it('renders temperature', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -39,7 +69,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders condition', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -50,7 +80,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders date labels', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -62,7 +92,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders feels like temperature', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -74,7 +104,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders humidity', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -86,7 +116,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders wind speed', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -98,7 +128,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders UV index when present', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -111,7 +141,7 @@ describe('WeatherPopup', () => {
 
   it('does not render UV index when not present', () => {
     const forecastWithoutUV = { ...mockForecast, uvi: null }
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={forecastWithoutUV}
         dateLabel="Today"
@@ -122,7 +152,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders pressure when present', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -134,7 +164,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders sunrise when present', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -142,11 +172,12 @@ describe('WeatherPopup', () => {
       />
     )
     expect(screen.getByText('Sunrise')).toBeInTheDocument()
-    expect(screen.getByText('06:30')).toBeInTheDocument()
+    // Sunrise time is converted from UTC (06:30) to configured timezone (America/New_York)
+    expect(screen.getByText('2:30 AM')).toBeInTheDocument()
   })
 
   it('renders sunset when present', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -154,11 +185,12 @@ describe('WeatherPopup', () => {
       />
     )
     expect(screen.getByText('Sunset')).toBeInTheDocument()
-    expect(screen.getByText('19:45')).toBeInTheDocument()
+    // Sunset time is converted from UTC (19:45) to configured timezone (America/New_York)
+    expect(screen.getByText('3:45 PM')).toBeInTheDocument()
   })
 
   it('renders moon phase placeholder', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -169,7 +201,7 @@ describe('WeatherPopup', () => {
   })
 
   it('renders precipitation when forecast has pop', () => {
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={mockForecast}
         dateLabel="Today"
@@ -182,7 +214,7 @@ describe('WeatherPopup', () => {
 
   it('does not render precipitation when forecast not provided', () => {
     const forecastWithoutPop = { ...mockForecast, pop: null }
-    render(
+    renderWithProviders(
       <WeatherPopup
         forecast={forecastWithoutPop}
         dateLabel="Today"
@@ -202,7 +234,7 @@ describe('WeatherPopup', () => {
     ]
 
     testCases.forEach(({ uvi, expected }) => {
-      const { unmount } = render(
+      const { unmount } = renderWithProviders(
         <WeatherPopup
           forecast={{ ...mockForecast, uvi }}
           dateLabel="Today"

@@ -18,8 +18,6 @@ describe('calendar utilities', () => {
     title: 'Team Meeting',
     start: Temporal.PlainDateTime.from('2026-01-15T10:00:00'),
     end: Temporal.PlainDateTime.from('2026-01-15T11:00:00'),
-    startIso: '2026-01-15T10:00:00+00:00',
-    endIso: '2026-01-15T11:00:00+00:00',
     all_day: false,
     members: ['alice'],
   }
@@ -38,8 +36,6 @@ describe('calendar utilities', () => {
     title: 'Lunch',
     start: Temporal.PlainDateTime.from('2026-01-16T12:00:00'),
     end: Temporal.PlainDateTime.from('2026-01-16T13:00:00'),
-    startIso: '2026-01-16T12:00:00+00:00',
-    endIso: '2026-01-16T13:00:00+00:00',
     all_day: false,
     members: ['charlie'],
   }
