@@ -21,7 +21,7 @@ import { EventPopup } from '../components/EventPopup'
 import { EventCard } from '../components/EventCard'
 import { DayWeatherBadge } from '../components/DayWeatherBadge'
 import { useEventPopup } from '../hooks/useEventPopup'
-import { getMonthGridDates, formatRelativeDay } from '@/shared/date/calendar'
+import { getMonthGridDates, formatRelativeDay, today } from '@/shared/date/calendar'
 import { getEventsForDate } from '@/shared/utils/calendar'
 import { getRelativeDensity, getEventCountsByDay } from '@/shared/utils/density'
 import { buildMemberColorMap } from '@/shared/utils/memberColors'
@@ -54,7 +54,7 @@ export function MonthView({ date, onPrevious, onNext }: MonthViewProps) {
   const { hoveredEvent, popupRef, EventPopupProvider } = useEventPopup()
   const yearMonth = Temporal.PlainYearMonth.from(date)
   const gridDates = getMonthGridDates(yearMonth)
-  const today = Temporal.Now.plainDateISO()
+  const todayDate = today()
   const forecastByDate = useForecastMap(forecast)
 
   // Group dates into weeks (7 days each)
@@ -130,7 +130,7 @@ export function MonthView({ date, onPrevious, onNext }: MonthViewProps) {
 
                   {/* Day cells */}
                   {week.map((dayDate) => {
-                    const isToday = Temporal.PlainDate.compare(dayDate, today) === 0
+                    const isToday = Temporal.PlainDate.compare(dayDate, todayDate) === 0
                     const dayForecast = forecastByDate.get(dayDate.toString())
                     return (
                       <DayCell

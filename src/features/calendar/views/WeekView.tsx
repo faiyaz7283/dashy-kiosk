@@ -23,7 +23,7 @@ import { EventPopup } from '../components/EventPopup'
 import { EventCard } from '../components/EventCard'
 import { DayWeatherBadge } from '../components/DayWeatherBadge'
 import { useEventPopup } from '../hooks/useEventPopup'
-import { getWeekDays, getShortWeekday, formatRelativeDay } from '@/shared/date/calendar'
+import { getWeekDays, getShortWeekday, formatRelativeDay, today } from '@/shared/date/calendar'
 import { getEventsForDate, getTimedEventsForDate } from '@/shared/utils/calendar'
 import { getEventCountsByDay, getRelativeDensity } from '@/shared/utils/density'
 import { isTimedEvent } from '@/types/calendar'
@@ -56,7 +56,7 @@ export function WeekView({ date, onPrevious, onNext }: WeekViewProps) {
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
   const { hoveredEvent, popupRef, EventPopupProvider } = useEventPopup()
   const weekDays = getWeekDays(date)
-  const today = Temporal.Now.plainDateISO()
+  const todayDate = today()
   const forecastByDate = useForecastMap(forecast)
 
   // Calculate event counts per day for density
@@ -116,7 +116,7 @@ export function WeekView({ date, onPrevious, onNext }: WeekViewProps) {
             const dayKey = day.toString()
             const dayCount = dayCounts[dayKey] || 0
             const density = getRelativeDensity(dayCount, allCounts)
-            const isToday = Temporal.PlainDate.compare(day, today) === 0
+            const isToday = Temporal.PlainDate.compare(day, todayDate) === 0
             const dayForecast = forecastByDate.get(dayKey)
 
             return (

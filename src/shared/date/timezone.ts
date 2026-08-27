@@ -7,6 +7,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { ENDPOINTS } from '@/shared/api/endpoints'
+import { setTimezone } from './calendar'
 
 /** Config data is considered fresh for 1 hour (timezone rarely changes). */
 const CONFIG_STALE_TIME_MS = 3_600_000
@@ -36,6 +37,7 @@ async function fetchConfig(): Promise<AppConfig> {
  *
  * Returns the configured timezone from the backend.
  * Timezone is cached for 1 hour (rarely changes).
+ * Also sets the timezone globally for date calculations.
  *
  * @returns Timezone string (e.g., "America/New_York"), loading state, error.
  */
@@ -46,6 +48,11 @@ export function useConfig() {
     staleTime: CONFIG_STALE_TIME_MS,
     refetchInterval: 0, // Fetch once on mount
   })
+
+  // Set timezone globally when it's fetched
+  if (data?.timezone) {
+    setTimezone(data.timezone)
+  }
 
   return {
     timezone: data?.timezone ?? 'UTC',
@@ -144,5 +151,60 @@ export function formatUtcDate(
   })
 
   const date = new Date(zoned.year, zoned.month - 1, zoned.day)
+  return formatter.format(date)
+}
+
+/**
+ * Convert UTC time string (HH:MM) to local timezone and format.
+ *
+ * Used for sunrise/sunset times which are returned as "HH:MM" in UTC.
+ *
+ * @param utcTime - UTC time in HH:MM format (e.g., "10:15")
+ * @param timezone - IANA timezone identifier (e.g., "America/New_York")
+ * @returns Formatted time string in local timezone (e.g., "6:15 AM")
+ *
+ * @example
+ * ```ts
+ * formatUtcTimeOfDay('10:15', 'America/New_York')
+ * // Returns "6:15 AM" (EDT is UTC-4)
+ * ```
+ */
+export function formatUtcTimeOfDay(
+  utcTime: string,
+  timezone: string
+): string {
+  // Parse HH:MM into hours and minutes
+  const [hours, minutes] = utcTime.split(':').map(Number)
+
+  // Create a ZonedDateTime for today at the UTC time
+  const todayUtc = Temporal.Now.zonedDateTimeISO('UTC')
+  const utcZoned = todayUtc.with({
+    hour: hours,
+    minute: minutes,
+    second: 0,
+    millisecond: 0,
+    microsecond: 0,
+    nanosecond: 0,
+  })
+
+  // Convert to target timezone
+  const localZoned = utcZoned.withTimeZone(timezone)
+
+  // Format using Intl.DateTimeFormat
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+
+  const date = new Date(
+    localZoned.year,
+    localZoned.month - 1,
+    localZoned.day,
+    localZoned.hour,
+    localZoned.minute,
+    localZoned.second
+  )
+
   return formatter.format(date)
 }

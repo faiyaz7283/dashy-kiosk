@@ -15,7 +15,7 @@ import { useCalendarData } from '../hooks/useCalendarData'
 import { useFamilyData } from '@/shared/hooks/useFamilyData'
 import { ContentCard } from '@/shared/components/ContentCard'
 import { NavArrows } from '@/shared/components/NavArrows'
-import { getMonthGridDates } from '@/shared/date/calendar'
+import { getMonthGridDates, today } from '@/shared/date/calendar'
 import { getEventCountsByMonth, getRelativeDensity } from '@/shared/utils/density'
 import { buildMemberColorMap, paletteBorderTopClasses, getMemberPaletteKey } from '@/shared/utils/memberColors'
 import type { PaletteKey } from '@/shared/utils/memberColors'
@@ -41,7 +41,7 @@ export function YearView({ date, onPrevious, onNext }: YearViewProps) {
   const { members } = useFamilyData()
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
   const year = date.year
-  const today = Temporal.Now.plainDateISO()
+  const todayDate = today()
 
   // Calculate event counts per month for density
   const monthCounts = useMemo(() => getEventCountsByMonth(events), [events])
@@ -93,7 +93,7 @@ export function YearView({ date, onPrevious, onNext }: YearViewProps) {
                 eventCount={monthCount}
                 density={monthDensity}
                 colorMap={colorMap}
-                today={today}
+                today={todayDate}
               />
             )
           })}

@@ -12,15 +12,33 @@
 import { themeConfig } from '@/theme/config'
 
 /**
- * Returns today's date as a PlainDate.
+ * Returns today's date as a PlainDate in the configured timezone.
  *
- * Uses the system's local ISO calendar. Safe for kiosk use where the
- * display timezone matches the system timezone.
+ * Fetches the timezone from the backend config and returns the current date
+ * in that timezone. Falls back to system timezone if config is unavailable.
  *
- * @returns The current date.
+ * @returns The current date in the configured timezone.
  */
 export function today(): Temporal.PlainDate {
+  // Use the configured timezone from the backend
+  // This is a synchronous function, so we use a cached timezone or fall back to system
+  const cachedTimezone = (globalThis as any).__DASHY_TIMEZONE__
+  if (cachedTimezone) {
+    return Temporal.Now.zonedDateTimeISO(cachedTimezone).toPlainDate()
+  }
+  // Fallback to system timezone
   return Temporal.Now.plainDateISO()
+}
+
+/**
+ * Sets the configured timezone for date calculations.
+ *
+ * Called by the app initialization after fetching config from backend.
+ *
+ * @param timezone - IANA timezone identifier (e.g., "America/New_York")
+ */
+export function setTimezone(timezone: string): void {
+  ;(globalThis as any).__DASHY_TIMEZONE__ = timezone
 }
 
 /**
