@@ -888,6 +888,45 @@ All 8 sub-phases complete. The chores frontend is fully rewired to the new assoc
 - `src/features/chores/components/MasterChoreModal.tsx` — conditional rendering based on frequency
 **Verification:** ✅ lint, typecheck, test, build all pass
 
+#### Bug #4: Duration Input and Form Grouping ✅ FIXED
+**Found:** 2026-08-27 during manual testing
+**Symptom:** 
+- Estimated Minutes label is confusing (hard to calculate in head)
+- Due Date always visible regardless of frequency (should be conditional)
+- Form fields not logically grouped
+
+**Fix:**
+- New `DurationInput` component with inline leading unit dropdown (min/hr/day)
+- New `duration.ts` utility with `toMinutes()` and `fromMinutes()` for unit conversion
+- "Estimated Duration" replaces "Estimated Minutes", grouped with Difficulty in a 2-column row
+- Due Time + Due Date grouped together inside Recurrence Pattern section (only for 'once' frequency)
+- End Date + Max Occurrences grouped together inside Recurrence Pattern section (only for recurring)
+- Form now logically groups related fields: Difficulty+Duration, Recurrence Pattern (frequency, time, pattern, end conditions)
+
+**Files Changed:**
+- `src/shared/components/DurationInput.tsx` — new (inline dropdown pattern)
+- `src/shared/components/DurationInput.test.tsx` — new
+- `src/shared/utils/duration.ts` — new (conversion utilities)
+- `src/shared/utils/duration.test.ts` — new
+- `src/features/chores/components/MasterChoreModal.tsx` — restructured form layout
+- `src/features/chores/components/MasterChoreModal.test.tsx` — updated test labels
+
+**Verification:** ✅ lint, typecheck, test (409 tests), build all pass
+
+#### Bug #5: TagInput Hover Popup Disappears ✅ FIXED
+**Found:** 2026-08-27 during manual testing
+**Symptom:** "Available tags" popup disappears when trying to move mouse from input to popup. Hard to interact with tags.
+**Root Cause:** `mt-1` margin-top created a gap between input container and popup. Mouse leaving input triggered `onMouseLeave` before reaching popup.
+**Fix:**
+- Removed `mt-1` from popup container
+- Popup now directly attached to input (no gap)
+- Mouse transitions smoothly from input to popup
+
+**Files Changed:**
+- `src/shared/components/TagInput.tsx` — removed margin-top gap
+
+**Verification:** ✅ lint, typecheck, test, build all pass
+
 ---
 
 ### Testing Checklist

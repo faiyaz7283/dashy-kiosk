@@ -150,9 +150,9 @@ describe('MasterChoreModal', () => {
       expect(screen.getByText('Estimated Duration')).toBeTruthy()
     })
 
-    it('renders When Overdue select', () => {
+    it('renders Keep visible checkbox', () => {
       renderModal()
-      expect(screen.getByText('When Overdue')).toBeTruthy()
+      expect(screen.getByText('Keep missed instances visible')).toBeTruthy()
     })
 
     it('renders End Date and Max Occurrences inputs', () => {
@@ -164,7 +164,8 @@ describe('MasterChoreModal', () => {
     it('renders Collaborative toggle', () => {
       renderModal()
       expect(screen.getByText('Collaborative')).toBeTruthy()
-      expect(screen.getByRole('switch')).toBeTruthy()
+      const switches = screen.getAllByRole('switch')
+      expect(switches.length).toBeGreaterThanOrEqual(1)
     })
 
     it('renders Conditions "Coming soon"', () => {

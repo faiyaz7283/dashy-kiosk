@@ -11,12 +11,11 @@
  */
 
 import { useState, useEffect, useMemo, type FormEvent } from 'react'
-import { X, RotateCw } from 'lucide-react'
+import { X, RotateCw, Info } from 'lucide-react'
 import type {
   MasterChore,
   ChoreCategory,
   ChoreTag,
-  ExpirationBehavior,
   RecurrenceRule,
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
@@ -25,6 +24,7 @@ import type { FamilyMember } from '@/types/family'
 import { Combobox } from '@/shared/components/Combobox'
 import { TagInput } from '@/shared/components/TagInput'
 import { DurationInput } from '@/shared/components/DurationInput'
+import { Tooltip } from '@/shared/components/Tooltip'
 import { formatDifficulty } from '@/shared/utils/chores'
 import { toMinutes, fromMinutes, type DurationUnit } from '@/shared/utils/duration'
 import { useChoreActions } from '../hooks/useChoreActions'
@@ -52,14 +52,6 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-/** Expiration behavior options. */
-const EXPIRATION_OPTIONS: { value: ExpirationBehavior; label: string }[] = [
-  { value: 'carry_over', label: 'Carry Over' },
-  { value: 'disappear', label: 'Disappear' },
-  { value: 'stay_visible', label: 'Stay Visible' },
-  { value: 'convert_to_open', label: 'Convert to Open Pool' },
-]
-
 /** Form state for the master chore modal. */
 interface FormState {
   name: string
@@ -77,7 +69,7 @@ interface FormState {
   estimatedDuration: { value: string; unit: DurationUnit }
   dueTime: string
   dueDate: string
-  expirationBehavior: ExpirationBehavior
+  keepVisible: boolean
   endDate: string
   maxOccurrences: string
   isCollaborative: boolean
@@ -100,7 +92,7 @@ const DEFAULT_FORM: FormState = {
   estimatedDuration: { value: '10', unit: 'minutes' },
   dueTime: '',
   dueDate: '',
-  expirationBehavior: 'carry_over',
+  keepVisible: false,
   endDate: '',
   maxOccurrences: '',
   isCollaborative: false,
@@ -197,7 +189,7 @@ export function MasterChoreModal({
           ...(estimatedMinutes ? { estimated_minutes: estimatedMinutes } : {}),
           ...(form.dueTime ? { due_time: form.dueTime } : {}),
           ...(form.dueDate ? { due_date: form.dueDate } : {}),
-          expiration_behavior: form.expirationBehavior,
+          expiration_behavior: form.keepVisible ? 'stay_visible' : 'disappear',
           ...(form.endDate ? { end_date: form.endDate } : {}),
           ...(form.maxOccurrences ? { max_occurrences: Number(form.maxOccurrences) } : {}),
           is_collaborative: form.isCollaborative,
@@ -215,7 +207,7 @@ export function MasterChoreModal({
           estimated_minutes: estimatedMinutes,
           due_time: form.dueTime || null,
           due_date: form.dueDate || null,
-          expiration_behavior: form.expirationBehavior,
+          expiration_behavior: form.keepVisible ? 'stay_visible' : 'disappear',
           end_date: form.endDate || null,
           max_occurrences: form.maxOccurrences ? Number(form.maxOccurrences) : null,
           is_collaborative: form.isCollaborative,
@@ -257,9 +249,14 @@ export function MasterChoreModal({
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
             {/* Name */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                Name
-              </label>
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <label className="text-sm font-medium text-text-secondary">
+                  Name
+                </label>
+                <Tooltip content="The name of this chore template. Examples: 'Wipe Counter', 'Take Out Trash', 'Water Plants'">
+                  <Info className="h-3.5 w-3.5 text-text-faint" />
+                </Tooltip>
+              </div>
               <input
                 type="text"
                 value={form.name}
@@ -271,36 +268,57 @@ export function MasterChoreModal({
 
             {/* Category + Tags row */}
             <div className="grid grid-cols-2 gap-4">
-              <Combobox
-                label="Category"
-                options={categoryOptions}
-                value={form.categoryId}
-                onChange={(id) => updateField('categoryId', id)}
-                onCreate={async (name) => {
-                  const category = await actions.createCategory(name)
-                  updateField('categoryId', category.id)
-                }}
-                placeholder="Select category..."
-              />
-              <TagInput
-                label="Tags"
-                availableTags={tagItems}
-                value={form.tagIds}
-                onChange={(ids) => updateField('tagIds', ids)}
-                onCreate={async (name) => {
-                  const tag = await actions.createTag(name)
-                  updateField('tagIds', [...form.tagIds, tag.id])
-                }}
-                placeholder="Add tag..."
-              />
+              <div>
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-text-muted">Category</span>
+                  <Tooltip content="Group chores by category. Create new categories inline by typing a name.">
+                    <Info className="h-3 w-3 text-text-faint" />
+                  </Tooltip>
+                </div>
+                <Combobox
+                  label=""
+                  options={categoryOptions}
+                  value={form.categoryId}
+                  onChange={(id) => updateField('categoryId', id)}
+                  onCreate={async (name) => {
+                    const category = await actions.createCategory(name)
+                    updateField('categoryId', category.id)
+                  }}
+                  placeholder="Select category..."
+                />
+              </div>
+              <div>
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-text-muted">Tags</span>
+                  <Tooltip content="Add optional tags for filtering. Create new tags inline by typing and pressing Enter.">
+                    <Info className="h-3 w-3 text-text-faint" />
+                  </Tooltip>
+                </div>
+                <TagInput
+                  label=""
+                  availableTags={tagItems}
+                  value={form.tagIds}
+                  onChange={(ids) => updateField('tagIds', ids)}
+                  onCreate={async (name) => {
+                    const tag = await actions.createTag(name)
+                    updateField('tagIds', [...form.tagIds, tag.id])
+                  }}
+                  placeholder="Add tag..."
+                />
+              </div>
             </div>
 
             {/* Difficulty + Estimated Duration row */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                  Difficulty
-                </label>
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Difficulty
+                  </label>
+                  <Tooltip content="How difficult this chore is. 1=Very Easy, 5=Very Hard">
+                    <Info className="h-3.5 w-3.5 text-text-faint" />
+                  </Tooltip>
+                </div>
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
@@ -318,33 +336,53 @@ export function MasterChoreModal({
                   </div>
                 </div>
               </div>
-              <DurationInput
-                label="Estimated Duration"
-                value={form.estimatedDuration.value}
-                onValueChange={(value) =>
-                  updateField('estimatedDuration', { ...form.estimatedDuration, value })
-                }
-                unit={form.estimatedDuration.unit}
-                onUnitChange={(unit) =>
-                  updateField('estimatedDuration', { ...form.estimatedDuration, unit })
-                }
-                placeholder="0"
-              />
+              <div>
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Estimated Duration
+                  </label>
+                  <Tooltip content="How long this chore typically takes to complete">
+                    <Info className="h-3.5 w-3.5 text-text-faint" />
+                  </Tooltip>
+                </div>
+                <DurationInput
+                  label=""
+                  value={form.estimatedDuration.value}
+                  onValueChange={(value) =>
+                    updateField('estimatedDuration', { ...form.estimatedDuration, value })
+                  }
+                  unit={form.estimatedDuration.unit}
+                  onUnitChange={(unit) =>
+                    updateField('estimatedDuration', { ...form.estimatedDuration, unit })
+                  }
+                  placeholder="0"
+                />
+              </div>
             </div>
 
             {/* Recurrence Pattern section */}
             <div className="rounded-lg border border-border p-4 space-y-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-                <RotateCw className="h-4 w-4 text-text-muted" />
-                Recurrence Pattern
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  <RotateCw className="h-4 w-4 text-text-muted" />
+                  Recurrence Pattern
+                </h3>
+                <Tooltip content="How often this chore repeats. 'Once' for one-time chores, or choose a recurring schedule.">
+                  <Info className="h-3.5 w-3.5 text-text-faint" />
+                </Tooltip>
+              </div>
 
               {/* Frequency + Time row */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-text-muted">
-                    Frequency
-                  </label>
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <label className="text-xs font-medium text-text-muted">
+                      Frequency
+                    </label>
+                    <Tooltip content="How often this chore repeats">
+                      <Info className="h-3 w-3 text-text-faint" />
+                    </Tooltip>
+                  </div>
                   <div className="relative">
                     <select
                       value={form.frequency}
@@ -362,9 +400,14 @@ export function MasterChoreModal({
                 </div>
                 {showRecurrenceSection && (
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">
-                      Time
-                    </label>
+                    <div className="mb-1 flex items-center gap-1.5">
+                      <label className="text-xs font-medium text-text-muted">
+                        Time
+                      </label>
+                      <Tooltip content="What time this chore is typically done">
+                        <Info className="h-3 w-3 text-text-faint" />
+                      </Tooltip>
+                    </div>
                     <input
                       type="time"
                       value={form.time}
@@ -530,9 +573,14 @@ export function MasterChoreModal({
               {showRecurrenceSection && (
                 <div className="grid grid-cols-2 gap-4 border-t border-border-light pt-4">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">
-                      End Date <span className="font-normal text-text-faint">(optional)</span>
-                    </label>
+                    <div className="mb-1 flex items-center gap-1.5">
+                      <label className="text-xs font-medium text-text-muted">
+                        End Date <span className="font-normal text-text-faint">(optional)</span>
+                      </label>
+                      <Tooltip content="Stop generating new instances after this date">
+                        <Info className="h-3 w-3 text-text-faint" />
+                      </Tooltip>
+                    </div>
                     <input
                       type="date"
                       value={form.endDate}
@@ -541,9 +589,14 @@ export function MasterChoreModal({
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">
-                      Max Occurrences <span className="font-normal text-text-faint">(optional)</span>
-                    </label>
+                    <div className="mb-1 flex items-center gap-1.5">
+                      <label className="text-xs font-medium text-text-muted">
+                        Max Occurrences <span className="font-normal text-text-faint">(optional)</span>
+                      </label>
+                      <Tooltip content="Stop generating new instances after this many occurrences">
+                        <Info className="h-3 w-3 text-text-faint" />
+                      </Tooltip>
+                    </div>
                     <input
                       type="number"
                       min="1"
@@ -557,40 +610,41 @@ export function MasterChoreModal({
               )}
             </div>
 
-            {/* Expiration behavior */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                When Overdue
-              </label>
-              <div className="relative">
-                <select
-                  value={form.expirationBehavior}
-                  onChange={(e) => updateField('expirationBehavior', e.target.value as ExpirationBehavior)}
-                  className="w-full appearance-none rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {EXPIRATION_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <ChevronDownIcon />
+            {/* Keep visible checkbox */}
+            <div className="flex items-start gap-3 border-t border-border-light py-3">
+              <ToggleSwitch
+                checked={form.keepVisible}
+                onChange={(val) => updateField('keepVisible', val)}
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium text-text-secondary">
+                  {form.frequency === 'once' ? 'Keep overdue instance visible' : 'Keep missed instances visible'}
+                </div>
+                <div className="text-xs text-text-faint">
+                  {form.frequency === 'once'
+                    ? 'If unchecked, the instance disappears when overdue. If checked, it stays visible marked as overdue.'
+                    : 'If unchecked, missed instances disappear. If checked, they stay visible marked as missed. New instances auto-generate regardless.'}
+                </div>
               </div>
-              <p className="mt-1 text-xs text-text-faint">
-                What happens to an instance that passes its due date without being completed.
-              </p>
             </div>
 
             {/* Collaborative toggle */}
-            <div className="flex items-center justify-between border-t border-border-light py-3">
-              <div>
-                <div className="text-sm font-medium text-text-secondary">Collaborative</div>
-                <div className="text-xs text-text-faint">
-                  Allow multiple members to have instances at the same time
-                </div>
-              </div>
+            <div className="flex items-start gap-3 border-t border-border-light py-3">
               <ToggleSwitch
                 checked={form.isCollaborative}
                 onChange={(val) => updateField('isCollaborative', val)}
               />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="text-sm font-medium text-text-secondary">Collaborative</div>
+                  <Tooltip content="Allow multiple family members to have instances of this chore at the same time">
+                    <Info className="h-3.5 w-3.5 text-text-faint" />
+                  </Tooltip>
+                </div>
+                <div className="text-xs text-text-faint">
+                  Allow multiple members to have instances at the same time
+                </div>
+              </div>
             </div>
 
             {/* Conditions section — deferred */}
@@ -745,7 +799,7 @@ function formFromMaster(master: MasterChore): FormState {
     estimatedDuration: { value: duration.value.toString(), unit: duration.unit },
     dueTime: master.due_time ?? '',
     dueDate: master.due_date ?? '',
-    expirationBehavior: master.expiration_behavior,
+    keepVisible: master.expiration_behavior === 'stay_visible',
     endDate: master.end_date ?? '',
     maxOccurrences: master.max_occurrences?.toString() ?? '',
     isCollaborative: master.is_collaborative,
