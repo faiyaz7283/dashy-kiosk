@@ -25,14 +25,16 @@ Rewire the chores frontend to match the redesigned backend architecture:
 
 **Each phase must pass ALL of the following before moving to the next:**
 
-1. ✅ **Code Review** — Manual review against AGENTS.md rules (no hardcoded values, no prop drilling, proper tokenization, no code duplication)
-2. ✅ **Quality Gates** — All four must pass:
+1. ✅ **Quality Gates** — All five must pass:
+   - `/code-review-gate` (manual code review — MUST run before committing)
    - `make lint-kiosk` (oxlint)
    - `make typecheck-kiosk` (tsc --noEmit)
    - `make test-kiosk` (vitest)
    - `make build-kiosk` (vite build)
-3. ✅ **Git Commit & Push** — Atomic commit with descriptive message, pushed to `development` branch
-4. ✅ **Phase Summary** — Document what was built, tech stack usage, any deviations
+2. ✅ **Git Commit & Push** — Atomic commit with descriptive message, pushed to `development` branch
+3. ✅ **Phase Summary** — Document what was built, tech stack usage, any deviations
+
+**IMPORTANT:** `/code-review-gate` is mandatory before every commit. Do not skip it. This catches issues that automated tools miss (hardcoded values, prop drilling, code duplication, missing shared components).
 
 **Session continuity:** This document tracks progress. When resuming work, read this file to understand current state and next steps.
 
@@ -448,11 +450,11 @@ _All mockups approved. No pending items._
 - `src/features/chores/components/ChoreCard.test.tsx` — update
 
 **Verification:**
+- [x] `/code-review-gate` passed
 - [x] `make lint-kiosk` passes
 - [x] `make typecheck-kiosk` passes
 - [x] `make test-kiosk` passes (264/264)
 - [x] `make build-kiosk` passes
-- [x] Code review completed
 - [x] Git commit: `feat(chores): Phase 3.1 — rewrite board and card for association-driven layout` (83710c9)
 - [x] Git push to `development`
 
@@ -508,10 +510,13 @@ _All mockups approved. No pending items._
 - `src/features/chores/views/ChoresBoard.tsx` — wire `+` button to open modal
 
 **Verification:**
-- [x] Quality gates pass (lint, typecheck, test, build)
-- [x] Code review completed (extracted DifficultyDots to avoid duplication)
-- [ ] Git commit: `feat(chores): add association picker modal`
-- [ ] Git push to `development`
+- [x] `/code-review-gate` passed (extracted DifficultyDots to avoid duplication)
+- [x] `make lint-kiosk` passed
+- [x] `make typecheck-kiosk` passed
+- [x] `make test-kiosk` passed (283/283)
+- [x] `make build-kiosk` passed
+- [x] Git commit: `feat(chores): Phase 3.2 — add association picker modal` (72476b3)
+- [x] Git push to `development`
 
 **Phase 3.2 completion summary:**
 
@@ -557,10 +562,13 @@ _All mockups approved. No pending items._
 - `src/features/chores/components/MasterChoreCard.test.tsx` — new
 
 **Verification:**
-- [x] Quality gates pass (lint, typecheck, test, build)
-- [x] Code review completed
-- [ ] Git commit: `feat(chores): add current chores view`
-- [ ] Git push to `development`
+- [x] `/code-review-gate` passed
+- [x] `make lint-kiosk` passed
+- [x] `make typecheck-kiosk` passed
+- [x] `make test-kiosk` passed (312/312)
+- [x] `make build-kiosk` passed
+- [x] Git commit: `feat(chores): Phase 3.3 — add current chores management view` (d409898)
+- [x] Git push to `development`
 
 **Phase 3.3 completion summary:**
 
@@ -600,8 +608,11 @@ _All mockups approved. No pending items._
 - `src/features/chores/components/MasterChoreCard.tsx` — extend with action variants
 
 **Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
+- [ ] `/code-review-gate` passed (MUST run before commit)
+- [ ] `make lint-kiosk` passed
+- [ ] `make typecheck-kiosk` passed
+- [ ] `make test-kiosk` passed
+- [ ] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add archived chores view`
 - [ ] Git push to `development`
 
@@ -625,8 +636,11 @@ _All mockups approved. No pending items._
 - `src/features/chores/components/MasterChoreModal.test.tsx` — new
 
 **Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
+- [ ] `/code-review-gate` passed (MUST run before commit)
+- [ ] `make lint-kiosk` passed
+- [ ] `make typecheck-kiosk` passed
+- [ ] `make test-kiosk` passed
+- [ ] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add master chore create/edit modal`
 - [ ] Git push to `development`
 
@@ -652,8 +666,11 @@ _All mockups approved. No pending items._
 - `src/features/chores/views/ChoresBoard.tsx` — wire card click to open popup
 
 **Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
+- [ ] `/code-review-gate` passed (MUST run before commit)
+- [ ] `make lint-kiosk` passed
+- [ ] `make typecheck-kiosk` passed
+- [ ] `make test-kiosk` passed
+- [ ] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add instance interaction popup`
 - [ ] Git push to `development`
 
@@ -690,8 +707,11 @@ _All mockups approved. No pending items._
 - `src/features/chores/views/ChoresView.test.tsx` — update
 
 **Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
+- [ ] `/code-review-gate` passed (MUST run before commit)
+- [ ] `make lint-kiosk` passed
+- [ ] `make typecheck-kiosk` passed
+- [ ] `make test-kiosk` passed
+- [ ] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add chores header and wire shell navigation`
 - [ ] Git push to `development`
 
@@ -717,8 +737,11 @@ _All mockups approved. No pending items._
 - `src/features/chores/components/ChoreEditModal.test.tsx` — delete (if exists)
 
 **Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
+- [ ] `/code-review-gate` passed (MUST run before commit)
+- [ ] `make lint-kiosk` passed
+- [ ] `make typecheck-kiosk` passed
+- [ ] `make test-kiosk` passed
+- [ ] `make build-kiosk` passed
 - [ ] Git commit: `refactor(chores): remove deprecated modals and clean up`
 - [ ] Git push to `development`
 
