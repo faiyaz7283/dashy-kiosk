@@ -17,6 +17,7 @@ import { useWeatherData } from '@/features/weather/hooks/useWeatherData'
 import { useForecastMap } from '@/features/weather/hooks/useForecastMap'
 import { useWeatherPopup } from '@/features/weather/hooks/useWeatherPopup'
 import { useFamilyData } from '@/shared/hooks/useFamilyData'
+import { useConfig, convertUtcToTimezone } from '@/shared/date/timezone'
 import { ContentCard } from '@/shared/components/ContentCard'
 import { NavArrows } from '@/shared/components/NavArrows'
 import { EventPopup } from '../components/EventPopup'
@@ -212,8 +213,11 @@ function TimedEventBlock({
   colorMap: Map<string, PaletteKey>
   members: FamilyMember[]
 }) {
-  const startHour = event.start.hour + event.start.minute / 60
-  const endHour = event.end.hour + event.end.minute / 60
+  const { timezone } = useConfig()
+  const startZoned = convertUtcToTimezone(event.startIso, timezone)
+  const endZoned = convertUtcToTimezone(event.endIso, timezone)
+  const startHour = startZoned.hour + startZoned.minute / 60
+  const endHour = endZoned.hour + endZoned.minute / 60
   const duration = endHour - startHour
 
   const top = startHour * layout.timelineHourHeight
