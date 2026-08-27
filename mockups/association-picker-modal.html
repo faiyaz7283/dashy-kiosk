@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<!--
+  ⚠️ KIOSK-V2 MOCKUP — TAILWIND ONLY RULE ⚠️
+
+  This mockup uses ONLY Tailwind utility classes. No inline styles with var(--dt-*).
+  Dark mode via Tailwind's `dark:` variant (`.dark` class on <html>).
+  Design tokens consumed via @theme block in src/index.css.
+
+  NOTE: This is a static visual mockup. All content is hardcoded HTML.
+  Do NOT translate any JavaScript from this mockup into the implementation.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashy v2 — Association Picker Modal (v2)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --color-primary: var(--dt-primary);
+            --color-primary-hover: var(--dt-primary-hover);
+            --color-primary-light: var(--dt-primary-light);
+            --color-primary-light-hover: var(--dt-primary-light-hover);
+            --color-primary-ring: var(--dt-primary-ring);
+            --color-bg: var(--dt-bg);
+            --color-bg-hover: var(--dt-bg-hover);
+            --color-white: var(--dt-white);
+            --color-text-primary: var(--dt-text-primary);
+            --color-text-secondary: var(--dt-text-secondary);
+            --color-text-muted: var(--dt-text-muted);
+            --color-text-faint: var(--dt-text-faint);
+            --color-text-disabled: var(--dt-text-disabled);
+            --color-border: var(--dt-border);
+            --color-border-light: var(--dt-border-light);
+            --color-border-dark: var(--dt-border-dark);
+            --color-success: var(--dt-success);
+            --color-danger: var(--dt-danger);
+            --color-warning: var(--dt-warning);
+            --color-faiyaz: var(--dt-member-faiyaz);
+            --color-trisha: var(--dt-member-trisha);
+            --color-arya: var(--dt-member-arya);
+            --color-raya: var(--dt-member-raya);
+            --color-chores-active: var(--dt-chores-active);
+            --color-chores-in-progress: var(--dt-chores-in-progress);
+            --color-chores-completed: var(--dt-chores-completed);
+            --color-chores-overdue: var(--dt-chores-overdue);
+            --color-chores-missed: var(--dt-chores-missed);
+            --color-chores-archived: var(--dt-chores-archived);
+        }
+
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
+    <link rel="stylesheet" href="tokens.css">
+</head>
+<body class="bg-bg text-text-primary font-sans h-screen overflow-hidden">
+
+    <!-- Theme toggle (bottom-right) -->
+    <button id="theme-toggle" class="fixed bottom-4 right-4 z-[9999] p-2 bg-white text-text-secondary border border-border rounded-lg cursor-pointer hover:bg-bg-hover hover:text-text-primary"
+            onclick="toggleTheme()"
+            title="Toggle theme">
+        <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <svg id="icon-moon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+        <svg id="icon-auto" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+    </button>
+
+    <!-- Hidden sentinel -->
+    <div class="hidden border-border bg-white dark:bg-bg bg-bg-hover text-text-primary text-text-secondary text-text-muted text-text-faint text-text-disabled border-faiyaz border-trisha border-arya border-raya bg-faiyaz bg-trisha bg-arya bg-raya bg-chores-active bg-chores-in-progress bg-chores-completed bg-chores-overdue bg-chores-missed bg-chores-archived rounded-md ring-2 ring-primary bg-white/10 hover:bg-white border-transparent hover:border-border text-text-faint/10"></div>
+
+    <!-- Modal overlay -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <!-- Modal content -->
+        <div class="w-full max-w-2xl mx-4 bg-white dark:bg-bg rounded-xl shadow-modal ring-1 ring-border overflow-hidden flex flex-col max-h-[85vh]">
+
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-border">
+                <div class="grid grid-cols-3 items-center gap-4">
+                    <!-- Member avatar icon — left -->
+                    <div class="w-8 h-8 rounded-full bg-faiyaz flex items-center justify-center text-white text-sm font-bold justify-self-start">
+                        F
+                    </div>
+                    <!-- Title — truly centered, plain text -->
+                    <h2 class="text-center text-lg font-semibold text-text-primary whitespace-nowrap">
+                        Assign Chores to Faiyaz
+                    </h2>
+                    <!-- Close button — right -->
+                    <button class="p-1 text-text-muted hover:text-text-primary rounded-md hover:bg-bg-hover transition-colors justify-self-end">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toolbar: Search + Sort + Group + Count -->
+            <div class="px-6 py-3 border-b border-border flex items-center gap-3">
+                <!-- Search -->
+                <div class="relative flex-1">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Search chores..."
+                        class="w-full pl-10 pr-4 py-2 text-sm bg-bg-hover border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                </div>
+
+                <!-- Count -->
+                <span class="text-xs text-text-muted shrink-0">5 available</span>
+
+                <!-- Group toggle: All / Recurring / One-off -->
+                <div class="flex items-center rounded-lg border border-border overflow-hidden">
+                    <button class="px-3 py-1.5 text-xs font-medium bg-primary text-white border-r border-border">
+                        All
+                    </button>
+                    <button class="px-3 py-1.5 text-xs font-medium text-text-muted hover:text-text-primary hover:bg-bg-hover bg-white dark:bg-bg border-r border-border">
+                        Recurring
+                    </button>
+                    <button class="px-3 py-1.5 text-xs font-medium text-text-muted hover:text-text-primary hover:bg-bg-hover bg-white dark:bg-bg">
+                        One-off
+                    </button>
+                </div>
+
+                <!-- Sort dropdown -->
+                <div class="relative">
+                    <button class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-border rounded-lg transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+                        </svg>
+                        Sort
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <!-- Sort dropdown menu (shown for mockup) -->
+                    <div class="hidden absolute right-0 top-full mt-1 w-40 bg-white dark:bg-bg border border-border rounded-lg shadow-popup z-10 overflow-hidden">
+                        <button class="w-full px-3 py-2 text-xs text-left text-text-primary hover:bg-bg-hover bg-bg-hover/50">Name A–Z</button>
+                        <button class="w-full px-3 py-2 text-xs text-left text-text-secondary hover:bg-bg-hover">Name Z–A</button>
+                        <button class="w-full px-3 py-2 text-xs text-left text-text-secondary hover:bg-bg-hover">Category</button>
+                        <button class="w-full px-3 py-2 text-xs text-left text-text-secondary hover:bg-bg-hover">Difficulty</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available master chores list -->
+            <div class="flex-1 overflow-y-auto">
+
+                <!-- Section: Recurring chores -->
+                <div class="px-6 pt-3 pb-1">
+                    <span class="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Recurring</span>
+                </div>
+
+                <!-- Master chore item 1 -->
+                <div class="px-6 py-3 border-b border-border-light hover:bg-bg-hover cursor-pointer transition-colors">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-semibold text-text-primary">Wipe Counter</h3>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Kitchen</span>
+                            </div>
+                            <div class="flex items-center gap-3 mb-1.5">
+                                <span class="text-xs text-text-muted">Daily at 6:00 PM</span>
+                                <span class="text-xs text-text-muted">·</span>
+                                <span class="text-xs text-text-muted">10m</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Medium</span>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Master chore item 2 -->
+                <div class="px-6 py-3 border-b border-border-light hover:bg-bg-hover cursor-pointer transition-colors">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-semibold text-text-primary">Cook Dinner</h3>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Kitchen</span>
+                            </div>
+                            <div class="flex items-center gap-3 mb-1.5">
+                                <span class="text-xs text-text-muted">Daily at 6:00 PM</span>
+                                <span class="text-xs text-text-muted">·</span>
+                                <span class="text-xs text-text-muted">45m</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Hard</span>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Master chore item 3 -->
+                <div class="px-6 py-3 border-b border-border-light hover:bg-bg-hover cursor-pointer transition-colors">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-semibold text-text-primary">Vacuum Living Room</h3>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Cleaning</span>
+                            </div>
+                            <div class="flex items-center gap-3 mb-1.5">
+                                <span class="text-xs text-text-muted">Weekly on Monday at 10:00 AM</span>
+                                <span class="text-xs text-text-muted">·</span>
+                                <span class="text-xs text-text-muted">30m</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Medium</span>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section: One-off chores -->
+                <div class="px-6 pt-3 pb-1">
+                    <span class="text-[10px] font-semibold text-text-muted uppercase tracking-wide">One-off</span>
+                </div>
+
+                <!-- Master chore item 4 — One-off -->
+                <div class="px-6 py-3 border-b border-border-light hover:bg-bg-hover cursor-pointer transition-colors">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-semibold text-text-primary">Deep Clean Oven</h3>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Kitchen</span>
+                                <span class="rounded bg-primary-light px-1.5 py-0.5 text-[10px] font-medium text-primary">One-time</span>
+                            </div>
+                            <div class="flex items-center gap-3 mb-1.5">
+                                <span class="text-xs text-text-muted">No recurrence</span>
+                                <span class="text-xs text-text-muted">·</span>
+                                <span class="text-xs text-text-muted">60m</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Very Hard</span>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Master chore item 5 — One-off -->
+                <div class="px-6 py-3 border-b border-border-light hover:bg-bg-hover cursor-pointer transition-colors">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-semibold text-text-primary">Organize Garage</h3>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Cleaning</span>
+                                <span class="rounded bg-primary-light px-1.5 py-0.5 text-[10px] font-medium text-primary">One-time</span>
+                            </div>
+                            <div class="flex items-center gap-3 mb-1.5">
+                                <span class="text-xs text-text-muted">No recurrence</span>
+                                <span class="text-xs text-text-muted">·</span>
+                                <span class="text-xs text-text-muted">120m</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Hard</span>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const iconSun = document.getElementById('icon-sun');
+            const iconMoon = document.getElementById('icon-moon');
+            const iconAuto = document.getElementById('icon-auto');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                iconSun.classList.remove('hidden');
+                iconMoon.classList.add('hidden');
+                iconAuto.classList.add('hidden');
+            } else {
+                html.classList.add('dark');
+                iconSun.classList.add('hidden');
+                iconMoon.classList.remove('hidden');
+                iconAuto.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

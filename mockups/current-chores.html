@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<!--
+  ⚠️ KIOSK-V2 MOCKUP — TAILWIND ONLY RULE ⚠️
+
+  This mockup uses ONLY Tailwind utility classes. No inline styles with var(--dt-*).
+  Dark mode via Tailwind's `dark:` variant (`.dark` class on <html>).
+  Design tokens consumed via @theme block.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashy v2 — Current Chores</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --color-primary: var(--dt-primary);
+            --color-primary-hover: var(--dt-primary-hover);
+            --color-primary-light: var(--dt-primary-light);
+            --color-primary-light-hover: var(--dt-primary-light-hover);
+            --color-primary-ring: var(--dt-primary-ring);
+            --color-bg: var(--dt-bg);
+            --color-bg-hover: var(--dt-bg-hover);
+            --color-white: var(--dt-white);
+            --color-text-primary: var(--dt-text-primary);
+            --color-text-secondary: var(--dt-text-secondary);
+            --color-text-muted: var(--dt-text-muted);
+            --color-text-faint: var(--dt-text-faint);
+            --color-text-disabled: var(--dt-text-disabled);
+            --color-border: var(--dt-border);
+            --color-border-light: var(--dt-border-light);
+            --color-border-dark: var(--dt-border-dark);
+            --color-success: var(--dt-success);
+            --color-danger: var(--dt-danger);
+            --color-warning: var(--dt-warning);
+            --color-faiyaz: var(--dt-member-faiyaz);
+            --color-trisha: var(--dt-member-trisha);
+            --color-arya: var(--dt-member-arya);
+            --color-raya: var(--dt-member-raya);
+            --color-chores-active: var(--dt-chores-active);
+            --color-chores-in-progress: var(--dt-chores-in-progress);
+            --color-chores-completed: var(--dt-chores-completed);
+            --color-chores-overdue: var(--dt-chores-overdue);
+            --color-chores-missed: var(--dt-chores-missed);
+            --color-chores-archived: var(--dt-chores-archived);
+        }
+
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
+    <link rel="stylesheet" href="tokens.css">
+</head>
+<body class="bg-bg text-text-primary font-sans h-screen overflow-hidden">
+
+    <!-- Theme toggle -->
+    <button id="theme-toggle" class="fixed bottom-4 right-4 z-[9999] p-2 bg-white text-text-secondary border border-border rounded-lg cursor-pointer hover:bg-bg-hover hover:text-text-primary"
+            onclick="toggleTheme()"
+            title="Toggle theme">
+        <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <svg id="icon-moon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+        <svg id="icon-auto" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+    </button>
+
+    <!-- Hidden sentinel -->
+    <div class="hidden border-border bg-white dark:bg-bg bg-bg-hover text-text-primary text-text-secondary text-text-muted text-text-faint text-text-disabled border-faiyaz border-trisha border-arya border-raya bg-faiyaz bg-trisha bg-arya bg-raya bg-chores-active bg-chores-in-progress bg-chores-completed bg-chores-overdue bg-chores-missed bg-chores-archived rounded-md ring-2 ring-primary bg-white/10 hover:bg-white border-transparent hover:border-border text-text-faint/10"></div>
+
+    <!-- MASTER MANAGEMENT VIEW — Standalone view (accessed via sidebar) -->
+    <main class="h-full w-full flex flex-col p-2 bg-bg">
+        <div class="grow rounded-lg bg-white dark:bg-bg shadow-xs ring-1 ring-border overflow-hidden flex flex-col">
+
+            <!-- Master chore grid -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="grid grid-cols-3 gap-4">
+
+                    <!-- Master chore card 1 — Active -->
+                    <div class="rounded-lg bg-white dark:bg-bg border border-border p-4 hover:shadow-card-hover transition-shadow cursor-pointer">
+                        <!-- Checkbox + Header -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" class="w-4 h-4 rounded border-border text-primary focus:ring-primary" checked />
+                                <h3 class="text-sm font-semibold text-text-primary">Wipe Counter</h3>
+                            </div>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-success/10 text-success">
+                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                                Active
+                            </span>
+                        </div>
+
+                        <!-- Category + Tags (labeled) -->
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Category</span>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Kitchen</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Tags</span>
+                                <div class="flex gap-1">
+                                    <span class="rounded bg-border-light px-1.5 py-0.5 text-[10px] text-text-muted">Quick</span>
+                                    <span class="rounded bg-border-light px-1.5 py-0.5 text-[10px] text-text-muted">Evening</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chore Type Info -->
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Frequency</span>
+                                <span class="text-text-muted">Daily at 6:00 PM</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Collab</span>
+                                <span class="text-text-muted">No</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Conditions</span>
+                                <span class="text-text-muted">None</span>
+                            </div>
+                        </div>
+
+                        <!-- Est + Difficulty -->
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-xs text-text-muted">Est. 10m</div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Medium</span>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="flex items-center gap-4 mb-3 text-[10px] text-text-muted">
+                            <span>3 associations</span>
+                            <span>45 occurrences</span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center gap-2 pt-3 border-t border-border-light">
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-md transition-colors">
+                                Edit
+                            </button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-warning hover:bg-warning/10 rounded-md transition-colors">
+                                Pause
+                            </button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-faint hover:text-text-muted hover:bg-bg-hover rounded-md transition-colors">
+                                Archive
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Master chore card 2 — Active (Collaborative) -->
+                    <div class="rounded-lg bg-white dark:bg-bg border border-border p-4 hover:shadow-card-hover transition-shadow cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" class="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
+                                <h3 class="text-sm font-semibold text-text-primary">Cook Dinner</h3>
+                            </div>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-success/10 text-success">
+                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                                Active
+                            </span>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Category</span>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Kitchen</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Tags</span>
+                                <div class="flex gap-1">
+                                    <span class="rounded bg-border-light px-1.5 py-0.5 text-[10px] text-text-muted">Evening</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Frequency</span>
+                                <span class="text-text-muted">Daily at 6:00 PM</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Collab</span>
+                                <span class="text-success font-medium">Yes</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Conditions</span>
+                                <span class="text-text-muted">None</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-xs text-text-muted">Est. 45m</div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Hard</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 mb-3 text-[10px] text-text-muted">
+                            <span>2 associations</span>
+                            <span>112 occurrences</span>
+                        </div>
+                        <div class="flex items-center gap-2 pt-3 border-t border-border-light">
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-md transition-colors">Edit</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-warning hover:bg-warning/10 rounded-md transition-colors">Pause</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-faint hover:text-text-muted hover:bg-bg-hover rounded-md transition-colors">Archive</button>
+                        </div>
+                    </div>
+
+                    <!-- Master chore card 3 — Inactive (paused) -->
+                    <div class="rounded-lg bg-white dark:bg-bg border border-border p-4 hover:shadow-card-hover transition-shadow cursor-pointer opacity-75">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" class="w-4 h-4 rounded border-border text-primary focus:ring-primary" checked />
+                                <h3 class="text-sm font-semibold text-text-primary">Water Plants</h3>
+                            </div>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warning/10 text-warning">
+                                <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+                                Inactive
+                            </span>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Category</span>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Garden</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Tags</span>
+                                <span class="text-[10px] text-text-disabled">None</span>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Frequency</span>
+                                <span class="text-text-muted">Daily at 8:00 AM</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Collab</span>
+                                <span class="text-text-muted">No</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Conditions</span>
+                                <span class="text-text-muted">None</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-xs text-text-muted">Est. 15m</div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Easy</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 mb-3 text-[10px] text-text-muted">
+                            <span>1 association</span>
+                            <span>28 occurrences</span>
+                        </div>
+                        <div class="flex items-center gap-2 pt-3 border-t border-border-light">
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-md transition-colors">Edit</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-success hover:bg-success/10 rounded-md transition-colors">Resume</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-faint hover:text-text-muted hover:bg-bg-hover rounded-md transition-colors">Archive</button>
+                        </div>
+                    </div>
+
+                    <!-- Master chore card 4 — Active (with conditions) -->
+                    <div class="rounded-lg bg-white dark:bg-bg border border-border p-4 hover:shadow-card-hover transition-shadow cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" class="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
+                                <h3 class="text-sm font-semibold text-text-primary">Vacuum Living Room</h3>
+                            </div>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-success/10 text-success">
+                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                                Active
+                            </span>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Category</span>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Cleaning</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Tags</span>
+                                <div class="flex gap-1">
+                                    <span class="rounded bg-border-light px-1.5 py-0.5 text-[10px] text-text-muted">Weekly</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Frequency</span>
+                                <span class="text-text-muted">Weekly on Monday at 10:00 AM</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Collab</span>
+                                <span class="text-text-muted">No</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Conditions</span>
+                                <span class="text-primary font-medium">2 active</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-xs text-text-muted">Est. 30m</div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Medium</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 mb-3 text-[10px] text-text-muted">
+                            <span>2 associations</span>
+                            <span>18 occurrences</span>
+                        </div>
+                        <div class="flex items-center gap-2 pt-3 border-t border-border-light">
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-md transition-colors">Edit</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-warning hover:bg-warning/10 rounded-md transition-colors">Pause</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-faint hover:text-text-muted hover:bg-bg-hover rounded-md transition-colors">Archive</button>
+                        </div>
+                    </div>
+
+                    <!-- Master chore card 5 — Active, open pool -->
+                    <div class="rounded-lg bg-white dark:bg-bg border border-border p-4 hover:shadow-card-hover transition-shadow cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" class="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
+                                <h3 class="text-sm font-semibold text-text-primary">Take Out Trash</h3>
+                            </div>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-success/10 text-success">
+                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                                Active
+                            </span>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Category</span>
+                                <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Kitchen</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Tags</span>
+                                <div class="flex gap-1">
+                                    <span class="rounded bg-border-light px-1.5 py-0.5 text-[10px] text-text-muted">Quick</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Frequency</span>
+                                <span class="text-text-muted">Daily at 7:00 PM</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Collab</span>
+                                <span class="text-text-muted">No</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-[10px] font-medium text-text-faint uppercase tracking-wide w-16 shrink-0">Conditions</span>
+                                <span class="text-text-muted">None</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-xs text-text-muted">Est. 10m</div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-border"></span>
+                                </div>
+                                <span class="text-[10px] text-text-muted">Easy</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 mb-3 text-[10px] text-text-muted">
+                            <span>Open Pool</span>
+                            <span>32 occurrences</span>
+                        </div>
+                        <div class="flex items-center gap-2 pt-3 border-t border-border-light">
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-md transition-colors">Edit</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-warning hover:bg-warning/10 rounded-md transition-colors">Pause</button>
+                            <button class="flex-1 py-1.5 text-xs font-medium text-text-faint hover:text-text-muted hover:bg-bg-hover rounded-md transition-colors">Archive</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const iconSun = document.getElementById('icon-sun');
+            const iconMoon = document.getElementById('icon-moon');
+            const iconAuto = document.getElementById('icon-auto');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                iconSun.classList.remove('hidden');
+                iconMoon.classList.add('hidden');
+                iconAuto.classList.add('hidden');
+            } else {
+                html.classList.add('dark');
+                iconSun.classList.add('hidden');
+                iconMoon.classList.remove('hidden');
+                iconAuto.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<!--
+  ⚠️ KIOSK-V2 MOCKUP — TAILWIND ONLY RULE ⚠️
+
+  This mockup uses ONLY Tailwind utility classes. No inline styles with var(--dt-*).
+  Dark mode via Tailwind's `dark:` variant (`.dark` class on <html>).
+  Design tokens consumed via @theme block.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashy v2 — Master Chore Modal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --color-primary: var(--dt-primary);
+            --color-primary-hover: var(--dt-primary-hover);
+            --color-primary-light: var(--dt-primary-light);
+            --color-primary-light-hover: var(--dt-primary-light-hover);
+            --color-primary-ring: var(--dt-primary-ring);
+            --color-bg: var(--dt-bg);
+            --color-bg-hover: var(--dt-bg-hover);
+            --color-white: var(--dt-white);
+            --color-text-primary: var(--dt-text-primary);
+            --color-text-secondary: var(--dt-text-secondary);
+            --color-text-muted: var(--dt-text-muted);
+            --color-text-faint: var(--dt-text-faint);
+            --color-text-disabled: var(--dt-text-disabled);
+            --color-border: var(--dt-border);
+            --color-border-light: var(--dt-border-light);
+            --color-border-dark: var(--dt-border-dark);
+            --color-success: var(--dt-success);
+            --color-danger: var(--dt-danger);
+            --color-warning: var(--dt-warning);
+            --color-faiyaz: var(--dt-member-faiyaz);
+            --color-trisha: var(--dt-member-trisha);
+            --color-arya: var(--dt-member-arya);
+            --color-raya: var(--dt-member-raya);
+            --color-chores-active: var(--dt-chores-active);
+            --color-chores-in-progress: var(--dt-chores-in-progress);
+            --color-chores-completed: var(--dt-chores-completed);
+            --color-chores-overdue: var(--dt-chores-overdue);
+            --color-chores-missed: var(--dt-chores-missed);
+            --color-chores-archived: var(--dt-chores-archived);
+        }
+
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
+    <link rel="stylesheet" href="tokens.css">
+</head>
+<body class="bg-bg text-text-primary font-sans h-screen overflow-hidden">
+
+    <!-- Theme toggle -->
+    <button id="theme-toggle" class="fixed bottom-4 right-4 z-[9999] p-2 bg-white text-text-secondary border border-border rounded-lg cursor-pointer hover:bg-bg-hover hover:text-text-primary"
+            onclick="toggleTheme()"
+            title="Toggle theme">
+        <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <svg id="icon-moon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+        <svg id="icon-auto" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+    </button>
+
+    <!-- Hidden sentinel -->
+    <div class="hidden border-border bg-white dark:bg-bg bg-bg-hover text-text-primary text-text-secondary text-text-muted text-text-faint text-text-disabled border-faiyaz border-trisha border-arya border-raya bg-faiyaz bg-trisha bg-arya bg-raya bg-chores-active bg-chores-in-progress bg-chores-completed bg-chores-overdue bg-chores-missed bg-chores-archived rounded-md ring-2 ring-primary bg-white/10 hover:bg-white border-transparent hover:border-border text-text-faint/10"></div>
+
+    <!-- Modal overlay -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <!-- Modal content — wider for form layout -->
+        <div class="w-full max-w-3xl mx-4 bg-white dark:bg-bg rounded-xl shadow-modal ring-1 ring-border overflow-hidden max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
+                <h2 class="text-lg font-semibold text-text-primary">New Chore Template</h2>
+                <button class="p-1 text-text-muted hover:text-text-primary rounded-md hover:bg-bg-hover transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Scrollable form body -->
+            <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-1.5">Name</label>
+                    <input type="text" value="Wipe Counter" placeholder="e.g., Wipe Counter" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                </div>
+
+                <!-- Category + Tags row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1.5">Category</label>
+                        <div class="relative">
+                            <select class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                                <option selected>Kitchen</option>
+                                <option>Cleaning</option>
+                                <option>Bathroom</option>
+                                <option>Garden</option>
+                                <option>Family</option>
+                                <option>Planning</option>
+                            </select>
+                            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1.5">Tags</label>
+                        <div class="flex items-center gap-1.5 flex-wrap px-3 py-1.5 bg-bg border border-border rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary-light text-primary text-xs font-medium">
+                                Quick
+                                <button class="text-primary/60 hover:text-primary">&times;</button>
+                            </span>
+                            <input type="text" placeholder="Add tag..." class="flex-1 min-w-16 py-0.5 text-sm bg-transparent border-none focus:outline-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Difficulty slider -->
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-1.5">Difficulty</label>
+                    <div class="flex items-center gap-4">
+                        <input type="range" min="1" max="5" value="3" class="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary" />
+                        <div class="flex items-center gap-2">
+                            <div class="flex gap-0.5">
+                                <span class="w-2 h-2 rounded-full bg-chores-in-progress"></span>
+                                <span class="w-2 h-2 rounded-full bg-chores-in-progress"></span>
+                                <span class="w-2 h-2 rounded-full bg-chores-in-progress"></span>
+                                <span class="w-2 h-2 rounded-full bg-border"></span>
+                                <span class="w-2 h-2 rounded-full bg-border"></span>
+                            </div>
+                            <span class="text-xs text-text-muted w-12">Medium</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recurrence pattern section -->
+                <div class="rounded-lg border border-border p-4 space-y-4">
+                    <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                        <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Recurrence Pattern
+                    </h3>
+
+                    <!-- Frequency + Time row -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-text-muted mb-1">Frequency</label>
+                            <div class="relative">
+                                <select class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                                    <option>Once</option>
+                                    <option>Daily</option>
+                                    <option selected>Weekly</option>
+                                    <option>Monthly</option>
+                                    <option>Yearly</option>
+                                </select>
+                                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-text-muted mb-1">Time</label>
+                            <input type="time" value="18:00" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                        </div>
+                    </div>
+
+                    <!-- Conditional: Day of week (shown for Weekly) -->
+                    <div>
+                        <label class="block text-xs font-medium text-text-muted mb-1">Day of Week</label>
+                        <div class="flex gap-1.5">
+                            <button class="w-9 h-9 rounded-lg text-xs font-medium bg-primary text-white">Mon</button>
+                            <button class="w-9 h-9 rounded-lg text-xs font-medium bg-bg border border-border text-text-muted hover:bg-bg-hover">Tue</button>
+                            <button class="w-9 h-9 rounded-lg text-xs font-medium bg-bg border border-border text-text-muted hover:bg-bg-hover">Wed</button>
+                            <button class="w-9 h-9 rounded-lg text-xs font-medium bg-bg border border-border text-text-muted hover:bg-bg-hover">Thu</button>
+                            <button class="w-9 h-9 rounded-lg text-xs font-medium bg-bg border border-border text-text-muted hover:bg-bg-hover">Fri</button>
+                            <button class="w-9 h-9 rounded-lg text-xs font-medium bg-bg border border-border text-text-muted hover:bg-bg-hover">Sat</button>
+                            <button class="w-9 h-9 rounded-lg text-xs font-medium bg-bg border border-border text-text-muted hover:bg-bg-hover">Sun</button>
+                        </div>
+                    </div>
+
+                    <!-- Conditional: Monthly options (hidden, shown for Monthly) -->
+                    <div class="hidden">
+                        <label class="block text-xs font-medium text-text-muted mb-1">Monthly Pattern</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-text-faint mb-1">Day of Month</label>
+                                <input type="number" min="1" max="31" placeholder="1-31" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                            </div>
+                            <div>
+                                <label class="block text-xs text-text-faint mb-1">OR Nth Weekday</label>
+                                <div class="flex gap-2">
+                                    <select class="flex-1 px-2 py-2 text-xs bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                                        <option>1st</option>
+                                        <option>2nd</option>
+                                        <option>3rd</option>
+                                        <option>4th</option>
+                                        <option>Last</option>
+                                    </select>
+                                    <select class="flex-1 px-2 py-2 text-xs bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                                        <option>Mon</option>
+                                        <option>Tue</option>
+                                        <option>Wed</option>
+                                        <option>Thu</option>
+                                        <option>Fri</option>
+                                        <option>Sat</option>
+                                        <option>Sun</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conditional: Yearly options (hidden, shown for Yearly) -->
+                    <div class="hidden">
+                        <label class="block text-xs font-medium text-text-muted mb-1">Yearly Pattern</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-text-faint mb-1">Month</label>
+                                <select class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                                    <option>January</option>
+                                    <option>February</option>
+                                    <option>March</option>
+                                    <option>April</option>
+                                    <option>May</option>
+                                    <option>June</option>
+                                    <option>July</option>
+                                    <option>August</option>
+                                    <option>September</option>
+                                    <option>October</option>
+                                    <option>November</option>
+                                    <option>December</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-text-faint mb-1">Day</label>
+                                <input type="number" min="1" max="31" placeholder="1-31" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                            </div>
+                        </div>
+                        <p class="mt-2 text-xs text-text-faint">OR use Nth weekday pattern (e.g., "4th Thursday of November")</p>
+                    </div>
+                </div>
+
+                <!-- Duration + Due time + Due date row -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1.5">Estimated Minutes</label>
+                        <input type="number" value="10" min="1" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1.5">Due Time <span class="text-text-faint font-normal">(optional)</span></label>
+                        <input type="time" value="" placeholder="No deadline" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1.5">Due Date <span class="text-text-faint font-normal">(optional)</span></label>
+                        <input type="date" value="" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    </div>
+                </div>
+
+                <!-- Expiration behavior -->
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-1.5">When Overdue</label>
+                    <div class="relative">
+                        <select class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                            <option selected>Carry Over</option>
+                            <option>Disappear</option>
+                            <option>Stay Visible</option>
+                            <option>Convert to Open Pool</option>
+                        </select>
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                    <p class="mt-1 text-xs text-text-faint">What happens to an instance that passes its due date without being completed.</p>
+                </div>
+
+                <!-- End conditions row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1.5">End Date <span class="text-text-faint font-normal">(optional)</span></label>
+                        <input type="date" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1.5">Max Occurrences <span class="text-text-faint font-normal">(optional)</span></label>
+                        <input type="number" min="1" placeholder="No limit" class="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    </div>
+                </div>
+
+                <!-- Collaborative toggle -->
+                <div class="flex items-center justify-between py-3 border-t border-border-light">
+                    <div>
+                        <div class="text-sm font-medium text-text-secondary">Collaborative</div>
+                        <div class="text-xs text-text-faint">Allow multiple members to have instances at the same time</div>
+                    </div>
+                    <button class="relative w-10 h-5 rounded-full bg-border transition-colors">
+                        <span class="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform"></span>
+                    </button>
+                </div>
+
+                <!-- Conditions section — deferred -->
+                <div class="flex items-center justify-between py-3 border-t border-border-light">
+                    <div>
+                        <div class="text-sm font-medium text-text-disabled">Conditions</div>
+                        <div class="text-xs text-text-faint">Set requirements for completion (e.g., "Must take a photo")</div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-bg-hover text-text-faint">Coming soon</span>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-border bg-bg-hover/50 flex items-center justify-end gap-3 shrink-0">
+                <button class="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary rounded-lg hover:bg-bg-hover transition-colors">
+                    Cancel
+                </button>
+                <button class="px-6 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors">
+                    Create Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const iconSun = document.getElementById('icon-sun');
+            const iconMoon = document.getElementById('icon-moon');
+            const iconAuto = document.getElementById('icon-auto');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                iconSun.classList.remove('hidden');
+                iconMoon.classList.add('hidden');
+                iconAuto.classList.add('hidden');
+            } else {
+                html.classList.add('dark');
+                iconSun.classList.add('hidden');
+                iconMoon.classList.remove('hidden');
+                iconAuto.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<!--
+  ⚠️ KIOSK-V2 MOCKUP — TAILWIND ONLY RULE ⚠️
+
+  This mockup uses ONLY Tailwind utility classes. No inline styles with var(--dt-*).
+  Dark mode via Tailwind's `dark:` variant (`.dark` class on <html>).
+  Design tokens consumed via @theme block.
+
+  Shows 3 instance interaction states side by side:
+  1. Active instance (assigned to member)
+  2. In-progress instance (with Complete action)
+  3. Open pool instance (with Claim action)
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashy v2 — Instance Interaction</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --color-primary: var(--dt-primary);
+            --color-primary-hover: var(--dt-primary-hover);
+            --color-primary-light: var(--dt-primary-light);
+            --color-primary-light-hover: var(--dt-primary-light-hover);
+            --color-primary-ring: var(--dt-primary-ring);
+            --color-bg: var(--dt-bg);
+            --color-bg-hover: var(--dt-bg-hover);
+            --color-white: var(--dt-white);
+            --color-text-primary: var(--dt-text-primary);
+            --color-text-secondary: var(--dt-text-secondary);
+            --color-text-muted: var(--dt-text-muted);
+            --color-text-faint: var(--dt-text-faint);
+            --color-text-disabled: var(--dt-text-disabled);
+            --color-border: var(--dt-border);
+            --color-border-light: var(--dt-border-light);
+            --color-border-dark: var(--dt-border-dark);
+            --color-success: var(--dt-success);
+            --color-danger: var(--dt-danger);
+            --color-warning: var(--dt-warning);
+            --color-faiyaz: var(--dt-member-faiyaz);
+            --color-trisha: var(--dt-member-trisha);
+            --color-arya: var(--dt-member-arya);
+            --color-raya: var(--dt-member-raya);
+            --color-chores-active: var(--dt-chores-active);
+            --color-chores-in-progress: var(--dt-chores-in-progress);
+            --color-chores-completed: var(--dt-chores-completed);
+            --color-chores-overdue: var(--dt-chores-overdue);
+            --color-chores-missed: var(--dt-chores-missed);
+            --color-chores-archived: var(--dt-chores-archived);
+            --shadow-popup: var(--dt-shadow-popup, 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05));
+        }
+
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
+    <link rel="stylesheet" href="tokens.css">
+</head>
+<body class="bg-bg text-text-primary font-sans min-h-screen">
+
+    <!-- Theme toggle -->
+    <button id="theme-toggle" class="fixed bottom-4 right-4 z-[9999] p-2 bg-white text-text-secondary border border-border rounded-lg cursor-pointer hover:bg-bg-hover hover:text-text-primary"
+            onclick="toggleTheme()"
+            title="Toggle theme">
+        <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <svg id="icon-moon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+        <svg id="icon-auto" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+    </button>
+
+    <!-- Hidden sentinel -->
+    <div class="hidden border-border bg-white dark:bg-bg bg-bg-hover text-text-primary text-text-secondary text-text-muted text-text-faint text-text-disabled border-faiyaz border-trisha border-arya border-raya bg-faiyaz bg-trisha bg-arya bg-raya bg-chores-active bg-chores-in-progress bg-chores-completed bg-chores-overdue bg-chores-missed bg-chores-archived rounded-md ring-2 ring-primary bg-white/10 hover:bg-white border-transparent hover:border-border text-text-faint/10"></div>
+
+    <!-- Page title -->
+    <div class="px-8 pt-8 pb-4">
+        <h1 class="text-xl font-bold text-text-primary mb-1">Instance Interaction — All States</h1>
+        <p class="text-sm text-text-muted">Five popup variants: Active, In Progress, Overdue, Missed, Open Pool</p>
+    </div>
+
+    <!-- Five popups side by side -->
+    <div class="flex items-start justify-center gap-6 px-8 pb-8 flex-wrap">
+
+        <!-- STATE 1: Active instance (assigned to member) -->
+        <div class="w-80">
+            <div class="text-xs font-medium text-text-muted mb-2 text-center">Active — Assigned to Member</div>
+            <div class="bg-white dark:bg-bg rounded-xl shadow-popup ring-1 ring-border overflow-hidden">
+                <!-- Header: name + status -->
+                <div class="px-4 py-3 border-b border-border-light">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-sm font-semibold text-text-primary">Read to Kids</h3>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-chores-active/10 text-chores-active">
+                            <span class="w-1.5 h-1.5 rounded-full bg-chores-active"></span>
+                            Active
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Family</span>
+                    </div>
+                </div>
+
+                <!-- Details -->
+                <div class="px-4 py-3 space-y-2.5">
+                    <!-- Recurrence -->
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Daily at 8:00 PM</span>
+                    </div>
+                    <!-- Period (single date, not range) -->
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Monday, Aug 25</span>
+                    </div>
+                    <!-- Due Time (if set) -->
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Due by 9:00 PM</span>
+                    </div>
+                    <!-- Assigned to -->
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-4 rounded-full bg-faiyaz flex items-center justify-center text-white text-[8px] font-bold">F</div>
+                            <span>Faiyaz</span>
+                            <span class="text-text-faint">· Assigned by Trisha</span>
+                        </div>
+                    </div>
+                    <!-- Est. time -->
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Est. 20m</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="px-4 py-3 border-t border-border-light space-y-2">
+                    <button class="w-full py-2 px-3 text-sm font-medium text-white bg-chores-active hover:bg-chores-active/90 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Start
+                    </button>
+                    <a href="#" class="w-full py-1.5 px-3 text-xs font-medium text-primary hover:text-primary-hover rounded-lg hover:bg-primary-light transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        View Template
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 2: In-progress instance -->
+        <div class="w-80">
+            <div class="text-xs font-medium text-text-muted mb-2 text-center">In Progress — Ready to Complete</div>
+            <div class="bg-white dark:bg-bg rounded-xl shadow-popup ring-1 ring-border overflow-hidden">
+                <div class="px-4 py-3 border-b border-border-light">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-sm font-semibold text-text-primary">Help with Homework</h3>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-chores-in-progress/10 text-chores-in-progress">
+                            <span class="w-1.5 h-1.5 rounded-full bg-chores-in-progress"></span>
+                            In Progress
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Family</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 space-y-2.5">
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Daily at 7:00 PM</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Tuesday, Aug 26</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Due by 8:00 PM</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-4 rounded-full bg-faiyaz flex items-center justify-center text-white text-[8px] font-bold">F</div>
+                            <span>Faiyaz</span>
+                            <span class="text-text-faint">· Claimed</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Est. 30m</span>
+                    </div>
+                    <!-- Started time -->
+                    <div class="flex items-center gap-2 text-xs text-chores-in-progress">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Started at 6:45 PM</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 border-t border-border-light space-y-2">
+                    <button class="w-full py-2 px-3 text-sm font-medium text-white bg-chores-completed hover:bg-chores-completed/90 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Complete
+                    </button>
+                    <a href="#" class="w-full py-1.5 px-3 text-xs font-medium text-primary hover:text-primary-hover rounded-lg hover:bg-primary-light transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        View Template
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 3: Open pool instance -->
+        <div class="w-80">
+            <div class="text-xs font-medium text-text-muted mb-2 text-center">Open Pool — Unclaimed</div>
+            <div class="bg-white dark:bg-bg rounded-xl shadow-popup ring-1 ring-border overflow-hidden">
+                <div class="px-4 py-3 border-b border-border-light">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-sm font-semibold text-text-primary">Vacuum Living Room</h3>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-chores-active/10 text-chores-active">
+                            <span class="w-1.5 h-1.5 rounded-full bg-chores-active"></span>
+                            Active
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Cleaning</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 space-y-2.5">
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Weekly on Monday at 10:00 AM</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Monday, Aug 25</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Due by 12:00 PM</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <span>Open Pool</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Est. 30m</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 border-t border-border-light space-y-2">
+                    <button class="w-full py-2 px-3 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
+                        Claim
+                    </button>
+                    <a href="#" class="w-full py-1.5 px-3 text-xs font-medium text-primary hover:text-primary-hover rounded-lg hover:bg-primary-light transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        View Template
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 4: Overdue instance -->
+        <div class="w-80">
+            <div class="text-xs font-medium text-text-muted mb-2 text-center">Overdue — Past Due Time</div>
+            <div class="bg-white dark:bg-bg rounded-xl shadow-popup ring-1 ring-border overflow-hidden">
+                <div class="px-4 py-3 border-b border-border-light">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-sm font-semibold text-text-primary">Take Out Trash</h3>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-chores-overdue/10 text-chores-overdue">
+                            <span class="w-1.5 h-1.5 rounded-full bg-chores-overdue"></span>
+                            Overdue
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Kitchen</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 space-y-2.5">
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Daily at 7:00 PM</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Monday, Aug 25</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-chores-overdue">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Due by 8:00 PM · 2h late</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-4 rounded-full bg-faiyaz flex items-center justify-center text-white text-[8px] font-bold">F</div>
+                            <span>Faiyaz</span>
+                            <span class="text-text-faint">· Assigned</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Est. 10m</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 border-t border-border-light space-y-2">
+                    <button class="w-full py-2 px-3 text-sm font-medium text-white bg-chores-completed hover:bg-chores-completed/90 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Complete Now
+                    </button>
+                    <a href="#" class="w-full py-1.5 px-3 text-xs font-medium text-primary hover:text-primary-hover rounded-lg hover:bg-primary-light transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        View Template
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 5: Missed instance -->
+        <div class="w-80">
+            <div class="text-xs font-medium text-text-muted mb-2 text-center">Missed — Period Ended</div>
+            <div class="bg-white dark:bg-bg rounded-xl shadow-popup ring-1 ring-border overflow-hidden opacity-75">
+                <div class="px-4 py-3 border-b border-border-light">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-sm font-semibold text-text-primary">Water Plants</h3>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-chores-missed/10 text-chores-missed">
+                            <span class="w-1.5 h-1.5 rounded-full bg-chores-missed"></span>
+                            Missed
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="rounded bg-border px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">Garden</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 space-y-2.5">
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Daily at 8:00 AM</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Sunday, Aug 24</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-chores-missed">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Due by 9:00 AM · Period ended</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-4 rounded-full bg-trisha flex items-center justify-center text-white text-[8px] font-bold">T</div>
+                            <span>Trisha</span>
+                            <span class="text-text-faint">· Assigned</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Est. 15m</span>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 border-t border-border-light space-y-2">
+                    <button class="w-full py-2 px-3 text-sm font-medium text-text-secondary bg-bg-hover hover:bg-bg rounded-lg transition-colors flex items-center justify-center gap-2" disabled>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Cannot Complete (Missed)
+                    </button>
+                    <a href="#" class="w-full py-1.5 px-3 text-xs font-medium text-primary hover:text-primary-hover rounded-lg hover:bg-primary-light transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        View Template
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const iconSun = document.getElementById('icon-sun');
+            const iconMoon = document.getElementById('icon-moon');
+            const iconAuto = document.getElementById('icon-auto');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                iconSun.classList.remove('hidden');
+                iconMoon.classList.add('hidden');
+                iconAuto.classList.add('hidden');
+            } else {
+                html.classList.add('dark');
+                iconSun.classList.add('hidden');
+                iconMoon.classList.remove('hidden');
+                iconAuto.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,709 @@
+# Chores Frontend Rewire — Implementation Tracker
+
+**Status:** 🟢 Phase 2: Mockups (Complete)
+**Created:** 2026-08-26
+**Last Updated:** 2026-08-27
+**Scope:** dashy-kiosk frontend only (backend timezone fix is separate dashy-api work)
+
+---
+
+## Overview
+
+Rewire the chores frontend to match the redesigned backend architecture:
+- **Backend entities:** MasterChore → ChoreAssociation → ChoreInstance
+- **New paradigm:** `+` buttons create **associations** (pick from existing masters), not masters
+- **Master CRUD:** Separate views for managing templates (Current Chores, Archived Chores)
+- **Board:** Driven by associations, not claimed_by/assigned_to fields
+- **Header:** Chores-specific header with 3-view toggle (Board, Manage Current, Manage Archived)
+- **Bulk actions:** Context-aware per view (Pause/Archive for Current, Restore/Delete for Archived)
+
+**Backend timezone issue (separate scope):** `recurrence_rule.time` and `due_time` are compared against UTC clock but users enter them in local time. Needs backend fix in `dashy-api` (convert local→UTC on input). Not in this plan.
+
+---
+
+## Phase Completion Criteria
+
+**Each phase must pass ALL of the following before moving to the next:**
+
+1. ✅ **Code Review** — Manual review against AGENTS.md rules (no hardcoded values, no prop drilling, proper tokenization, no code duplication)
+2. ✅ **Quality Gates** — All four must pass:
+   - `make lint-kiosk` (oxlint)
+   - `make typecheck-kiosk` (tsc --noEmit)
+   - `make test-kiosk` (vitest)
+   - `make build-kiosk` (vite build)
+3. ✅ **Git Commit & Push** — Atomic commit with descriptive message, pushed to `development` branch
+4. ✅ **Phase Summary** — Document what was built, tech stack usage, any deviations
+
+**Session continuity:** This document tracks progress. When resuming work, read this file to understand current state and next steps.
+
+---
+
+## Phase 1: Foundation (Types + API + Parse Utilities)
+
+**Status:** ✅ Complete
+**Goal:** Align data layer with backend — no UI changes yet.
+
+### 1.1 Rewrite `src/types/chores.ts`
+
+**Status:** ✅ Complete
+
+**Update enums/types to match backend:**
+- `MasterChoreStatus`: `'active' | 'inactive' | 'archived'` (remove `pending_approval`, add `inactive`)
+- `InstanceStatus`: `'active' | 'in_progress' | 'completed' | 'overdue' | 'missed' | 'archived'` (remove `open`, `claimed`, `assigned`, `completed_pending_signoff`, `expiring_soon`)
+- Remove `ChoreFrequency` — replaced by `RecurrenceRule` interface
+
+**Add new types:**
+```typescript
+/** Recurrence pattern configuration. */
+export interface RecurrenceRule {
+  frequency: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+  time: string  // HH:MM 24-hour format
+  day_of_week?: number  // 0=Monday, 6=Sunday
+  day_of_month?: number  // 1-31
+  week_of_month?: number  // 1-5
+  month?: number  // 1-12
+}
+
+/** Association between master chore and member/open pool. */
+export interface ChoreAssociation {
+  id: string
+  master_chore_id: string
+  member_id: string | null
+  is_open_pool: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+  removed_at: string | null
+}
+```
+
+**Update `MasterChore`:**
+- Remove: `frequency: ChoreFrequency`, `approved_by: string | null`
+- Add: `recurrence_rule: RecurrenceRule | null`, `end_date: string | null`, `max_occurrences: number | null`, `occurrence_count: number`, `conditions: any | null`, `is_collaborative: boolean`
+
+**Update `ChoreInstance`:**
+- Remove: `signoff_by: string | null`, `signed_off_at: string | null`
+- Add: `association_id: string | null`
+
+**Update `ChoresData`:**
+- Add: `associations: ChoreAssociation[]`
+
+**Update request types:**
+- `CreateMasterChoreRequest`: replace `frequency` with `recurrence_rule`, remove `approved_by`, add `end_date`, `max_occurrences`, `conditions`, `is_collaborative`
+- `UpdateMasterChoreRequest`: same changes
+- Add: `CreateAssociationRequest` — `{ master_chore_id, member_id?, is_open_pool?, created_by }`
+
+### 1.2 Rewrite `src/features/chores/api/choresApi.ts`
+
+**Status:** ✅ Complete
+
+**Changes:**
+- Update `fetchChores()` return type to include `associations`
+- Add `createAssociation(data: CreateAssociationRequest): Promise<ChoreAssociation>`
+- Add `deleteAssociation(associationId: string): Promise<void>`
+- Add `bulkUpdateMasterStatus(masterIds: string[], status: string): Promise<{updated_count: number}>`
+- Remove `approveMasterChore()` — endpoint doesn't exist
+- Remove `signoffInstance()` — endpoint doesn't exist
+- Update `updateInstanceStatus()` — remove `isAdult` parameter
+- Update `createMasterChore()` / `updateMasterChore()` — use `recurrence_rule` instead of `frequency`
+
+### 1.3 Rewrite `src/features/chores/hooks/useChoreActions.ts`
+
+**Status:** ✅ Complete
+
+**Changes:**
+- Remove: `approveMaster`, `signoffInstance`
+- Add: `createAssociation`, `deleteAssociation`, `bulkUpdateMasterStatus`
+- Update: `updateInstanceStatus` signature (remove `isAdult` param)
+
+### 1.4 Add chores parse utilities
+
+**Status:** ✅ Complete
+
+**Note:** Reused existing `formatUtcTimeOfDay()` from `src/shared/date/timezone.ts` instead of creating a duplicate. Added to barrel export in `src/shared/date/index.ts`.
+
+**New file:** `src/shared/date/chores.ts`
+
+```typescript
+/**
+ * Format recurrence rule time (UTC) to configured timezone.
+ * 
+ * @param utcTime - HH:MM in UTC (e.g., "14:00")
+ * @param timezone - IANA timezone (e.g., "America/New_York")
+ * @returns Formatted time in local timezone (e.g., "10:00 AM")
+ */
+export function formatRecurrenceTime(utcTime: string, timezone: string): string
+```
+
+Reuse existing `convertUtcToTimezone()` from `src/shared/date/timezone.ts`.
+
+### 1.5 Update `src/shared/utils/chores.ts`
+
+**Status:** ✅ Complete
+
+**Update for new enums:**
+- `getStatusColor()` — update Record keys for new InstanceStatus values
+- `getStatusLabel()` — update labels (e.g., "active" → "Active", "missed" → "Missed")
+- `isOpenPoolInstance()` — logic stays the same (claimed_by === null && assigned_to === null)
+
+**Add helpers:**
+```typescript
+/** Filter associations by member ID. */
+export function getMemberAssociations(associations: ChoreAssociation[], memberId: string): ChoreAssociation[]
+
+/** Filter for open pool associations. */
+export function getOpenPoolAssociations(associations: ChoreAssociation[]): ChoreAssociation[]
+
+/** Human-readable recurrence summary (e.g., "Weekly on Monday at 8:00 AM"). */
+export function formatRecurrence(rule: RecurrenceRule | null, timezone?: string): string
+```
+
+### 1.6 Update existing tests
+
+**Status:** ✅ Complete
+
+- `src/features/chores/hooks/useChoresData.test.ts` — update mock data for new types
+- `src/features/chores/components/ChoreCard.test.tsx` — update for new status values
+- `src/features/chores/views/ChoresBoard.test.tsx` — update for associations in data
+- `src/shared/utils/chores.test.ts` — update for new enum values, add tests for new helpers
+
+### 1.7 Verification
+
+**Status:** ✅ Complete
+
+- [x] `make lint-kiosk` passes
+- [x] `make typecheck-kiosk` passes
+- [x] `make test-kiosk` passes (253/253)
+- [x] `make build-kiosk` passes
+- [x] Code review completed (no hardcoded values, proper tokenization, no duplication)
+- [x] Git commit: `feat(chores): align types and API layer with backend redesign` (95db67c)
+- [x] Git push to `development`
+
+**Phase 1 completion summary:**
+
+**What was built:**
+- Rewrote `src/types/chores.ts` — new enums (`MasterChoreStatus`, `InstanceStatus`), `RecurrenceRule` interface, `ChoreAssociation` type, updated `MasterChore`/`ChoreInstance`/`ChoresData`/request types to match backend
+- Rewrote `src/features/chores/api/choresApi.ts` — added `createAssociation`, `deleteAssociation`, `bulkUpdateMasterStatus`; removed `approveMasterChore`, `signoffInstance`; updated `updateInstanceStatus` (removed `isAdult` param)
+- Rewrote `src/features/chores/hooks/useChoreActions.ts` — aligned with new API functions
+- Updated `src/shared/utils/chores.ts` — new status color/label maps, added `getMemberAssociations`, `getOpenPoolAssociations`, `formatRecurrence` helpers
+- Exported `formatUtcTimeOfDay` from `src/shared/date/index.ts` barrel (reused instead of duplicating)
+- Updated CSS tokens (`src/index.css`) — replaced old chores status variables with new ones (active, in_progress, completed, overdue, missed, archived)
+- Updated `src/theme/tokens.ts` — aligned chores color tokens with new CSS variables
+- Updated `src/types/index.ts` barrel — removed `ChoreFrequency`, added `RecurrenceRule`, `ChoreAssociation`, `CreateAssociationRequest`
+- Updated components with minimal changes to keep typecheck passing: `ChoreCard.tsx`, `ChoresBoard.tsx`, `ChoreEditModal.tsx`, `ChoreCreateModal.tsx`
+- Updated all test files with new mock data and assertions
+
+**Tech stack usage:**
+- TypeScript: strict typing for all new types and interfaces
+- Tailwind CSS: updated color tokens for new status values
+- Temporal API: reused `formatUtcTimeOfDay` for recurrence time formatting
+- vitest: 253 tests passing (39 in chores.test.ts alone)
+
+**Deviations from plan:**
+- Did not create `src/shared/date/chores.ts` — reused existing `formatUtcTimeOfDay()` to avoid duplication (DRY principle)
+- Made minimal component updates (ChoreCard, ChoresBoard, ChoreEditModal, ChoreCreateModal) to keep typecheck passing — full UI rewire is Phase 3
+- `bulkUpdateMasterStatus` uses query parameters (not JSON body) to match backend endpoint design
+
+---
+
+## Phase 2: Mockups (Design Approval Required)
+
+**Status:** ✅ Complete (7/7 approved)
+**Goal:** Design all new/changed UI as HTML mockups. **No implementation until approved.**
+
+### Approved Mockups
+
+| # | Mockup | File | Status | Notes |
+|---|--------|------|--------|-------|
+| 1 | Chores Board | `mockups/chores-board.html` | ✅ Approved | 3-column equal grid, hybrid metric cards (icon + shorthand), member color pills for headers |
+| 2 | Association Picker Modal | `mockups/association-picker-modal.html` | ✅ Approved | 3-column header grid for true centering, no footer, scrollable list with section headers |
+| 3 | Current Chores | `mockups/current-chores.html` | ✅ Approved | Active + Inactive cards only, labeled rows (Category, Tags, Frequency, Collab, Conditions) |
+| 4 | Archived Chores | `mockups/archived-chores.html` | ✅ Approved | Archived cards only, same style as current (no grey/strikethrough), Restore + Delete actions |
+| 5 | Header (Chores) | `mockups/header-chores.html` | ✅ Approved | 3-view toggle (Board/Manage Current/Manage Archived), context-aware bulk actions, no family pills |
+| 6 | Master Chore Modal | `mockups/master-chore-modal.html` | ✅ Approved | Conditional recurrence fields, Due Date added, start_date deferred to future feature |
+
+### Pending Review
+
+_All mockups approved. No pending items._
+
+### Design Decisions (Phase 2)
+
+**Header Architecture:**
+- Chores feature has its own header (`header-chores.html`), separate from calendar (`header-calendar.html`)
+- No family pills in chores header — board columns show per-member metrics
+- 3-view toggle: `Board | Manage Current | Manage Archived`
+- Context-aware bulk actions per view (see table below)
+- `Create Master` button always visible (primary action)
+
+**View-Specific Button Visibility:**
+
+| View | Select All | Bulk Actions | Create Master |
+|------|-----------|--------------|---------------|
+| Board | ❌ | ❌ | ✅ |
+| Manage Current | ✅ | Pause Selected, Archive Selected | ✅ |
+| Manage Archived | ✅ | Restore Selected, Delete Permanently | ✅ |
+
+**Management View Split:**
+- `current-chores.html` — Active + Inactive (paused) master chores only
+- `archived-chores.html` — Archived master chores only
+- Both are standalone views accessed via sidebar or header toggle
+- No inline collapsible panel (original design changed)
+
+**Card Design:**
+- Labeled rows with fixed-width labels (`w-16 shrink-0`): Category, Tags, Frequency, Collab, Conditions
+- Est. minutes + Difficulty dots on same row (space-between)
+- Archived cards: same style as current (no opacity/strikethrough — separate view provides context)
+- "Create Master" button in header, not in grid
+
+**Metric Cards (Board):**
+- Hybrid approach: Lucide icon + shorthand text label (Asn, Clm, Prog, Done, Over)
+- `text-[8px]` labels, `text-sm` values, `text-center`, `leading-none` for compact uniform sizing
+- Colors: Asn/Clm = muted, Prog = amber, Done = green, Over = red
+
+**Modal Header Centering:**
+- 3-column equal grid (`grid-cols-3`) for true centering
+- Left: avatar circle or empty, Center: title text, Right: close button
+- `whitespace-nowrap` on title to prevent wrapping
+
+### 2.1 Mockup: Updated Chore Board
+
+**Status:** ✅ Approved
+
+**File:** `mockups/chores-board.html`
+
+**Final design:**
+- 3-column equal grid (`grid-cols-3`, `flex-1 min-w-0`) for member columns + open pool
+- Column headers: member name as colored pill (`bg-{member} text-white border border-{member}/50`), `+` button as colored pill circle
+- Open Pool uses gray pills
+- Metric cards: 5-column grid of small cards, hybrid icon + shorthand labels
+- Chore cards: `border-l-4 border-l-{member}`, status icon badge, category tag, frequency tag, difficulty dots, est. time, assignment text, action button (Start/Complete)
+- No management bar or inline panel (moved to separate views)
+
+### 2.2 Mockup: Association Picker Modal
+
+**Status:** ✅ Approved
+
+**File:** `mockups/association-picker-modal.html`
+
+**Final design:**
+- Centered modal with dark backdrop (`fixed inset-0 z-50 bg-black/50`)
+- Header: 3-column equal grid — left: avatar circle, center: "Assign Chores to {Name}" plain text, right: close X button
+- Toolbar: search input (flex-1) + count ("N available") + 3-button group toggle (All | Recurring | One-off) + sort dropdown
+- No footer — modal closes via X button only
+- Scrollable list with section headers ("RECURRING" / "ONE-OFF" uppercase tracking-wide)
+- Each row: name + category tag + recurrence summary + difficulty dots + "Assign" button
+
+### 2.3 Mockup: Current Chores (was Master Management)
+
+**Status:** ✅ Approved
+
+**File:** `mockups/current-chores.html` (renamed from `master-management.html`)
+
+**Final design:**
+- Standalone view (accessed via sidebar or header toggle)
+- Shows only Active and Inactive (paused) master chores
+- Grid of cards with labeled rows: Category, Tags, Frequency, Collab, Conditions
+- Est. minutes + Difficulty on same row
+- Card actions: Edit, Pause/Resume, Archive
+- No header bar inside content area (app shell header provides controls)
+
+### 2.4 Mockup: Archived Chores
+
+**Status:** ✅ Approved
+
+**File:** `mockups/archived-chores.html` (new)
+
+**Final design:**
+- Standalone view (accessed via sidebar or header toggle)
+- Shows only Archived master chores
+- Same card style as current-chores (no grey/strikethrough — separate view provides context)
+- Card actions: Edit, Restore (no Archive button)
+
+### 2.5 Mockup: Header (Chores)
+
+**Status:** ✅ Approved
+
+**File:** `mockups/header-chores.html` (new)
+
+**Final design:**
+- LEFT: Date + Clock + Weather (same as calendar header)
+- CENTER: Empty (no family pills — board columns show per-member metrics)
+- RIGHT: View Toggle (Board | Manage Current | Manage Archived) + Select All + Bulk Actions + Create Master
+- Bulk actions context-aware per view (see table above)
+
+### 2.6 Mockup: Master Create/Edit Modal
+
+**Status:** ⬜ Pending Review
+
+**File:** `mockups/master-chore-modal.html`
+
+**Design:**
+- Modal title: "New Chore Template" or "Edit Chore Template"
+- Fields:
+  - Name (text input)
+  - Category (combobox with create)
+  - Tags (tag input with create)
+  - Difficulty (slider 1-5)
+  - Recurrence pattern:
+    - Frequency dropdown: Once / Daily / Weekly / Monthly / Yearly
+    - Conditional fields based on frequency:
+      - Weekly: day of week picker
+      - Monthly: day of month OR nth weekday
+      - Yearly: month + day
+    - Time (HH:MM input — displayed in configured timezone)
+  - Est. minutes (number input)
+  - Due time (HH:MM — optional deadline)
+  - When overdue: dropdown (Disappear / Carry Over / Stay Visible / Convert to Open)
+  - End date (date picker — optional)
+  - Max occurrences (number — optional)
+  - Collaborative toggle (allows multiple members to have instances simultaneously)
+  - Conditions section: **deferred** — show "Coming soon" or omit for now
+- Footer: Cancel / Save (Create)
+
+### 2.7 Mockup: Instance Interaction
+
+**Status:** ⬜ Pending Review
+
+**File:** `mockups/instance-interaction.html`
+
+**Design:**
+- Compact modal/popup showing:
+  - Chore name + category tag
+  - Recurrence summary (e.g., "Weekly on Monday at 8:00 AM")
+  - Period: "Aug 25 – Aug 31"
+  - Current status badge
+  - Assigned to: member avatar + name (or "Open Pool")
+  - Action button: "Start" (if active) / "Complete" (if in_progress)
+  - Link: "View Template" → navigates to Master Management with that master highlighted
+  - For open pool instances: "Claim" button (moves to member's column)
+
+### 2.8 User Review & Iteration
+
+**Status:** 🟡 In Progress
+
+- [x] User reviews all mockups in browser
+- [x] Iterate until all designs are approved (5/7 complete)
+- [ ] Mockup #6: Master Chore Modal — pending review
+- [ ] Mockup #7: Instance Interaction — pending review
+- [ ] Document approval date and any design decisions
+- [ ] Only then proceed to Phase 3
+
+**Phase 2 completion summary:** _[To be filled after all mockups approved]_
+
+---
+
+## Phase 3: Implementation
+
+**Status:** ⬜ Not Started
+**Goal:** Build from approved mockups. Each sub-phase verified independently.
+
+### 3.1 Board + Card Updates
+
+**Status:** ⬜ Not Started
+
+**Files:**
+- `src/features/chores/views/ChoresBoard.tsx` — use associations for column population, update metrics, add settings gear icon
+- `src/features/chores/components/ChoreCard.tsx` — new status indicators, action buttons (Start/Complete)
+- `src/shared/utils/chores.ts` — update helpers
+- Update tests
+
+**Verification:**
+- [ ] `make lint-kiosk` passes
+- [ ] `make typecheck-kiosk` passes
+- [ ] `make test-kiosk` passes
+- [ ] `make build-kiosk` passes
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): update board and card components for association-driven layout`
+- [ ] Git push to `development`
+
+### 3.2 Association Picker Modal
+
+**Status:** ⬜ Not Started
+
+**Files:**
+- New: `src/features/chores/components/AssociationPickerModal.tsx`
+- Uses `createAssociation()` API
+- Filters available masters (not yet associated to target member/pool)
+- Replace old `ChoreCreateModal` — sidebar `+` and column `+` open this instead
+- Tests
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add association picker modal for assigning masters`
+- [ ] Git push to `development`
+
+### 3.3 Current + Archived Chores Views + Modal
+
+**Status:** ⬜ Not Started
+
+**Files:**
+- New: `src/features/chores/views/CurrentChores.tsx` (was MasterManagement)
+- New: `src/features/chores/views/ArchivedChores.tsx`
+- New: `src/features/chores/components/MasterChoreModal.tsx` (create/edit)
+- New: `src/features/chores/components/InstanceInteraction.tsx` (replaces ChoreEditModal)
+- Wire navigation: board ↔ current chores ↔ archived chores via header toggle
+- Update `src/features/shell/AppShell.tsx` — add view state, route sidebar to views
+- Update `src/features/shell/Sidebar.tsx` — change `+` behavior for chores to open current chores
+- Update `src/features/shell/Header.tsx` — add chores header with view toggle and bulk actions
+- Tests
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add current/archived chores views and master modal`
+- [ ] Git push to `development`
+
+### 3.4 Instance Interaction
+
+**Status:** ⬜ Not Started
+
+**Files:**
+- Replace `src/features/chores/components/ChoreEditModal.tsx` with simplified instance interaction component
+- Status transitions: active→in_progress→completed via API
+- Open pool claim flow
+- "View Template" link to management
+- Tests
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): simplify instance interaction modal`
+- [ ] Git push to `development`
+
+### 3.5 Cleanup
+
+**Status:** ⬜ Not Started
+
+**Files:**
+- Delete `src/features/chores/components/ChoreCreateModal.tsx` (replaced by AssociationPickerModal)
+- Delete `src/features/chores/components/ChoreEditModal.tsx` (replaced by simplified instance interaction)
+- Delete old mockups that are fully superseded
+- Update `src/features/chores/views/ChoresView.tsx` to compose new components
+- Update `src/features/shell/AppShell.tsx` — remove old modal state, wire new views
+- Update tests
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `refactor(chores): remove deprecated modals and clean up`
+- [ ] Git push to `development`
+
+**Phase 3 completion summary:** _[To be filled after completion]_
+
+---
+
+## Phase 4: Final Quality Gates & Verification
+
+**Status:** ⬜ Not Started
+**Goal:** End-to-end verification with real data.
+
+### 4.1 Quality Gates
+
+**Status:** ⬜ Not Started
+
+- [ ] `make lint-kiosk` — oxlint passes
+- [ ] `make typecheck-kiosk` — tsc --noEmit passes
+- [ ] `make test-kiosk` — vitest passes (all existing + new tests)
+- [ ] `make build-kiosk` — production build succeeds
+
+### 4.2 Manual Verification
+
+**Status:** ⬜ Not Started
+
+- [ ] Start dev environment: `make dev-up`
+- [ ] Verify `CHORES_USE_MOCK=false` in `env/.env.dev`
+- [ ] Test full flow:
+  1. Open chores board — should show columns for each member + open pool
+  2. Click `+` on member column — association picker opens
+  3. Select a master chore — creates association, instance appears in column
+  4. Click instance card — instance interaction modal opens
+  5. Click "Start" — status changes to in_progress
+  6. Click "Complete" — status changes to completed, next instance auto-generated
+  7. Click "Manage Current" in header — current chores view opens
+  8. Click "Create Master" — master create modal opens
+  9. Fill form and save — new master appears in current chores view
+  10. Edit master — changes persist
+  11. Pause master — status changes to inactive
+  12. Click "Manage Archived" in header — archived chores view opens
+  13. Select archived master — Restore button restores to current
+  14. Return to board — paused master's instances no longer generate
+
+### 4.3 Code Quality Audit
+
+**Status:** ⬜ Not Started
+
+Before declaring done, audit for:
+- [ ] No hardcoded pixel/color values — all use tokens
+- [ ] No code duplication — shared components/hooks used
+- [ ] No prop drilling — Context API used if 3+ levels
+- [ ] Proper tokenization — shell dimensions, layout values reference CSS custom properties
+- [ ] No inline styles with `var(--dt-*)` — all Tailwind
+- [ ] All public functions/components have JSDoc
+- [ ] All new components have tests
+
+### 4.4 Final Commit
+
+**Status:** ⬜ Not Started
+
+- [ ] Git commit: `feat(chores): complete frontend rewire for association-based architecture`
+- [ ] Git push to `development`
+- [ ] Update this document status to ✅ COMPLETE
+
+**Phase 4 completion summary:** _[To be filled after completion]_
+
+---
+
+## Out of Scope (Separate Plans)
+
+- **Backend timezone fix** — `recurrence_rule.time` and `due_time` need local→UTC conversion on input. Separate `dashy-api` work. Track in `dashy-api/docs/plans/` or create new plan.
+- **Conditional chores UI** — backend supports it, but frontend UI for condition config is deferred.
+- **Bulk association** — assign master to multiple members at once. Future feature.
+- **SSE / real-time updates** — polling sufficient for v1.
+
+---
+
+## Files Changed (Summary)
+
+| File | Action | Phase |
+|------|--------|-------|
+| `src/types/chores.ts` | Rewrite | 1 |
+| `src/features/chores/api/choresApi.ts` | Rewrite | 1 |
+| `src/features/chores/hooks/useChoreActions.ts` | Rewrite | 1 |
+| `src/features/chores/hooks/useChoresData.ts` | Minor update | 1 |
+| `src/shared/utils/chores.ts` | Update + add helpers | 1 |
+| `src/shared/date/chores.ts` | New | 1 |
+| All `*.test.*` files | Update | 1, 3 |
+| `mockups/chores-board.html` | Update (approved) | 2 |
+| `mockups/association-picker-modal.html` | New (approved) | 2 |
+| `mockups/current-chores.html` | New (approved, renamed from master-management.html) | 2 |
+| `mockups/archived-chores.html` | New (approved) | 2 |
+| `mockups/header-chores.html` | New (approved) | 2 |
+| `mockups/header-calendar.html` | Renamed from header.html | 2 |
+| `mockups/master-chore-modal.html` | New (pending review) | 2 |
+| `mockups/instance-interaction.html` | New (pending review) | 2 |
+| `src/features/chores/views/ChoresBoard.tsx` | Update | 3.1 |
+| `src/features/chores/components/ChoreCard.tsx` | Update | 3.1 |
+| `src/features/chores/components/AssociationPickerModal.tsx` | New | 3.2 |
+| `src/features/chores/views/CurrentChores.tsx` | New (was MasterManagement) | 3.3 |
+| `src/features/chores/views/ArchivedChores.tsx` | New | 3.3 |
+| `src/features/chores/components/MasterChoreModal.tsx` | New | 3.3 |
+| `src/features/chores/components/InstanceInteraction.tsx` | New (replaces ChoreEditModal) | 3.4 |
+| `src/features/shell/AppShell.tsx` | Update | 3.3, 3.5 |
+| `src/features/shell/Sidebar.tsx` | Update | 3.3 |
+| `src/features/shell/Header.tsx` | Update (chores header) | 3.3 |
+| `src/features/chores/components/ChoreCreateModal.tsx` | Delete | 3.5 |
+| `src/features/chores/components/ChoreEditModal.tsx` | Delete | 3.5 |
+| `src/features/chores/views/ChoresView.tsx` | Update | 3.5 |
+
+---
+
+## Session Notes
+
+_Use this section to track decisions, blockers, and context across sessions._
+
+### 2026-08-27 — Phase 2 Mockup Iteration
+
+**Mockup approvals:**
+- ✅ Chores Board (v4) — 3-column grid, hybrid metric cards, member color pills
+- ✅ Association Picker Modal (v2) — 3-column header, no footer, scrollable list
+- ✅ Current Chores — labeled rows, Active+Inactive only, standalone view
+- ✅ Archived Chores — same style as current, Restore+Delete actions
+- ✅ Header (Chores) — 3-view toggle, context-aware bulk actions, no family pills
+
+**Key design decisions:**
+- Management view split into 2 standalone views (Current + Archived) instead of inline panel
+- Archived cards: no grey/strikethrough (separate view provides context)
+- Header: chores-specific with view toggle, bulk actions, Create Master
+- No family pills in chores header (board columns show per-member metrics)
+- Bulk actions context-aware per view (Board/Manage Current/Manage Archived)
+- "Create Master" button in header, not in grid
+- Metric cards: hybrid icon + shorthand (Asn, Clm, Prog, Done, Over) at `text-[8px]`
+
+**File renames:**
+- `master-management.html` → `current-chores.html`
+- `header.html` → `header-calendar.html`
+- New: `archived-chores.html`, `header-chores.html`
+
+**Master Chore Modal review (2026-08-27):**
+- Verified all fields against backend `MasterChore` model
+- Added conditional recurrence fields (Weekly: day-of-week, Monthly: day-of-month OR nth weekday, Yearly: month + day)
+- Added Due Date field (backend has `due_date`)
+- Backend gap documented: `start_date` missing from `RecurrenceRule` — deferred to future feature
+- Review document: `docs/plans/MASTER-CHORE-MODAL-REVIEW.md`
+
+**Pending:**
+- All mockups approved. Phase 2 complete.
+
+### Instance Interaction Mockup Updates (2026-08-27)
+
+**Changes made:**
+- Added `shadow-popup` CSS variable to theme
+- Fixed period display: "Monday, Aug 25" instead of "Aug 25 – Aug 31" (backend uses single date)
+- Added Due Time display (if master has `due_time` set)
+- Added Overdue state popup (red badge, "Complete Now" button, shows "2h late")
+- Added Missed state popup (grayed out, "Cannot Complete (Missed)" disabled button)
+- Total: 5 state variants (Active, In Progress, Overdue, Missed, Open Pool)
+
+**Backend alignment:**
+- `period_start == period_end` for all frequencies (verified in `calculate_period()`)
+- Overdue: status = `overdue`, past due_time but period still active
+- Missed: status = `missed`, period ended without completion
+- Open Pool: `claimed_by == null && assigned_to == null`
+
+**Phase 2 completion summary:**
+
+**What was built:**
+- 7 HTML mockups covering all new/changed UI for the chores frontend rewire
+- All mockups use Tailwind CDN v4, design tokens, dark mode support
+- Design decisions documented in plan and memory
+
+**Mockup files:**
+| File | Purpose |
+|------|---------|
+| `mockups/chores-board.html` | Board view with 3-column grid, metric cards, member pills |
+| `mockups/association-picker-modal.html` | Modal for assigning masters to members/pool |
+| `mockups/current-chores.html` | Active + Inactive master chores management |
+| `mockups/archived-chores.html` | Archived master chores management |
+| `mockups/header-chores.html` | Chores-specific header with view toggle and bulk actions |
+| `mockups/header-calendar.html` | Calendar-specific header (renamed from header.html) |
+| `mockups/master-chore-modal.html` | Create/Edit master chore template form |
+| `mockups/instance-interaction.html` | Instance popup with 5 state variants |
+
+**Key design decisions:**
+- Management view split into 2 standalone views (Current + Archived)
+- Header: chores-specific with 3-view toggle (Board/Manage Current/Manage Archived)
+- Bulk actions context-aware per view
+- No family pills in chores header (board columns show per-member metrics)
+- Metric cards: hybrid icon + shorthand (Asn, Clm, Prog, Done, Over)
+- Archived cards: same style as current (no grey/strikethrough)
+- Period display: single date (e.g., "Monday, Aug 25"), not range
+- `start_date` backend gap deferred to future feature
+
+**Tech stack usage:**
+- HTML + Tailwind CDN v4 (`@tailwindcss/browser@4`)
+- Design tokens via `tokens.css` shared across mockups
+- Dark mode via `.dark` class on `<html>`
+- Lucide SVG icons for all iconography
+
+### 2026-08-26 — Initial Planning
+
+- Backend redesign complete (9 phases, all committed)
+- Frontend types/API completely stale — wrong enums, missing associations, removed fields
+- User decisions:
+  - Master CRUD → separate "Manage Chores" view (not modal on board)
+  - Timezone fix → backend converts on input (separate dashy-api work)
+  - Unassociated masters → don't show on board (only in management view)
+  - Phased approach with mockup approval gate before implementation
+- Backend timezone issue documented: `recurrence_rule.time` and `due_time` compared against UTC but users enter local time. Needs backend fix.
+
+---
+
+## References
+
+- **Backend redesign plan:** `dashy-api/docs/plans/CHORES-REDESIGN.md`
+- **Datetime standardization:** `docs/plans/DATETIME-STANDARDIZATION.md`
+- **Backend API models:** `dashy-api/app/api/models/chores.py`
+- **Backend domain models:** `dashy-api/app/domain/chores/models.py`
+- **Frontend types (current):** `dashy-kiosk/src/types/chores.ts`
+- **Frontend API (current):** `dashy-kiosk/src/features/chores/api/choresApi.ts`
