@@ -10,22 +10,26 @@ import {
   createMasterChore,
   updateMasterChore,
   deleteMasterChore,
+  bulkUpdateMasterStatus,
+  createAssociation,
+  deleteAssociation,
   claimInstance,
   assignInstance,
   updateInstanceStatus,
-  signoffInstance,
   createCategory,
   createTag,
-  approveMasterChore,
 } from '../api/choresApi'
 import type {
   MasterChore,
   ChoreInstance,
+  ChoreAssociation,
   ChoreCategory,
   ChoreTag,
   InstanceStatus,
+  MasterChoreStatus,
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
+  CreateAssociationRequest,
 } from '@/types/chores'
 
 /** Return type of useChoreActions. */
@@ -39,6 +43,15 @@ export interface UseChoreActionsReturn {
   ) => Promise<MasterChore>
   /** Soft-delete a master chore template. */
   deleteMaster: (choreId: string) => Promise<void>
+  /** Bulk update status of multiple master chores. */
+  bulkUpdateMasterStatus: (
+    masterIds: string[],
+    status: MasterChoreStatus,
+  ) => Promise<{ updated_count: number }>
+  /** Create a new association between a master chore and a member/pool. */
+  createAssociation: (data: CreateAssociationRequest) => Promise<ChoreAssociation>
+  /** Delete (soft-remove) a chore association. */
+  deleteAssociation: (associationId: string) => Promise<void>
   /** Claim an open-pool instance for a member. */
   claimInstance: (instanceId: string, memberId: string) => Promise<ChoreInstance>
   /** Assign an instance to a member. */
@@ -52,19 +65,11 @@ export interface UseChoreActionsReturn {
     instanceId: string,
     status: InstanceStatus,
     actorId: string,
-    isAdult?: boolean,
-  ) => Promise<ChoreInstance>
-  /** Sign off on a kid-completed instance. */
-  signoffInstance: (
-    instanceId: string,
-    signoffMemberId: string,
   ) => Promise<ChoreInstance>
   /** Create a new chore category. */
   createCategory: (name: string) => Promise<ChoreCategory>
   /** Create a new chore tag. */
   createTag: (name: string) => Promise<ChoreTag>
-  /** Approve a pending master chore. */
-  approveMaster: (choreId: string, approverId: string) => Promise<MasterChore>
 }
 
 /**
@@ -117,6 +122,47 @@ export function useChoreActions(
     [refetch],
   )
 
+  const bulkUpdateMasterStatusAction = useCallback(
+    async (masterIds: string[], status: MasterChoreStatus) => {
+      try {
+        const result = await bulkUpdateMasterStatus(masterIds, status)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to bulk update master status:', error)
+        throw error
+      }
+    },
+    [refetch],
+  )
+
+  const createAssociationAction = useCallback(
+    async (data: CreateAssociationRequest) => {
+      try {
+        const result = await createAssociation(data)
+        refetch()
+        return result
+      } catch (error) {
+        console.error('Failed to create association:', error)
+        throw error
+      }
+    },
+    [refetch],
+  )
+
+  const deleteAssociationAction = useCallback(
+    async (associationId: string) => {
+      try {
+        await deleteAssociation(associationId)
+        refetch()
+      } catch (error) {
+        console.error('Failed to delete association:', error)
+        throw error
+      }
+    },
+    [refetch],
+  )
+
   const claimInstanceAction = useCallback(
     async (instanceId: string, memberId: string) => {
       try {
@@ -146,37 +192,13 @@ export function useChoreActions(
   )
 
   const updateInstanceStatusAction = useCallback(
-    async (
-      instanceId: string,
-      status: InstanceStatus,
-      actorId: string,
-      isAdult = true,
-    ) => {
+    async (instanceId: string, status: InstanceStatus, actorId: string) => {
       try {
-        const result = await updateInstanceStatus(
-          instanceId,
-          status,
-          actorId,
-          isAdult,
-        )
+        const result = await updateInstanceStatus(instanceId, status, actorId)
         refetch()
         return result
       } catch (error) {
         console.error('Failed to update instance status:', error)
-        throw error
-      }
-    },
-    [refetch],
-  )
-
-  const signoffInstanceAction = useCallback(
-    async (instanceId: string, signoffMemberId: string) => {
-      try {
-        const result = await signoffInstance(instanceId, signoffMemberId)
-        refetch()
-        return result
-      } catch (error) {
-        console.error('Failed to signoff instance:', error)
         throw error
       }
     },
@@ -211,30 +233,17 @@ export function useChoreActions(
     [refetch],
   )
 
-  const approveMaster = useCallback(
-    async (choreId: string, approverId: string) => {
-      try {
-        const result = await approveMasterChore(choreId, approverId)
-        refetch()
-        return result
-      } catch (error) {
-        console.error('Failed to approve master chore:', error)
-        throw error
-      }
-    },
-    [refetch],
-  )
-
   return {
     createMaster,
     updateMaster,
     deleteMaster,
+    bulkUpdateMasterStatus: bulkUpdateMasterStatusAction,
+    createAssociation: createAssociationAction,
+    deleteAssociation: deleteAssociationAction,
     claimInstance: claimInstanceAction,
     assignInstance: assignInstanceAction,
     updateInstanceStatus: updateInstanceStatusAction,
-    signoffInstance: signoffInstanceAction,
     createCategory: createCategoryAction,
     createTag: createTagAction,
-    approveMaster,
   }
 }

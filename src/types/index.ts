@@ -12,12 +12,14 @@ export type {
   ChoreTag,
   MasterChore,
   ChoreInstance,
+  ChoreAssociation,
   ChoresData,
-  ChoreFrequency,
+  RecurrenceRule,
   ExpirationBehavior,
   MasterChoreStatus,
   InstanceStatus,
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
+  CreateAssociationRequest,
 } from './chores'
 export type { WeatherResponse, WeatherCurrent, WeatherCondition, HourlyForecast, DailyForecast } from './weather'

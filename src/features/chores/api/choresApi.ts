@@ -1,9 +1,8 @@
 /**
- * Chores API mutation functions.
+ * Chores API functions.
  *
- * All CRUD operations for master chores, instances, categories, and tags.
- * Uses direct fetch() against the dashy-api endpoints — same pattern as
- * useCalendarData.
+ * All CRUD operations for master chores, instances, associations,
+ * categories, and tags. Uses direct fetch() against the dashy-api endpoints.
  */
 
 import { ENDPOINTS } from '@/shared/api/endpoints'
@@ -12,17 +11,20 @@ import type {
   ChoresData,
   MasterChore,
   ChoreInstance,
+  ChoreAssociation,
   ChoreCategory,
   ChoreTag,
   InstanceStatus,
+  MasterChoreStatus,
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
+  CreateAssociationRequest,
 } from '@/types/chores'
 
 const BASE = ENDPOINTS.chores.url
 
 /**
- * Fetch all chores data (categories, tags, masters, instances).
+ * Fetch all chores data (categories, tags, masters, associations, instances).
  *
  * @returns Complete chores data payload.
  */
@@ -91,6 +93,68 @@ export async function deleteMasterChore(choreId: string): Promise<void> {
 }
 
 /**
+ * Bulk update the status of multiple master chores.
+ *
+ * Uses query parameters (not JSON body) per backend endpoint design.
+ *
+ * @param masterIds - Array of master chore IDs to update.
+ * @param status - New status to apply.
+ * @returns Object with updated_count.
+ */
+export async function bulkUpdateMasterStatus(
+  masterIds: string[],
+  status: MasterChoreStatus,
+): Promise<{ updated_count: number }> {
+  const params = new URLSearchParams()
+  for (const id of masterIds) {
+    params.append('master_ids', id)
+  }
+  params.append('status', status)
+
+  const response = await fetch(`${BASE}/masters/bulk-status?${params.toString()}`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+  return response.json()
+}
+
+/**
+ * Create a new association between a master chore and a member/pool.
+ *
+ * @param data - Association creation request.
+ * @returns The created association.
+ */
+export async function createAssociation(
+  data: CreateAssociationRequest,
+): Promise<ChoreAssociation> {
+  const response = await fetch(`${BASE}/associations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+  return response.json()
+}
+
+/**
+ * Delete (soft-remove) a chore association.
+ *
+ * @param associationId - The association ID to delete.
+ */
+export async function deleteAssociation(associationId: string): Promise<void> {
+  const response = await fetch(`${BASE}/associations/${associationId}`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+}
+
+/**
  * Claim an open-pool chore instance for a member.
  *
  * @param instanceId - The instance to claim.
@@ -142,43 +206,17 @@ export async function assignInstance(
  * @param instanceId - The instance to update.
  * @param status - The new status.
  * @param actorId - The member performing the action.
- * @param isAdult - Whether the actor is an adult (affects completion flow).
  * @returns The updated instance.
  */
 export async function updateInstanceStatus(
   instanceId: string,
   status: InstanceStatus,
   actorId: string,
-  isAdult = true,
 ): Promise<ChoreInstance> {
   const response = await fetch(`${BASE}/instances/${instanceId}/status`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, actor_id: actorId, is_adult: isAdult }),
-  })
-  if (!response.ok) {
-    throw await parseApiError(response)
-  }
-  return response.json()
-}
-
-/**
- * Sign off on a kid-completed chore instance.
- *
- * Transitions from completed_pending_signoff to completed.
- *
- * @param instanceId - The instance to sign off.
- * @param signoffMemberId - The parent member signing off.
- * @returns The updated instance.
- */
-export async function signoffInstance(
-  instanceId: string,
-  signoffMemberId: string,
-): Promise<ChoreInstance> {
-  const response = await fetch(`${BASE}/instances/${instanceId}/signoff`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ signoff_member_id: signoffMemberId }),
+    body: JSON.stringify({ status, actor_id: actorId }),
   })
   if (!response.ok) {
     throw await parseApiError(response)
@@ -215,28 +253,6 @@ export async function createTag(name: string): Promise<ChoreTag> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
-  })
-  if (!response.ok) {
-    throw await parseApiError(response)
-  }
-  return response.json()
-}
-
-/**
- * Approve a pending master chore.
- *
- * @param choreId - The master chore to approve.
- * @param approverId - The parent approving it.
- * @returns The approved master chore.
- */
-export async function approveMasterChore(
-  choreId: string,
-  approverId: string,
-): Promise<MasterChore> {
-  const response = await fetch(`${BASE}/masters/${choreId}/approve`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ approver_id: approverId }),
   })
   if (!response.ok) {
     throw await parseApiError(response)

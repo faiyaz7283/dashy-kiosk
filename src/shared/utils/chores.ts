@@ -5,8 +5,28 @@
  * Used across the chores feature components and hooks.
  */
 
-import type { ChoreInstance, InstanceStatus } from '@/types/chores'
+import type {
+  ChoreInstance,
+  ChoreAssociation,
+  InstanceStatus,
+  RecurrenceRule,
+} from '@/types/chores'
 import { colors } from '@/theme/tokens'
+import { formatUtcTimeOfDay } from '@/shared/date'
+
+/** Day-of-week names indexed by RecurrenceRule convention (0=Monday, 6=Sunday). */
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+/** Month names indexed 1-12. */
+const MONTH_NAMES = [
+  '', 'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+/** Ordinal suffixes for day-of-month formatting. */
+const ORDINAL_SUFFIXES: Record<number, string> = {
+  1: 'st', 2: 'nd', 3: 'rd', 21: 'st', 22: 'nd', 23: 'rd', 31: 'st',
+}
 
 /**
  * Checks whether a chore instance is in the open pool (unclaimed and unassigned).
@@ -35,6 +55,34 @@ export function getMemberInstances(instances: ChoreInstance[], memberId: string)
 }
 
 /**
+ * Returns associations belonging to a specific member.
+ *
+ * @param associations - All chore associations.
+ * @param memberId - The member's key/ID.
+ * @returns Associations where member_id matches (excludes open pool).
+ */
+export function getMemberAssociations(
+  associations: ChoreAssociation[],
+  memberId: string,
+): ChoreAssociation[] {
+  return associations.filter(
+    (assoc) => assoc.member_id === memberId && assoc.removed_at === null,
+  )
+}
+
+/**
+ * Returns all active open pool associations.
+ *
+ * @param associations - All chore associations.
+ * @returns Associations where is_open_pool is true and not removed.
+ */
+export function getOpenPoolAssociations(associations: ChoreAssociation[]): ChoreAssociation[] {
+  return associations.filter(
+    (assoc) => assoc.is_open_pool && assoc.removed_at === null,
+  )
+}
+
+/**
  * Returns the CSS color token for a given instance status.
  *
  * @param status - The chore instance status.
@@ -42,14 +90,12 @@ export function getMemberInstances(instances: ChoreInstance[], memberId: string)
  */
 export function getStatusColor(status: InstanceStatus): string {
   const colorMap: Record<InstanceStatus, string> = {
-    open: colors.choresOpen,
-    claimed: colors.choresClaimed,
-    assigned: colors.choresAssigned,
+    active: colors.choresActive,
     in_progress: colors.choresInProgress,
-    completed_pending_signoff: colors.choresPendingSignoff,
     completed: colors.choresCompleted,
     overdue: colors.choresOverdue,
-    expiring_soon: colors.choresExpiringSoon,
+    missed: colors.choresMissed,
+    archived: colors.choresArchived,
   }
   return colorMap[status]
 }
@@ -76,14 +122,98 @@ export function formatDifficulty(level: number): string {
  */
 export function getStatusLabel(status: InstanceStatus): string {
   const labelMap: Record<InstanceStatus, string> = {
-    open: 'Open',
-    claimed: 'Claimed',
-    assigned: 'Assigned',
+    active: 'Active',
     in_progress: 'In Progress',
-    completed_pending_signoff: 'Pending Signoff',
     completed: 'Completed',
     overdue: 'Overdue',
-    expiring_soon: 'Expiring Soon',
+    missed: 'Missed',
+    archived: 'Archived',
   }
   return labelMap[status]
+}
+
+/**
+ * Format a day-of-month number with ordinal suffix.
+ *
+ * @param day - Day of month (1-31).
+ * @returns Formatted string (e.g. "1st", "2nd", "3rd", "4th").
+ */
+function formatOrdinalDay(day: number): string {
+  const suffix = ORDINAL_SUFFIXES[day] ?? 'th'
+  return `${day}${suffix}`
+}
+
+/**
+ * Format an nth-week-of-month ordinal.
+ *
+ * @param week - Week of month (1-5).
+ * @returns Formatted string (e.g. "first", "second", "third").
+ */
+function formatWeekOrdinal(week: number): string {
+  const ordinals = ['', 'first', 'second', 'third', 'fourth', 'fifth']
+  return ordinals[week] ?? `${week}th`
+}
+
+/**
+ * Format a recurrence rule as a human-readable summary.
+ *
+ * Converts UTC time to the configured timezone for display.
+ *
+ * @param rule - Recurrence rule to format, or null.
+ * @param timezone - IANA timezone for time display (e.g. "America/New_York").
+ *   If omitted, the raw UTC time is shown.
+ * @returns Human-readable summary (e.g. "Weekly on Monday at 8:00 AM").
+ */
+export function formatRecurrence(rule: RecurrenceRule | null, timezone?: string): string {
+  if (!rule) return 'No recurrence'
+
+  const timeStr = timezone
+    ? formatUtcTimeOfDay(rule.time, timezone)
+    : rule.time
+
+  switch (rule.frequency) {
+    case 'once':
+      return 'One-time'
+
+    case 'daily':
+      return `Daily at ${timeStr}`
+
+    case 'weekly': {
+      const dayName = rule.day_of_week != null
+        ? DAY_NAMES[rule.day_of_week]
+        : 'unknown day'
+      return `Weekly on ${dayName} at ${timeStr}`
+    }
+
+    case 'monthly': {
+      if (rule.day_of_month != null) {
+        return `Monthly on the ${formatOrdinalDay(rule.day_of_month)} at ${timeStr}`
+      }
+      if (rule.day_of_week != null && rule.week_of_month != null) {
+        const dayName = DAY_NAMES[rule.day_of_week]
+        const weekOrd = formatWeekOrdinal(rule.week_of_month)
+        return `Monthly on the ${weekOrd} ${dayName} at ${timeStr}`
+      }
+      return `Monthly at ${timeStr}`
+    }
+
+    case 'yearly': {
+      const monthName = rule.month != null
+        ? MONTH_NAMES[rule.month]
+        : 'unknown month'
+
+      if (rule.day_of_month != null) {
+        return `Yearly on ${monthName} ${formatOrdinalDay(rule.day_of_month)} at ${timeStr}`
+      }
+      if (rule.day_of_week != null && rule.week_of_month != null) {
+        const dayName = DAY_NAMES[rule.day_of_week]
+        const weekOrd = formatWeekOrdinal(rule.week_of_month)
+        return `Yearly on the ${weekOrd} ${dayName} of ${monthName} at ${timeStr}`
+      }
+      return `Yearly in ${monthName} at ${timeStr}`
+    }
+
+    default:
+      return 'Unknown recurrence'
+  }
 }

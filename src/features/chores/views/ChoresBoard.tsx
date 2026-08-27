@@ -2,7 +2,7 @@
  * Chores board view — metrics row + member columns + open pool.
  *
  * Displays a kanban-style board with:
- * - Top row: 5 metric cards (Pending, In Progress, Completed, Overdue, This Week)
+ * - Top row: 5 metric cards (Active, In Progress, Completed, Overdue, This Week)
  * - Bottom row: Open Pool column + one column per family member
  *
  * Each column shows chore instances with status-colored left borders.
@@ -57,15 +57,13 @@ export function ChoresBoard({
 
   // Calculate metrics
   const metrics = useMemo(() => {
-    const pendingCount = instances.filter(
-      (i) => i.status === 'open' || i.status === 'claimed' || i.status === 'assigned',
-    ).length
+    const activeCount = instances.filter((i) => i.status === 'active').length
     const inProgressCount = instances.filter((i) => i.status === 'in_progress').length
     const completedCount = instances.filter((i) => i.status === 'completed').length
     const overdueCount = instances.filter((i) => i.status === 'overdue').length
     const totalCount = instances.length
 
-    return { pendingCount, inProgressCount, completedCount, overdueCount, totalCount }
+    return { activeCount, inProgressCount, completedCount, overdueCount, totalCount }
   }, [instances])
 
   // Get open pool instances (unclaimed and unassigned)
@@ -106,7 +104,7 @@ export function ChoresBoard({
       <div className="flex h-full flex-col">
         {/* Metrics row */}
         <div className="grid grid-cols-5 gap-4 border-b border-border px-4 py-3">
-          <MetricCard label="Pending" value={metrics.pendingCount} color="bg-chores-pending" />
+          <MetricCard label="Active" value={metrics.activeCount} color="bg-chores-active" />
           <MetricCard label="In Progress" value={metrics.inProgressCount} color="bg-chores-in-progress" />
           <MetricCard label="Completed" value={metrics.completedCount} color="bg-chores-completed" />
           <MetricCard label="Overdue" value={metrics.overdueCount} color="bg-chores-overdue" />
@@ -143,8 +141,8 @@ export function ChoresBoard({
             const memberInstances = getMemberInstances(instances, member.key)
             const assignedCount = memberInstances.length
             const completedByMember = memberInstances.filter((i) => i.status === 'completed').length
-            const pendingByMember = memberInstances.filter(
-              (i) => i.status !== 'completed' && i.status !== 'overdue',
+            const activeByMember = memberInstances.filter(
+              (i) => i.status === 'active',
             ).length
             const paletteKey = getMemberPaletteKey(member.key, colorMap)
 
@@ -156,7 +154,7 @@ export function ChoresBoard({
                 memberInitial={member.initial}
                 subtitle1={{ label: 'Assigned', value: assignedCount }}
                 subtitle2={{ label: 'Completed', value: completedByMember, color: 'text-chores-completed' }}
-                subtitle3={{ label: 'Pending', value: pendingByMember, color: 'text-chores-pending' }}
+                subtitle3={{ label: 'Active', value: activeByMember, color: 'text-chores-active' }}
                 onAdd={() => onAddChore?.(member.key)}
               >
                 {memberInstances.map((instance) => {

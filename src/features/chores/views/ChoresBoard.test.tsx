@@ -26,34 +26,38 @@ describe('ChoresBoard', () => {
         category: { id: 'cat-1', name: 'Kitchen' },
         tags: [],
         difficulty: 3,
-        frequency: 'daily',
+        recurrence_rule: { frequency: 'daily', time: '18:00' },
         estimated_minutes: 10,
         due_time: '18:00',
         due_date: null,
         expiration_behavior: 'carry_over',
+        end_date: null,
+        max_occurrences: null,
+        occurrence_count: 0,
+        conditions: null,
+        is_collaborative: false,
         created_by: 'faiyaz',
-        approved_by: 'faiyaz',
         status: 'active',
         created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T00:00:00Z',
         deleted_at: null,
       },
     ],
+    associations: [],
     instances: [
       {
         id: 'instance-1',
         master_chore_id: 'master-1',
-        status: 'open',
+        association_id: null,
+        status: 'active',
         period_start: '2026-01-15',
         period_end: '2026-01-16',
         assigned_to: null,
         assigned_by: null,
         claimed_by: null,
         completed_by: null,
-        signoff_by: null,
         started_at: null,
         completed_at: null,
-        signed_off_at: null,
         created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T00:00:00Z',
       },
@@ -96,7 +100,7 @@ describe('ChoresBoard', () => {
         error={null}
       />
     )
-    expect(screen.getAllByText('Pending').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Active').length).toBeGreaterThan(0)
     expect(screen.getAllByText('In Progress').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Completed').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Overdue').length).toBeGreaterThan(0)

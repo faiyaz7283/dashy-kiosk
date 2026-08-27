@@ -6,7 +6,7 @@
  * and assignment info.
  */
 
-import { Clock, AlertTriangle, CheckCircle, Play, Pause } from 'lucide-react'
+import { Clock, AlertTriangle, CheckCircle, Play, Archive } from 'lucide-react'
 import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '@/types/chores'
 import { paletteBorderClasses, getMemberPaletteKey, type PaletteKey } from '@/shared/utils/memberColors'
 
@@ -26,14 +26,12 @@ export interface ChoreCardProps {
 
 /** Static map for status icon colors. */
 const statusIconClasses: Record<InstanceStatus, string> = {
-  open: 'bg-chores-pending',
-  claimed: 'bg-chores-claimed',
-  assigned: 'bg-chores-assigned',
+  active: 'bg-chores-active',
   in_progress: 'bg-chores-in-progress',
-  completed_pending_signoff: 'bg-chores-pending',
   completed: 'bg-chores-completed',
   overdue: 'bg-chores-overdue',
-  expiring_soon: 'bg-chores-pending',
+  missed: 'bg-chores-missed',
+  archived: 'bg-chores-archived',
 }
 
 /**
@@ -46,10 +44,10 @@ function getStatusIcon(status: InstanceStatus) {
     case 'in_progress':
       return <Play className="h-3 w-3" />
     case 'overdue':
+    case 'missed':
       return <AlertTriangle className="h-3 w-3" />
-    case 'claimed':
-    case 'assigned':
-      return <Pause className="h-3 w-3" />
+    case 'archived':
+      return <Archive className="h-3 w-3" />
     default:
       return <Clock className="h-3 w-3" />
   }
@@ -118,7 +116,7 @@ export function ChoreCard({ instance, masterChore, categories, colorMap, onClick
           {categoryName}
         </span>
         <span className="rounded bg-border-light px-1 py-0.5 text-[9px] text-text-muted">
-          {masterChore.frequency}
+          {masterChore.recurrence_rule?.frequency ?? 'once'}
         </span>
       </div>
 

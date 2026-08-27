@@ -19,14 +19,12 @@ import { DifficultySlider } from '@/shared/components/DifficultySlider'
 import { useChoreActions } from '../hooks/useChoreActions'
 import { getStatusLabel } from '@/shared/utils/chores'
 import { paletteBgClasses, type PaletteKey } from '@/shared/utils/memberColors'
-import { isAdult } from '@/shared/utils/family'
 import type {
   ChoreInstance,
   MasterChore,
   ChoreCategory,
   ChoreTag,
   InstanceStatus,
-  ChoreFrequency,
   ExpirationBehavior,
   UpdateMasterChoreRequest,
 } from '@/types/chores'
@@ -74,14 +72,15 @@ export function ChoreEditModal({
     instance.claimed_by ? 'claimed' : instance.assigned_to ? 'assigned' : 'open',
   )
   const [completedBy, setCompletedBy] = useState<string>(instance.completed_by ?? '')
-  const [signoffBy, setSignoffBy] = useState<string>(instance.signoff_by ?? '')
 
   // Template tab state
   const [name, setName] = useState(masterChore.name)
   const [categoryId, setCategoryId] = useState(masterChore.category.id)
   const [tagIds, setTagIds] = useState<string[]>(masterChore.tags.map((t) => t.id))
   const [difficulty, setDifficulty] = useState(masterChore.difficulty)
-  const [frequency, setFrequency] = useState<ChoreFrequency>(masterChore.frequency)
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<string>(
+    masterChore.recurrence_rule?.frequency ?? 'once',
+  )
   const [dueTime, setDueTime] = useState(masterChore.due_time ?? '')
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(masterChore.estimated_minutes)
   const [expirationBehavior, setExpirationBehavior] = useState<ExpirationBehavior>(
@@ -93,7 +92,6 @@ export function ChoreEditModal({
     // Determine what changed and call appropriate action(s)
     const statusChanged = status !== instance.status
     const assignmentChanged = assignmentType !== (instance.claimed_by ? 'claimed' : instance.assigned_to ? 'assigned' : 'open')
-    const signoffChanged = signoffBy !== (instance.signoff_by ?? '')
 
     // Handle status change
     if (statusChanged) {
@@ -101,8 +99,7 @@ export function ChoreEditModal({
       const actor = members[0] // Default to first member as actor
       if (!actor) return
 
-      const actorIsAdult = isAdult(actor)
-      await actions.updateInstanceStatus(instance.id, status, actor.key, actorIsAdult)
+      await actions.updateInstanceStatus(instance.id, status, actor.key)
     }
 
     // Handle assignment change
@@ -124,11 +121,6 @@ export function ChoreEditModal({
       // If 'open', no action needed (backend handles clearing via claim/assign)
     }
 
-    // Handle signoff
-    if (signoffChanged && signoffBy) {
-      await actions.signoffInstance(instance.id, signoffBy)
-    }
-
     onClose()
   }
 
@@ -139,7 +131,7 @@ export function ChoreEditModal({
       category_id: categoryId,
       tag_ids: tagIds,
       difficulty,
-      frequency,
+      recurrence_rule: { frequency: recurrenceFrequency as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly', time: '00:00' },
       due_time: dueTime || null,
       estimated_minutes: estimatedMinutes,
       expiration_behavior: expirationBehavior,
@@ -219,7 +211,7 @@ export function ChoreEditModal({
                   onChange={(e) => setStatus(e.target.value as InstanceStatus)}
                   className="w-full appearance-none rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-ring"
                 >
-                  {(['open', 'claimed', 'assigned', 'in_progress', 'completed_pending_signoff', 'completed', 'overdue'] as InstanceStatus[]).map((s) => (
+                  {(['active', 'in_progress', 'completed', 'overdue', 'missed'] as InstanceStatus[]).map((s) => (
                     <option key={s} value={s}>
                       {getStatusLabel(s)}
                     </option>
@@ -283,23 +275,6 @@ export function ChoreEditModal({
                 </select>
               </div>
 
-              {/* Signed off by */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-text-secondary">Signed off by</label>
-                <select
-                  value={signoffBy}
-                  onChange={(e) => setSignoffBy(e.target.value)}
-                  className="w-full appearance-none rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-ring"
-                >
-                  <option value="">— Not signed off —</option>
-                  {members.map((m) => (
-                    <option key={m.key} value={m.key}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               {/* Period (read-only) */}
               {instance.period_start && (
                 <div>
@@ -348,14 +323,15 @@ export function ChoreEditModal({
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-text-secondary">Frequency</label>
                   <select
-                    value={frequency}
-                    onChange={(e) => setFrequency(e.target.value as ChoreFrequency)}
+                    value={recurrenceFrequency}
+                    onChange={(e) => setRecurrenceFrequency(e.target.value)}
                     className="w-full appearance-none rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-ring"
                   >
+                    <option value="once">Once</option>
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
-                    <option value="once">Once</option>
+                    <option value="yearly">Yearly</option>
                   </select>
                 </div>
               </div>

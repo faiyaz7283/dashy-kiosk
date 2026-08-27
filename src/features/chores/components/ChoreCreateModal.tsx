@@ -18,7 +18,7 @@ import { DifficultySlider } from '@/shared/components/DifficultySlider'
 import { useChoreActions } from '../hooks/useChoreActions'
 import { paletteBgClasses, type PaletteKey } from '@/shared/utils/memberColors'
 import { findFirstAdult } from '@/shared/utils/family'
-import type { ChoreCategory, ChoreTag, ChoreFrequency, ExpirationBehavior, CreateMasterChoreRequest } from '@/types/chores'
+import type { ChoreCategory, ChoreTag, ExpirationBehavior, CreateMasterChoreRequest } from '@/types/chores'
 import type { FamilyMember } from '@/types'
 
 /** Entry point for the create modal. */
@@ -64,7 +64,7 @@ export function ChoreCreateModal({
   const [categoryId, setCategoryId] = useState('')
   const [tagIds, setTagIds] = useState<string[]>([])
   const [difficulty, setDifficulty] = useState(2)
-  const [frequency, setFrequency] = useState<ChoreFrequency>('daily')
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<string>('daily')
   const [dueDate, setDueDate] = useState('')
   const [dueTime, setDueTime] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(null)
@@ -99,7 +99,7 @@ export function ChoreCreateModal({
       category_id: categoryId,
       tag_ids: tagIds,
       difficulty,
-      frequency,
+      recurrence_rule: { frequency: recurrenceFrequency as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly', time: '00:00' },
       estimated_minutes: estimatedMinutes,
       due_time: dueTime || null,
       due_date: dueDate || null,
@@ -171,14 +171,15 @@ export function ChoreCreateModal({
             <div>
               <label className="mb-1.5 block text-xs font-medium text-text-secondary">Frequency</label>
               <select
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value as ChoreFrequency)}
+                value={recurrenceFrequency}
+                onChange={(e) => setRecurrenceFrequency(e.target.value)}
                 className="w-full appearance-none rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-ring"
               >
+                <option value="once">Once</option>
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
-                <option value="once">Once</option>
+                <option value="yearly">Yearly</option>
               </select>
             </div>
           </div>
@@ -272,8 +273,8 @@ export function ChoreCreateModal({
           )}
 
           {entryPoint.type === 'open-pool' && (
-            <div className="rounded-lg border border-chores-open/20 bg-chores-open/10 px-3 py-2">
-              <p className="text-xs font-medium text-chores-open">
+            <div className="rounded-lg border border-chores-active/20 bg-chores-active/10 px-3 py-2">
+              <p className="text-xs font-medium text-chores-active">
                 Open Pool — chore will be available for anyone to claim
               </p>
             </div>

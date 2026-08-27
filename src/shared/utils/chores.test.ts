@@ -8,28 +8,30 @@ import { describe, it, expect } from 'vitest'
 import {
   isOpenPoolInstance,
   getMemberInstances,
+  getMemberAssociations,
+  getOpenPoolAssociations,
   getStatusColor,
   formatDifficulty,
   getStatusLabel,
+  formatRecurrence,
 } from './chores'
-import type { ChoreInstance, InstanceStatus } from '@/types/chores'
+import type { ChoreInstance, ChoreAssociation, InstanceStatus, RecurrenceRule } from '@/types/chores'
 
 describe('chores utilities', () => {
   // Test instances
   const openPoolInstance: ChoreInstance = {
     id: '1',
     master_chore_id: 'mc1',
+    association_id: null,
     period_start: '2026-01-15',
     period_end: '2026-01-15',
-    status: 'open',
+    status: 'active',
     claimed_by: null,
     assigned_to: null,
     assigned_by: null,
     completed_by: null,
-    signoff_by: null,
     started_at: null,
     completed_at: null,
-    signed_off_at: null,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   }
@@ -37,17 +39,16 @@ describe('chores utilities', () => {
   const claimedInstance: ChoreInstance = {
     id: '2',
     master_chore_id: 'mc2',
+    association_id: 'assoc-1',
     period_start: '2026-01-15',
     period_end: '2026-01-15',
-    status: 'claimed',
+    status: 'active',
     claimed_by: 'alice',
     assigned_to: null,
     assigned_by: null,
     completed_by: null,
-    signoff_by: null,
     started_at: null,
     completed_at: null,
-    signed_off_at: null,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   }
@@ -55,17 +56,16 @@ describe('chores utilities', () => {
   const assignedInstance: ChoreInstance = {
     id: '3',
     master_chore_id: 'mc3',
+    association_id: 'assoc-2',
     period_start: '2026-01-15',
     period_end: '2026-01-15',
-    status: 'assigned',
+    status: 'active',
     claimed_by: null,
     assigned_to: 'bob',
     assigned_by: 'parent',
     completed_by: null,
-    signoff_by: null,
     started_at: null,
     completed_at: null,
-    signed_off_at: null,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   }
@@ -73,6 +73,7 @@ describe('chores utilities', () => {
   const completedInstance: ChoreInstance = {
     id: '4',
     master_chore_id: 'mc4',
+    association_id: 'assoc-3',
     period_start: '2026-01-15',
     period_end: '2026-01-15',
     status: 'completed',
@@ -80,10 +81,8 @@ describe('chores utilities', () => {
     assigned_to: null,
     assigned_by: null,
     completed_by: 'alice',
-    signoff_by: 'parent',
     started_at: '2026-01-15T10:00:00',
     completed_at: '2026-01-15T11:00:00',
-    signed_off_at: '2026-01-15T12:00:00',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   }
@@ -93,6 +92,46 @@ describe('chores utilities', () => {
     claimedInstance,
     assignedInstance,
     completedInstance,
+  ]
+
+  // Test associations
+  const memberAssociation: ChoreAssociation = {
+    id: 'assoc-1',
+    master_chore_id: 'mc1',
+    member_id: 'alice',
+    is_open_pool: false,
+    created_by: 'parent',
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+    removed_at: null,
+  }
+
+  const openPoolAssociation: ChoreAssociation = {
+    id: 'assoc-2',
+    master_chore_id: 'mc2',
+    member_id: null,
+    is_open_pool: true,
+    created_by: 'parent',
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+    removed_at: null,
+  }
+
+  const removedAssociation: ChoreAssociation = {
+    id: 'assoc-3',
+    master_chore_id: 'mc3',
+    member_id: 'bob',
+    is_open_pool: false,
+    created_by: 'parent',
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+    removed_at: '2026-01-10T00:00:00Z',
+  }
+
+  const associations: ChoreAssociation[] = [
+    memberAssociation,
+    openPoolAssociation,
+    removedAssociation,
   ]
 
   describe('isOpenPoolInstance', () => {
@@ -138,9 +177,40 @@ describe('chores utilities', () => {
     })
   })
 
+  describe('getMemberAssociations', () => {
+    it('returns active associations for member', () => {
+      const result = getMemberAssociations(associations, 'alice')
+      expect(result).toHaveLength(1)
+      expect(result).toContainEqual(memberAssociation)
+    })
+
+    it('excludes removed associations', () => {
+      const result = getMemberAssociations(associations, 'bob')
+      expect(result).toHaveLength(0)
+    })
+
+    it('excludes open pool associations', () => {
+      const result = getMemberAssociations(associations, 'nobody')
+      expect(result).toHaveLength(0)
+    })
+  })
+
+  describe('getOpenPoolAssociations', () => {
+    it('returns active open pool associations', () => {
+      const result = getOpenPoolAssociations(associations)
+      expect(result).toHaveLength(1)
+      expect(result).toContainEqual(openPoolAssociation)
+    })
+
+    it('handles empty array', () => {
+      const result = getOpenPoolAssociations([])
+      expect(result).toHaveLength(0)
+    })
+  })
+
   describe('getStatusColor', () => {
-    it('returns color for open status', () => {
-      const color = getStatusColor('open')
+    it('returns color for active status', () => {
+      const color = getStatusColor('active')
       expect(color).toBeDefined()
       expect(typeof color).toBe('string')
     })
@@ -158,12 +228,12 @@ describe('chores utilities', () => {
     })
 
     it('returns different colors for different statuses', () => {
-      const openColor = getStatusColor('open')
+      const activeColor = getStatusColor('active')
       const completedColor = getStatusColor('completed')
       const overdueColor = getStatusColor('overdue')
 
-      expect(openColor).not.toBe(completedColor)
-      expect(openColor).not.toBe(overdueColor)
+      expect(activeColor).not.toBe(completedColor)
+      expect(activeColor).not.toBe(overdueColor)
       expect(completedColor).not.toBe(overdueColor)
     })
   })
@@ -200,14 +270,12 @@ describe('chores utilities', () => {
 
   describe('getStatusLabel', () => {
     const allStatuses: InstanceStatus[] = [
-      'open',
-      'claimed',
-      'assigned',
+      'active',
       'in_progress',
-      'completed_pending_signoff',
       'completed',
       'overdue',
-      'expiring_soon',
+      'missed',
+      'archived',
     ]
 
     it('returns label for all statuses', () => {
@@ -219,24 +287,12 @@ describe('chores utilities', () => {
       })
     })
 
-    it('returns "Open" for open status', () => {
-      expect(getStatusLabel('open')).toBe('Open')
-    })
-
-    it('returns "Claimed" for claimed status', () => {
-      expect(getStatusLabel('claimed')).toBe('Claimed')
-    })
-
-    it('returns "Assigned" for assigned status', () => {
-      expect(getStatusLabel('assigned')).toBe('Assigned')
+    it('returns "Active" for active status', () => {
+      expect(getStatusLabel('active')).toBe('Active')
     })
 
     it('returns "In Progress" for in_progress status', () => {
       expect(getStatusLabel('in_progress')).toBe('In Progress')
-    })
-
-    it('returns "Pending Signoff" for completed_pending_signoff status', () => {
-      expect(getStatusLabel('completed_pending_signoff')).toBe('Pending Signoff')
     })
 
     it('returns "Completed" for completed status', () => {
@@ -247,8 +303,53 @@ describe('chores utilities', () => {
       expect(getStatusLabel('overdue')).toBe('Overdue')
     })
 
-    it('returns "Expiring Soon" for expiring_soon status', () => {
-      expect(getStatusLabel('expiring_soon')).toBe('Expiring Soon')
+    it('returns "Missed" for missed status', () => {
+      expect(getStatusLabel('missed')).toBe('Missed')
+    })
+
+    it('returns "Archived" for archived status', () => {
+      expect(getStatusLabel('archived')).toBe('Archived')
+    })
+  })
+
+  describe('formatRecurrence', () => {
+    it('returns "No recurrence" for null rule', () => {
+      expect(formatRecurrence(null)).toBe('No recurrence')
+    })
+
+    it('formats once frequency', () => {
+      const rule: RecurrenceRule = { frequency: 'once', time: '10:00' }
+      expect(formatRecurrence(rule)).toBe('One-time')
+    })
+
+    it('formats daily frequency', () => {
+      const rule: RecurrenceRule = { frequency: 'daily', time: '08:00' }
+      expect(formatRecurrence(rule)).toBe('Daily at 08:00')
+    })
+
+    it('formats weekly frequency', () => {
+      const rule: RecurrenceRule = { frequency: 'weekly', time: '09:00', day_of_week: 0 }
+      expect(formatRecurrence(rule)).toBe('Weekly on Monday at 09:00')
+    })
+
+    it('formats monthly frequency with day_of_month', () => {
+      const rule: RecurrenceRule = { frequency: 'monthly', time: '10:00', day_of_month: 3 }
+      expect(formatRecurrence(rule)).toBe('Monthly on the 3rd at 10:00')
+    })
+
+    it('formats monthly frequency with nth weekday', () => {
+      const rule: RecurrenceRule = { frequency: 'monthly', time: '08:00', day_of_week: 0, week_of_month: 1 }
+      expect(formatRecurrence(rule)).toBe('Monthly on the first Monday at 08:00')
+    })
+
+    it('formats yearly frequency with month and day', () => {
+      const rule: RecurrenceRule = { frequency: 'yearly', time: '09:00', month: 1, day_of_month: 15 }
+      expect(formatRecurrence(rule)).toBe('Yearly on January 15th at 09:00')
+    })
+
+    it('formats yearly frequency with nth weekday', () => {
+      const rule: RecurrenceRule = { frequency: 'yearly', time: '12:00', month: 11, day_of_week: 3, week_of_month: 4 }
+      expect(formatRecurrence(rule)).toBe('Yearly on the fourth Thursday of November at 12:00')
     })
   })
 })

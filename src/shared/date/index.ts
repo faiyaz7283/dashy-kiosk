@@ -45,4 +45,4 @@ export {
   eventDate,
 } from './calendar'
 
-export { useConfig, convertUtcToTimezone, formatUtcTime, formatUtcDate } from './timezone'
+export { useConfig, convertUtcToTimezone, formatUtcTime, formatUtcDate, formatUtcTimeOfDay } from './timezone'
