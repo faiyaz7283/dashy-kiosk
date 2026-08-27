@@ -927,6 +927,36 @@ All 8 sub-phases complete. The chores frontend is fully rewired to the new assoc
 
 **Verification:** ✅ lint, typecheck, test, build all pass
 
+#### Bug #6: Simplify Expiration Handling and Add Tooltips ✅ FIXED
+**Found:** 2026-08-27 during manual testing and design review
+**Symptom:** 
+- "When Overdue" dropdown had 4 complex options (Carry Over, Disappear, Stay Visible, Convert to Open Pool)
+- Most options were redundant or confusing for users
+- No help text or tooltips to explain what each field does
+
+**Root Cause:**
+- Original design tried to handle all edge cases but created confusion
+- Carry Over and Stay Visible were essentially the same for recurring chores
+- Open Pool was too complex for recurring chores (many edge cases)
+- No user guidance on what each option means
+
+**Fix:**
+- Replaced "When Overdue" dropdown with simple "Keep visible" checkbox
+- One-time chores: "Keep overdue instance visible" (default: unchecked = disappear)
+- Recurring chores: "Keep missed instances visible" (default: unchecked = disappear)
+- New instances auto-generate for recurring chores regardless of checkbox state
+- Open Pool option removed from modal (can be done via Manage Current/Archived if needed)
+- Created Tooltip component for hover help text
+- Added tooltips to all major form fields: Name, Category, Tags, Difficulty, Duration, Recurrence Pattern, Frequency, Time, End Date, Max Occurrences, Collaborative
+- Added descriptions under field labels
+
+**Files Changed:**
+- `src/shared/components/Tooltip.tsx` — new (hover tooltip component)
+- `src/features/chores/components/MasterChoreModal.tsx` — simplified expiration, added tooltips
+- `src/features/chores/components/MasterChoreModal.test.tsx` — updated tests
+
+**Verification:** ✅ lint, typecheck, test (409 tests), build all pass
+
 ---
 
 ### Testing Checklist
