@@ -125,7 +125,7 @@ export function TagInput({
 
       {/* Hover popup showing all tags */}
       {showPopup && unselectedTags.length > 0 && (
-        <div className="absolute left-0 top-full z-10 mt-1 min-w-[200px] rounded-lg border border-border bg-white p-3 shadow-lg dark:bg-bg">
+        <div className="absolute left-0 top-full z-10 min-w-[200px] rounded-lg border border-border bg-white p-3 shadow-lg dark:bg-bg">
           <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-text-faint">
             Available tags
           </p>
