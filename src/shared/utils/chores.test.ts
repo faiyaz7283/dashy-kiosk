@@ -14,6 +14,7 @@ import {
   formatDifficulty,
   getStatusLabel,
   formatRecurrence,
+  getColumnMetrics,
 } from './chores'
 import type { ChoreInstance, ChoreAssociation, InstanceStatus, RecurrenceRule } from '@/types/chores'
 
@@ -350,6 +351,84 @@ describe('chores utilities', () => {
     it('formats yearly frequency with nth weekday', () => {
       const rule: RecurrenceRule = { frequency: 'yearly', time: '12:00', month: 11, day_of_week: 3, week_of_month: 4 }
       expect(formatRecurrence(rule)).toBe('Yearly on the fourth Thursday of November at 12:00')
+    })
+  })
+
+  describe('getColumnMetrics', () => {
+    it('returns zero counts for empty array', () => {
+      const metrics = getColumnMetrics([])
+      expect(metrics).toEqual({
+        assigned: 0,
+        claimed: 0,
+        inProgress: 0,
+        completed: 0,
+        overdue: 0,
+      })
+    })
+
+    it('counts assigned instances', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, assigned_to: 'alice' },
+        { ...openPoolInstance, assigned_to: 'bob' },
+        openPoolInstance,
+      ]
+      const metrics = getColumnMetrics(instances)
+      expect(metrics.assigned).toBe(2)
+    })
+
+    it('counts claimed instances', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, claimed_by: 'alice' },
+        { ...openPoolInstance, claimed_by: 'bob' },
+        openPoolInstance,
+      ]
+      const metrics = getColumnMetrics(instances)
+      expect(metrics.claimed).toBe(2)
+    })
+
+    it('counts in_progress instances', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, status: 'in_progress' },
+        { ...openPoolInstance, status: 'active' },
+        { ...openPoolInstance, status: 'in_progress' },
+      ]
+      const metrics = getColumnMetrics(instances)
+      expect(metrics.inProgress).toBe(2)
+    })
+
+    it('counts completed instances', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, status: 'completed' },
+        { ...openPoolInstance, status: 'active' },
+        { ...openPoolInstance, status: 'completed' },
+      ]
+      const metrics = getColumnMetrics(instances)
+      expect(metrics.completed).toBe(2)
+    })
+
+    it('counts overdue instances', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, status: 'overdue' },
+        { ...openPoolInstance, status: 'active' },
+        { ...openPoolInstance, status: 'overdue' },
+      ]
+      const metrics = getColumnMetrics(instances)
+      expect(metrics.overdue).toBe(2)
+    })
+
+    it('handles mixed instance types', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, assigned_to: 'alice', status: 'in_progress' },
+        { ...openPoolInstance, claimed_by: 'bob', status: 'completed' },
+        { ...openPoolInstance, status: 'overdue' },
+        { ...openPoolInstance, assigned_to: 'charlie', status: 'active' },
+      ]
+      const metrics = getColumnMetrics(instances)
+      expect(metrics.assigned).toBe(2)
+      expect(metrics.claimed).toBe(1)
+      expect(metrics.inProgress).toBe(1)
+      expect(metrics.completed).toBe(1)
+      expect(metrics.overdue).toBe(1)
     })
   })
 })

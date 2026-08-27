@@ -1,14 +1,23 @@
 /**
  * Tests for ChoresBoard component.
  *
- * Validates chores board renders metrics and member columns correctly.
+ * Validates chores board renders per-column metrics and member columns correctly.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChoresBoard } from './ChoresBoard'
 import type { FamilyMember } from '@/types/family'
 import type { ChoresData } from '@/types/chores'
+
+// Mock useConfig to return a fixed timezone
+vi.mock('@/shared/date', async () => {
+  const actual = await vi.importActual('@/shared/date')
+  return {
+    ...actual,
+    useConfig: () => ({ timezone: 'America/New_York', isLoading: false, error: null }),
+  }
+})
 
 describe('ChoresBoard', () => {
   const mockMembers: FamilyMember[] = [
@@ -52,6 +61,22 @@ describe('ChoresBoard', () => {
         status: 'active',
         period_start: '2026-01-15',
         period_end: '2026-01-16',
+        assigned_to: 'faiyaz',
+        assigned_by: 'trisha',
+        claimed_by: null,
+        completed_by: null,
+        started_at: null,
+        completed_at: null,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+      {
+        id: 'instance-2',
+        master_chore_id: 'master-1',
+        association_id: null,
+        status: 'active',
+        period_start: '2026-01-15',
+        period_end: '2026-01-16',
         assigned_to: null,
         assigned_by: null,
         claimed_by: null,
@@ -90,22 +115,6 @@ describe('ChoresBoard', () => {
     expect(screen.getByText('Error loading chores: Failed to load')).toBeInTheDocument()
   })
 
-  it('renders metrics row', () => {
-    render(
-      <ChoresBoard
-        members={mockMembers}
-        data={mockData}
-        isLoading={false}
-        isRefreshing={false}
-        error={null}
-      />
-    )
-    expect(screen.getAllByText('Active').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('In Progress').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Completed').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Overdue').length).toBeGreaterThan(0)
-  })
-
   it('renders member columns', () => {
     render(
       <ChoresBoard
@@ -131,6 +140,25 @@ describe('ChoresBoard', () => {
       />
     )
     expect(screen.getByText('Open Pool')).toBeInTheDocument()
+  })
+
+  it('renders metric labels in each column', () => {
+    render(
+      <ChoresBoard
+        members={mockMembers}
+        data={mockData}
+        isLoading={false}
+        isRefreshing={false}
+        error={null}
+      />
+    )
+    // Each column has 5 metric labels: Asn, Clm, Prog, Done, Over
+    // 3 columns (Open Pool + 2 members) = 15 of each label
+    expect(screen.getAllByText('Asn').length).toBe(3)
+    expect(screen.getAllByText('Clm').length).toBe(3)
+    expect(screen.getAllByText('Prog').length).toBe(3)
+    expect(screen.getAllByText('Done').length).toBe(3)
+    expect(screen.getAllByText('Over').length).toBe(3)
   })
 
   it('renders null when no data and not loading', () => {

@@ -1,14 +1,23 @@
 /**
  * Tests for ChoreCard component.
  *
- * Validates chore card renders instance details correctly.
+ * Validates chore card renders instance details, action buttons, and compact styling.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChoreCard } from './ChoreCard'
 import type { ChoreInstance, MasterChore, ChoreCategory } from '@/types/chores'
 import type { PaletteKey } from '@/shared/utils/memberColors'
+
+// Mock useConfig to return a fixed timezone
+vi.mock('@/shared/date', async () => {
+  const actual = await vi.importActual('@/shared/date')
+  return {
+    ...actual,
+    useConfig: () => ({ timezone: 'America/New_York', isLoading: false, error: null }),
+  }
+})
 
 describe('ChoreCard', () => {
   const mockCategories: ChoreCategory[] = [
@@ -24,7 +33,7 @@ describe('ChoreCard', () => {
     difficulty: 3,
     recurrence_rule: { frequency: 'daily', time: '18:00' },
     estimated_minutes: 10,
-    due_time: '18:00',
+    due_time: '22:00',
     due_date: null,
     expiration_behavior: 'carry_over',
     end_date: null,
@@ -106,8 +115,8 @@ describe('ChoreCard', () => {
         colorMap={mockColorMap}
       />
     )
-    // Should have 5 difficulty dots
-    const dots = container.querySelectorAll('.h-1\\.5')
+    // Should have 5 difficulty dots (compact h-1 w-1)
+    const dots = container.querySelectorAll('.h-1.w-1')
     expect(dots.length).toBe(5)
   })
 
@@ -121,18 +130,6 @@ describe('ChoreCard', () => {
       />
     )
     expect(screen.getByText('10m')).toBeInTheDocument()
-  })
-
-  it('renders due time', () => {
-    render(
-      <ChoreCard
-        instance={mockInstance}
-        masterChore={mockMasterChore}
-        categories={mockCategories}
-        colorMap={mockColorMap}
-      />
-    )
-    expect(screen.getByText('Due: 18:00')).toBeInTheDocument()
   })
 
   it('renders assignment status for open chore', () => {
@@ -209,5 +206,75 @@ describe('ChoreCard', () => {
       />
     )
     expect(screen.getByText('Uncategorized')).toBeInTheDocument()
+  })
+
+  it('renders Start button for active instance', () => {
+    render(
+      <ChoreCard
+        instance={mockInstance}
+        masterChore={mockMasterChore}
+        categories={mockCategories}
+        colorMap={mockColorMap}
+      />
+    )
+    expect(screen.getByText('Start')).toBeInTheDocument()
+  })
+
+  it('renders Complete button for in_progress instance', () => {
+    const inProgressInstance = { ...mockInstance, status: 'in_progress' as const }
+    render(
+      <ChoreCard
+        instance={inProgressInstance}
+        masterChore={mockMasterChore}
+        categories={mockCategories}
+        colorMap={mockColorMap}
+      />
+    )
+    expect(screen.getByText('Complete')).toBeInTheDocument()
+  })
+
+  it('does not render action button for completed instance', () => {
+    const completedInstance = { ...mockInstance, status: 'completed' as const }
+    render(
+      <ChoreCard
+        instance={completedInstance}
+        masterChore={mockMasterChore}
+        categories={mockCategories}
+        colorMap={mockColorMap}
+      />
+    )
+    expect(screen.queryByText('Start')).not.toBeInTheDocument()
+    expect(screen.queryByText('Complete')).not.toBeInTheDocument()
+  })
+
+  it('calls onStart when Start button is clicked', () => {
+    const onStart = vi.fn()
+    render(
+      <ChoreCard
+        instance={mockInstance}
+        masterChore={mockMasterChore}
+        categories={mockCategories}
+        colorMap={mockColorMap}
+        onStart={onStart}
+      />
+    )
+    screen.getByText('Start').click()
+    expect(onStart).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onComplete when Complete button is clicked', () => {
+    const onComplete = vi.fn()
+    const inProgressInstance = { ...mockInstance, status: 'in_progress' as const }
+    render(
+      <ChoreCard
+        instance={inProgressInstance}
+        masterChore={mockMasterChore}
+        categories={mockCategories}
+        colorMap={mockColorMap}
+        onComplete={onComplete}
+      />
+    )
+    screen.getByText('Complete').click()
+    expect(onComplete).toHaveBeenCalledTimes(1)
   })
 })

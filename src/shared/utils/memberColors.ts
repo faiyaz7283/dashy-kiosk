@@ -71,6 +71,20 @@ export const paletteBorderClasses: Record<PaletteKey, string> = {
 } as const
 
 /**
+ * Static mapping of palette keys to Tailwind border color classes with 50% opacity.
+ */
+export const paletteBorderOpacityClasses: Record<PaletteKey, string> = {
+  blue: 'border-blue-500/50',
+  pink: 'border-pink-500/50',
+  green: 'border-green-500/50',
+  amber: 'border-amber-500/50',
+  purple: 'border-purple-500/50',
+  teal: 'border-teal-500/50',
+  red: 'border-red-500/50',
+  indigo: 'border-indigo-500/50',
+} as const
+
+/**
  * Static mapping of palette keys to Tailwind border-top color classes.
  */
 export const paletteBorderTopClasses: Record<PaletteKey, string> = {

@@ -70,6 +70,36 @@ export function getMemberAssociations(
   )
 }
 
+/** Metrics for a board column (member or open pool). */
+export interface ColumnMetrics {
+  /** Total assigned instances. */
+  assigned: number
+  /** Claimed instances (voluntary). */
+  claimed: number
+  /** In-progress instances. */
+  inProgress: number
+  /** Completed instances. */
+  completed: number
+  /** Overdue instances. */
+  overdue: number
+}
+
+/**
+ * Calculate metrics for a board column from its instances.
+ *
+ * @param instances - Instances in this column.
+ * @returns Metric counts for display.
+ */
+export function getColumnMetrics(instances: ChoreInstance[]): ColumnMetrics {
+  return {
+    assigned: instances.filter((i) => i.assigned_to !== null).length,
+    claimed: instances.filter((i) => i.claimed_by !== null).length,
+    inProgress: instances.filter((i) => i.status === 'in_progress').length,
+    completed: instances.filter((i) => i.status === 'completed').length,
+    overdue: instances.filter((i) => i.status === 'overdue').length,
+  }
+}
+
 /**
  * Returns all active open pool associations.
  *

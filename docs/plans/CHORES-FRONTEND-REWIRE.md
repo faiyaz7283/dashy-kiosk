@@ -333,7 +333,7 @@ _All mockups approved. No pending items._
 
 ### 2.6 Mockup: Master Create/Edit Modal
 
-**Status:** ⬜ Pending Review
+**Status:** ✅ Approved
 
 **File:** `mockups/master-chore-modal.html`
 
@@ -362,7 +362,7 @@ _All mockups approved. No pending items._
 
 ### 2.7 Mockup: Instance Interaction
 
-**Status:** ⬜ Pending Review
+**Status:** ✅ Approved
 
 **File:** `mockups/instance-interaction.html`
 
@@ -379,33 +379,73 @@ _All mockups approved. No pending items._
 
 ### 2.8 User Review & Iteration
 
-**Status:** 🟡 In Progress
+**Status:** ✅ Complete (7/7 approved)
 
 - [x] User reviews all mockups in browser
-- [x] Iterate until all designs are approved (5/7 complete)
-- [ ] Mockup #6: Master Chore Modal — pending review
-- [ ] Mockup #7: Instance Interaction — pending review
-- [ ] Document approval date and any design decisions
-- [ ] Only then proceed to Phase 3
+- [x] Iterate until all designs are approved (7/7 complete)
+- [x] Mockup #1: Chores Board — approved
+- [x] Mockup #2: Association Picker Modal — approved
+- [x] Mockup #3: Current Chores — approved
+- [x] Mockup #4: Archived Chores — approved
+- [x] Mockup #5: Header (Chores) — approved
+- [x] Mockup #6: Master Chore Modal — approved
+- [x] Mockup #7: Instance Interaction — approved
+- [x] Document approval date and any design decisions
 
-**Phase 2 completion summary:** _[To be filled after all mockups approved]_
+**Phase 2 completion summary:**
+
+**What was built:**
+- 7 HTML mockups covering all new/changed UI for the chores frontend rewire
+- All 7 approved for implementation
+
+**Mockup files:**
+| File | Purpose | Status |
+|------|---------|--------|
+| `mockups/chores-board.html` | Board view with 3-column grid, per-column metrics, member pills | ✅ Approved |
+| `mockups/association-picker-modal.html` | Modal for assigning masters to members/pool | ✅ Approved |
+| `mockups/current-chores.html` | Active + Inactive master chores management | ✅ Approved |
+| `mockups/archived-chores.html` | Archived master chores management | ✅ Approved |
+| `mockups/header-chores.html` | Chores-specific header with view toggle and bulk actions | ✅ Approved |
+| `mockups/master-chore-modal.html` | Create/Edit master chore template form | ✅ Approved |
+| `mockups/instance-interaction.html` | Instance popup with 5 state variants | ✅ Approved |
+| `mockups/header-calendar.html` | Calendar-specific header (renamed from header.html) | ✅ Approved |
+
+**Key design decisions:**
+- Management view split into 2 standalone views (Current + Archived)
+- Header: chores-specific with 3-view toggle (Board | Manage Current | Manage Archived)
+- Bulk actions context-aware per view
+- No family pills in chores header (board columns show per-member metrics)
+- Per-column metrics: 5 compact cards (Asn, Clm, Prog, Done, Over) with Lucide icons
+- Archived cards: same style as current (no grey/strikethrough)
+- "Create Master" button in header, not in grid
+- Instance interaction: 5 state variants (Active, In Progress, Overdue, Missed, Open Pool)
 
 ---
 
 ## Phase 3: Implementation
 
-**Status:** ⬜ Not Started
+**Status:** 🟡 In Progress
 **Goal:** Build from approved mockups. Each sub-phase verified independently.
 
-### 3.1 Board + Card Updates
+### 3.1 Chores Board (`mockups/chores-board.html`)
 
 **Status:** ⬜ Not Started
+**Mockup:** `mockups/chores-board.html` (v4 approved)
+
+**Scope:**
+- Rewrite `ChoresBoard.tsx` — 3-column equal grid (`flex-1 min-w-0`), per-column metric cards (Asn/Clm/Prog/Done/Over), member name as colored pill header
+- Rewrite `ChoreCard.tsx` — compact styling, action buttons (Start/Complete), status icon badge
+- Update `src/shared/utils/chores.ts` — add `getColumnMetrics()` helper for per-column metric calculation
+- Open Pool column: gray pills, 2-column metrics (Unclaimed/Overdue)
+- Remove top metrics row (metrics now per-column)
+- Update tests
 
 **Files:**
-- `src/features/chores/views/ChoresBoard.tsx` — use associations for column population, update metrics, add settings gear icon
-- `src/features/chores/components/ChoreCard.tsx` — new status indicators, action buttons (Start/Complete)
-- `src/shared/utils/chores.ts` — update helpers
-- Update tests
+- `src/features/chores/views/ChoresBoard.tsx` — rewrite
+- `src/features/chores/components/ChoreCard.tsx` — rewrite
+- `src/shared/utils/chores.ts` — add helper
+- `src/features/chores/views/ChoresBoard.test.tsx` — update
+- `src/features/chores/components/ChoreCard.test.tsx` — update
 
 **Verification:**
 - [ ] `make lint-kiosk` passes
@@ -413,81 +453,201 @@ _All mockups approved. No pending items._
 - [ ] `make test-kiosk` passes
 - [ ] `make build-kiosk` passes
 - [ ] Code review completed
-- [ ] Git commit: `feat(chores): update board and card components for association-driven layout`
+- [ ] Git commit: `feat(chores): rewrite board and card for association-driven layout`
 - [ ] Git push to `development`
 
-### 3.2 Association Picker Modal
+---
+
+### 3.2 Association Picker Modal (`mockups/association-picker-modal.html`)
 
 **Status:** ⬜ Not Started
+**Mockup:** `mockups/association-picker-modal.html` (approved)
 
-**Files:**
-- New: `src/features/chores/components/AssociationPickerModal.tsx`
+**Scope:**
+- New `AssociationPickerModal.tsx` — 3-column header grid, search + filter toolbar, scrollable list with section headers
 - Uses `createAssociation()` API
 - Filters available masters (not yet associated to target member/pool)
-- Replace old `ChoreCreateModal` — sidebar `+` and column `+` open this instead
-- Tests
-
-**Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
-- [ ] Git commit: `feat(chores): add association picker modal for assigning masters`
-- [ ] Git push to `development`
-
-### 3.3 Current + Archived Chores Views + Modal
-
-**Status:** ⬜ Not Started
-
-**Files:**
-- New: `src/features/chores/views/CurrentChores.tsx` (was MasterManagement)
-- New: `src/features/chores/views/ArchivedChores.tsx`
-- New: `src/features/chores/components/MasterChoreModal.tsx` (create/edit)
-- New: `src/features/chores/components/InstanceInteraction.tsx` (replaces ChoreEditModal)
-- Wire navigation: board ↔ current chores ↔ archived chores via header toggle
-- Update `src/features/shell/AppShell.tsx` — add view state, route sidebar to views
-- Update `src/features/shell/Sidebar.tsx` — change `+` behavior for chores to open current chores
-- Update `src/features/shell/Header.tsx` — add chores header with view toggle and bulk actions
-- Tests
-
-**Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
-- [ ] Git commit: `feat(chores): add current/archived chores views and master modal`
-- [ ] Git push to `development`
-
-### 3.4 Instance Interaction
-
-**Status:** ⬜ Not Started
-
-**Files:**
-- Replace `src/features/chores/components/ChoreEditModal.tsx` with simplified instance interaction component
-- Status transitions: active→in_progress→completed via API
-- Open pool claim flow
-- "View Template" link to management
-- Tests
-
-**Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
-- [ ] Git commit: `feat(chores): simplify instance interaction modal`
-- [ ] Git push to `development`
-
-### 3.5 Cleanup
-
-**Status:** ⬜ Not Started
-
-**Files:**
-- Delete `src/features/chores/components/ChoreCreateModal.tsx` (replaced by AssociationPickerModal)
-- Delete `src/features/chores/components/ChoreEditModal.tsx` (replaced by simplified instance interaction)
-- Delete old mockups that are fully superseded
-- Update `src/features/chores/views/ChoresView.tsx` to compose new components
-- Update `src/features/shell/AppShell.tsx` — remove old modal state, wire new views
+- Opens from column `+` button (member or open pool)
 - Update tests
+
+**Files:**
+- `src/features/chores/components/AssociationPickerModal.tsx` — new
+- `src/features/chores/components/AssociationPickerModal.test.tsx` — new
+- `src/features/chores/views/ChoresBoard.tsx` — wire `+` button to open modal
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add association picker modal`
+- [ ] Git push to `development`
+
+---
+
+### 3.3 Current Chores View (`mockups/current-chores.html`)
+
+**Status:** ⬜ Not Started
+**Mockup:** `mockups/current-chores.html` (approved)
+
+**Scope:**
+- New `CurrentChores.tsx` view — shows Active + Inactive master chores
+- Card design: labeled rows (Category, Tags, Frequency, Collab, Conditions), Est. minutes + Difficulty
+- Card actions: Edit, Pause/Resume, Archive
+- No header bar inside content (app shell header provides controls)
+- Update tests
+
+**Files:**
+- `src/features/chores/views/CurrentChores.tsx` — new
+- `src/features/chores/views/CurrentChores.test.tsx` — new
+- `src/features/chores/components/MasterChoreCard.tsx` — new (shared card for current/archived)
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add current chores view`
+- [ ] Git push to `development`
+
+---
+
+### 3.4 Archived Chores View (`mockups/archived-chores.html`)
+
+**Status:** ⬜ Not Started
+**Mockup:** `mockups/archived-chores.html` (approved)
+
+**Scope:**
+- New `ArchivedChores.tsx` view — shows Archived master chores only
+- Same card style as CurrentChores (reuse `MasterChoreCard`)
+- Card actions: Edit, Restore (no Archive button)
+- Update tests
+
+**Files:**
+- `src/features/chores/views/ArchivedChores.tsx` — new
+- `src/features/chores/views/ArchivedChores.test.tsx` — new
+- `src/features/chores/components/MasterChoreCard.tsx` — extend with action variants
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add archived chores view`
+- [ ] Git push to `development`
+
+---
+
+### 3.5 Master Chore Modal (`mockups/master-chore-modal.html`)
+
+**Status:** ⬜ Not Started
+**Mockup:** `mockups/master-chore-modal.html` (approved)
+
+**Scope:**
+- New `MasterChoreModal.tsx` — create/edit master chore template
+- Conditional recurrence fields based on frequency (Weekly: day-of-week, Monthly: day-of-month OR nth weekday, Yearly: month + day)
+- Uses `createMasterChore()` / `updateMasterChore()` API
+- Fields: Name, Category (combobox), Tags, Difficulty, Recurrence, Est. minutes, Due time, Expiration behavior, End date, Max occurrences, Collaborative toggle
+- Conditions section: deferred (show "Coming soon" or omit)
+- Update tests
+
+**Files:**
+- `src/features/chores/components/MasterChoreModal.tsx` — new
+- `src/features/chores/components/MasterChoreModal.test.tsx` — new
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add master chore create/edit modal`
+- [ ] Git push to `development`
+
+---
+
+### 3.6 Instance Interaction (`mockups/instance-interaction.html`)
+
+**Status:** ⬜ Not Started
+**Mockup:** `mockups/instance-interaction.html` (approved)
+
+**Scope:**
+- New `InstanceInteraction.tsx` — popup/modal for instance details
+- 5 state variants: Active, In Progress, Overdue, Missed, Open Pool
+- Status transitions: active→in_progress→completed via `updateInstanceStatus()`
+- Open pool: "Claim" button via `claimInstance()`
+- "View Template" link → navigates to Current Chores with master highlighted
+- Period display: single date (e.g., "Monday, Aug 25")
+- Update tests
+
+**Files:**
+- `src/features/chores/components/InstanceInteraction.tsx` — new
+- `src/features/chores/components/InstanceInteraction.test.tsx` — new
+- `src/features/chores/views/ChoresBoard.tsx` — wire card click to open popup
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add instance interaction popup`
+- [ ] Git push to `development`
+
+---
+
+### 3.7 Header + Shell Wiring (`mockups/header-chores.html`)
+
+**Status:** ⬜ Not Started
+**Mockup:** `mockups/header-chores.html` (approved)
+
+**Scope:**
+- New `HeaderChores.tsx` — chores-specific header component
+  - LEFT: Date + Clock + Weather (same as calendar header)
+  - CENTER: Empty (no family pills)
+  - RIGHT: View Toggle (Board | Manage Current | Manage Archived) + Select All + Bulk Actions + Create Master
+  - Context-aware bulk actions per view:
+    - Board: Create Master only
+    - Manage Current: Select All, Pause Selected, Archive Selected, Create Master
+    - Manage Archived: Select All, Restore Selected, Delete Permanently, Create Master
+- Selection state — shared between header and views (context or lifted to ChoresView)
+- Update `AppShell.tsx` — add chores view state (board/current/archived), route to correct view + header
+- Update `Sidebar.tsx` — change `+` behavior for chores to open Current Chores view
+- Update `Header.tsx` — conditionally render `HeaderChores` when active feature is chores
+- Rewrite `ChoresView.tsx` — compose new views based on active view state, manage selection
+- Update tests
+
+**Files:**
+- `src/features/shell/HeaderChores.tsx` — new
+- `src/features/shell/HeaderChores.test.tsx` — new
+- `src/features/shell/AppShell.tsx` — update
+- `src/features/shell/Sidebar.tsx` — update
+- `src/features/shell/Header.tsx` — update
+- `src/features/chores/views/ChoresView.tsx` — rewrite
+- `src/features/chores/views/ChoresView.test.tsx` — update
+
+**Verification:**
+- [ ] Quality gates pass
+- [ ] Code review completed
+- [ ] Git commit: `feat(chores): add chores header and wire shell navigation`
+- [ ] Git push to `development`
+
+---
+
+### 3.8 Cleanup
+
+**Status:** ⬜ Not Started
+**Mockup:** N/A (cleanup work)
+
+**Scope:**
+- Delete `ChoreCreateModal.tsx` (replaced by `AssociationPickerModal`)
+- Delete `ChoreEditModal.tsx` (replaced by `InstanceInteraction`)
+- Delete old test files for removed components
+- Remove unused imports and types
+- Final code quality audit (hardcoded values, duplication, tokenization)
+- Update tests
+
+**Files:**
+- `src/features/chores/components/ChoreCreateModal.tsx` — delete
+- `src/features/chores/components/ChoreEditModal.tsx` — delete
+- `src/features/chores/components/ChoreCreateModal.test.tsx` — delete (if exists)
+- `src/features/chores/components/ChoreEditModal.test.tsx` — delete (if exists)
 
 **Verification:**
 - [ ] Quality gates pass
 - [ ] Code review completed
 - [ ] Git commit: `refactor(chores): remove deprecated modals and clean up`
 - [ ] Git push to `development`
+
+---
 
 **Phase 3 completion summary:** _[To be filled after completion]_
 
@@ -571,30 +731,43 @@ Before declaring done, audit for:
 | `src/features/chores/api/choresApi.ts` | Rewrite | 1 |
 | `src/features/chores/hooks/useChoreActions.ts` | Rewrite | 1 |
 | `src/features/chores/hooks/useChoresData.ts` | Minor update | 1 |
-| `src/shared/utils/chores.ts` | Update + add helpers | 1 |
-| `src/shared/date/chores.ts` | New | 1 |
+| `src/shared/utils/chores.ts` | Update + add helpers | 1, 3.1 |
+| `src/shared/date/index.ts` | Add export | 1 |
+| `src/index.css` | Update chores tokens | 1 |
+| `src/theme/tokens.ts` | Update chores tokens | 1 |
 | All `*.test.*` files | Update | 1, 3 |
+| **Mockups (Phase 2)** | | |
 | `mockups/chores-board.html` | Update (approved) | 2 |
 | `mockups/association-picker-modal.html` | New (approved) | 2 |
-| `mockups/current-chores.html` | New (approved, renamed from master-management.html) | 2 |
+| `mockups/current-chores.html` | New (approved) | 2 |
 | `mockups/archived-chores.html` | New (approved) | 2 |
 | `mockups/header-chores.html` | New (approved) | 2 |
 | `mockups/header-calendar.html` | Renamed from header.html | 2 |
-| `mockups/master-chore-modal.html` | New (pending review) | 2 |
-| `mockups/instance-interaction.html` | New (pending review) | 2 |
-| `src/features/chores/views/ChoresBoard.tsx` | Update | 3.1 |
-| `src/features/chores/components/ChoreCard.tsx` | Update | 3.1 |
+| `mockups/master-chore-modal.html` | New (approved) | 2 |
+| `mockups/instance-interaction.html` | New (approved) | 2 |
+| **Phase 3.1 — Board + Card** | | |
+| `src/features/chores/views/ChoresBoard.tsx` | Rewrite | 3.1 |
+| `src/features/chores/components/ChoreCard.tsx` | Rewrite | 3.1 |
+| **Phase 3.2 — Association Picker** | | |
 | `src/features/chores/components/AssociationPickerModal.tsx` | New | 3.2 |
-| `src/features/chores/views/CurrentChores.tsx` | New (was MasterManagement) | 3.3 |
-| `src/features/chores/views/ArchivedChores.tsx` | New | 3.3 |
-| `src/features/chores/components/MasterChoreModal.tsx` | New | 3.3 |
-| `src/features/chores/components/InstanceInteraction.tsx` | New (replaces ChoreEditModal) | 3.4 |
-| `src/features/shell/AppShell.tsx` | Update | 3.3, 3.5 |
-| `src/features/shell/Sidebar.tsx` | Update | 3.3 |
-| `src/features/shell/Header.tsx` | Update (chores header) | 3.3 |
-| `src/features/chores/components/ChoreCreateModal.tsx` | Delete | 3.5 |
-| `src/features/chores/components/ChoreEditModal.tsx` | Delete | 3.5 |
-| `src/features/chores/views/ChoresView.tsx` | Update | 3.5 |
+| **Phase 3.3 — Current Chores** | | |
+| `src/features/chores/views/CurrentChores.tsx` | New | 3.3 |
+| `src/features/chores/components/MasterChoreCard.tsx` | New | 3.3 |
+| **Phase 3.4 — Archived Chores** | | |
+| `src/features/chores/views/ArchivedChores.tsx` | New | 3.4 |
+| **Phase 3.5 — Master Modal** | | |
+| `src/features/chores/components/MasterChoreModal.tsx` | New | 3.5 |
+| **Phase 3.6 — Instance Interaction** | | |
+| `src/features/chores/components/InstanceInteraction.tsx` | New | 3.6 |
+| **Phase 3.7 — Header + Shell Wiring** | | |
+| `src/features/shell/HeaderChores.tsx` | New | 3.7 |
+| `src/features/shell/AppShell.tsx` | Update | 3.7 |
+| `src/features/shell/Sidebar.tsx` | Update | 3.7 |
+| `src/features/shell/Header.tsx` | Update | 3.7 |
+| `src/features/chores/views/ChoresView.tsx` | Rewrite | 3.7 |
+| **Phase 3.8 — Cleanup** | | |
+| `src/features/chores/components/ChoreCreateModal.tsx` | Delete | 3.8 |
+| `src/features/chores/components/ChoreEditModal.tsx` | Delete | 3.8 |
 
 ---
 
