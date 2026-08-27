@@ -27,6 +27,8 @@ describe('EventPopup', () => {
     title: 'Team Meeting',
     start: Temporal.PlainDateTime.from('2026-01-15T10:00:00'),
     end: Temporal.PlainDateTime.from('2026-01-15T11:00:00'),
+    startIso: '2026-01-15T10:00:00+00:00',
+    endIso: '2026-01-15T11:00:00+00:00',
     members: ['faiyaz'],
     location: 'Conference Room A',
     description: 'Weekly team sync',

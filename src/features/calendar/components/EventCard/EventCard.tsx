@@ -13,6 +13,7 @@
 import { Repeat } from 'lucide-react'
 import { getMemberPaletteKey, paletteBgClasses, paletteBgOpacityClasses, paletteBgHoverClasses, paletteBorderClasses } from '@/shared/utils/memberColors'
 import { formatTime } from '@/shared/date/format'
+import { useConfig, convertUtcToTimezone } from '@/shared/date/timezone'
 import { isTimedEvent } from '@/types/calendar'
 import { useEventPopupContext } from '../../hooks/useEventPopup'
 import type { CalendarEvent } from '@/types/calendar'
@@ -72,6 +73,7 @@ export function EventCard({
   showTime = false,
 }: EventCardProps) {
   const { handleMouseEnter, handleMouseMove, handleMouseLeave } = useEventPopupContext()
+  const { timezone } = useConfig()
   const memberKey = event.members[0]
   const paletteKey = getMemberPaletteKey(memberKey, colorMap)
   const member = members.find(m => m.key === memberKey)
@@ -91,7 +93,7 @@ export function EventCard({
           </div>
           {showTime && isTimedEvent(event) && (
             <div className={`${config.time} text-text-muted`}>
-              {formatTime(event.start.toPlainTime())} – {formatTime(event.end.toPlainTime())}
+              {formatTime(convertUtcToTimezone(event.startIso, timezone).toPlainTime())} – {formatTime(convertUtcToTimezone(event.endIso, timezone).toPlainTime())}
             </div>
           )}
         </div>

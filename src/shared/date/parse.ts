@@ -204,6 +204,8 @@ export function parseCalendarEvent(raw: RawCalendarEvent): CalendarEvent {
     all_day: false,
     start: Temporal.PlainDateTime.from(stripTimezone(raw.start)),
     end: Temporal.PlainDateTime.from(stripTimezone(raw.end)),
+    startIso: raw.start,
+    endIso: raw.end,
   }
 }
 

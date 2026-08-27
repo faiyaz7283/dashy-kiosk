@@ -20,6 +20,7 @@ import { useFamilyData } from '@/shared/hooks/useFamilyData'
 import { Clock, MapPin, FileText, RefreshCw, Users } from 'lucide-react'
 import type { CalendarEvent, Attendee } from '@/types/calendar'
 import { formatTime } from '@/shared/date/format'
+import { useConfig, convertUtcToTimezone } from '@/shared/date/timezone'
 import { isTimedEvent } from '@/types/calendar'
 import { buildMemberColorMap, paletteBgClasses, getMemberPaletteKey } from '@/shared/utils/memberColors'
 import type { PaletteKey } from '@/shared/utils/memberColors'
@@ -38,8 +39,9 @@ export interface EventPopupProps {
  */
 export function EventPopup({ event }: EventPopupProps) {
   const { members } = useFamilyData()
+  const { timezone } = useConfig()
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
-  
+
   const memberKey = event.members[0]
   const paletteKey = getMemberPaletteKey(memberKey, colorMap)
   const member = members.find(m => m.key === memberKey)
@@ -66,7 +68,7 @@ export function EventPopup({ event }: EventPopupProps) {
           <div className="text-sm text-text-primary">
             {isTimedEvent(event) ? (
               <>
-                {formatTime(event.start.toPlainTime())} – {formatTime(event.end.toPlainTime())}
+                {formatTime(convertUtcToTimezone(event.startIso, timezone).toPlainTime())} – {formatTime(convertUtcToTimezone(event.endIso, timezone).toPlainTime())}
               </>
             ) : (
               'All day'

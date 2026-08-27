@@ -76,6 +76,10 @@ export interface TimedCalendarEvent extends CalendarEventBase {
   start: Temporal.PlainDateTime
   /** Event end date+time (PlainDateTime — includes hour/minute). */
   end: Temporal.PlainDateTime
+  /** Original UTC ISO string for timezone conversion. */
+  startIso: string
+  /** Original UTC ISO string for timezone conversion. */
+  endIso: string
 }
 
 /**
