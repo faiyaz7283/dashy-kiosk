@@ -875,6 +875,19 @@ All 8 sub-phases complete. The chores frontend is fully rewired to the new assoc
 - `src/features/chores/components/MasterChoreModal.test.tsx` — added refetch to defaultProps
 **Verification:** ✅ lint, typecheck, test, build all pass
 
+#### Bug #3: Due Date and End Date Should Be Conditional ✅ FIXED
+**Found:** 2026-08-27 during manual testing
+**Symptom:** Both Due Date and End Date fields always visible regardless of recurrence frequency. Confusing because they serve different purposes (one-time vs recurring).
+**Root Cause:** Form layout didn't conditionally show/hide fields based on frequency selection.
+**Fix:**
+- Due Date only shows when frequency = 'once' (one-time chores)
+- End Date + Max Occurrences only show when frequency ≠ 'once' (recurring chores)
+- Moved End Date/Max Occurrences into the Recurrence Pattern section for better visual grouping
+- Removed standalone "End conditions" section
+**Files Changed:**
+- `src/features/chores/components/MasterChoreModal.tsx` — conditional rendering based on frequency
+**Verification:** ✅ lint, typecheck, test, build all pass
+
 ---
 
 ### Testing Checklist

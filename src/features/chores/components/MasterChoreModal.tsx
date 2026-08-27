@@ -24,7 +24,9 @@ import type {
 import type { FamilyMember } from '@/types/family'
 import { Combobox } from '@/shared/components/Combobox'
 import { TagInput } from '@/shared/components/TagInput'
+import { DurationInput } from '@/shared/components/DurationInput'
 import { formatDifficulty } from '@/shared/utils/chores'
+import { toMinutes, fromMinutes, type DurationUnit } from '@/shared/utils/duration'
 import { useChoreActions } from '../hooks/useChoreActions'
 import { DifficultyDots } from './DifficultyDots'
 import { findFirstAdult } from '@/shared/utils/family'
@@ -72,7 +74,7 @@ interface FormState {
   nthDayOfWeek: number
   yearMonth: number
   yearDay: string
-  estimatedMinutes: string
+  estimatedDuration: { value: string; unit: DurationUnit }
   dueTime: string
   dueDate: string
   expirationBehavior: ExpirationBehavior
@@ -95,7 +97,7 @@ const DEFAULT_FORM: FormState = {
   nthDayOfWeek: 0,
   yearMonth: 1,
   yearDay: '1',
-  estimatedMinutes: '10',
+  estimatedDuration: { value: '10', unit: 'minutes' },
   dueTime: '',
   dueDate: '',
   expirationBehavior: 'carry_over',
@@ -181,6 +183,9 @@ export function MasterChoreModal({
       const recurrenceRule = buildRecurrenceRule(form)
       const adult = findFirstAdult(members)
       const createdBy = adult?.key ?? members[0]?.key ?? 'unknown'
+      const estimatedMinutes = form.estimatedDuration.value
+        ? toMinutes(Number(form.estimatedDuration.value), form.estimatedDuration.unit)
+        : null
 
       if (mode === 'create') {
         const request: CreateMasterChoreRequest = {
@@ -189,7 +194,7 @@ export function MasterChoreModal({
           ...(form.tagIds.length > 0 ? { tag_ids: form.tagIds } : {}),
           difficulty: form.difficulty,
           ...(recurrenceRule !== null ? { recurrence_rule: recurrenceRule } : {}),
-          ...(form.estimatedMinutes ? { estimated_minutes: Number(form.estimatedMinutes) } : {}),
+          ...(estimatedMinutes ? { estimated_minutes: estimatedMinutes } : {}),
           ...(form.dueTime ? { due_time: form.dueTime } : {}),
           ...(form.dueDate ? { due_date: form.dueDate } : {}),
           expiration_behavior: form.expirationBehavior,
@@ -207,7 +212,7 @@ export function MasterChoreModal({
           tag_ids: form.tagIds,
           difficulty: form.difficulty,
           recurrence_rule: recurrenceRule,
-          estimated_minutes: form.estimatedMinutes ? Number(form.estimatedMinutes) : null,
+          estimated_minutes: estimatedMinutes,
           due_time: form.dueTime || null,
           due_date: form.dueDate || null,
           expiration_behavior: form.expirationBehavior,
@@ -290,27 +295,41 @@ export function MasterChoreModal({
               />
             </div>
 
-            {/* Difficulty */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                Difficulty
-              </label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={form.difficulty}
-                  onChange={(e) => updateField('difficulty', Number(e.target.value))}
-                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-border accent-primary"
-                />
-                <div className="flex items-center gap-2">
-                  <DifficultyDots level={form.difficulty} size="md" />
-                  <span className="w-12 text-xs text-text-muted">
-                    {formatDifficulty(form.difficulty)}
-                  </span>
+            {/* Difficulty + Estimated Duration row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-text-secondary">
+                  Difficulty
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={form.difficulty}
+                    onChange={(e) => updateField('difficulty', Number(e.target.value))}
+                    className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-border accent-primary"
+                  />
+                  <div className="flex items-center gap-2">
+                    <DifficultyDots level={form.difficulty} size="md" />
+                    <span className="w-12 text-xs text-text-muted">
+                      {formatDifficulty(form.difficulty)}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <DurationInput
+                label="Estimated Duration"
+                value={form.estimatedDuration.value}
+                onValueChange={(value) =>
+                  updateField('estimatedDuration', { ...form.estimatedDuration, value })
+                }
+                unit={form.estimatedDuration.unit}
+                onUnitChange={(unit) =>
+                  updateField('estimatedDuration', { ...form.estimatedDuration, unit })
+                }
+                placeholder="0"
+              />
             </div>
 
             {/* Recurrence Pattern section */}
@@ -479,6 +498,34 @@ export function MasterChoreModal({
                 </div>
               )}
 
+              {/* Due Time + Due Date (one-time only) */}
+              {form.frequency === 'once' && (
+                <div className="grid grid-cols-2 gap-4 border-t border-border-light pt-4">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                      Due Time <span className="font-normal text-text-faint">(optional)</span>
+                    </label>
+                    <input
+                      type="time"
+                      value={form.dueTime}
+                      onChange={(e) => updateField('dueTime', e.target.value)}
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                      Due Date <span className="font-normal text-text-faint">(optional)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={form.dueDate}
+                      onChange={(e) => updateField('dueDate', e.target.value)}
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* End conditions (recurring only) */}
               {showRecurrenceSection && (
                 <div className="grid grid-cols-2 gap-4 border-t border-border-light pt-4">
@@ -506,46 +553,6 @@ export function MasterChoreModal({
                       className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary placeholder-text-faint focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Estimated Minutes + Due Time + Due Date (one-time only) */}
-            <div className={form.frequency === 'once' ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-2 gap-4'}>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                  Estimated Minutes
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.estimatedMinutes}
-                  onChange={(e) => updateField('estimatedMinutes', e.target.value)}
-                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                  Due Time <span className="font-normal text-text-faint">(optional)</span>
-                </label>
-                <input
-                  type="time"
-                  value={form.dueTime}
-                  onChange={(e) => updateField('dueTime', e.target.value)}
-                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              {form.frequency === 'once' && (
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                    Due Date <span className="font-normal text-text-faint">(optional)</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={form.dueDate}
-                    onChange={(e) => updateField('dueDate', e.target.value)}
-                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
                 </div>
               )}
             </div>
@@ -718,6 +725,9 @@ function buildRecurrenceRule(form: FormState): RecurrenceRule | null {
 function formFromMaster(master: MasterChore): FormState {
   const rule = master.recurrence_rule
   const frequency: RecurrenceFrequency = rule?.frequency ?? 'once'
+  const duration = master.estimated_minutes
+    ? fromMinutes(master.estimated_minutes)
+    : { value: 10, unit: 'minutes' as DurationUnit }
 
   return {
     name: master.name,
@@ -732,7 +742,7 @@ function formFromMaster(master: MasterChore): FormState {
     nthDayOfWeek: rule?.day_of_week ?? 0,
     yearMonth: rule?.month ?? 1,
     yearDay: rule?.day_of_month?.toString() ?? '1',
-    estimatedMinutes: master.estimated_minutes?.toString() ?? '10',
+    estimatedDuration: { value: duration.value.toString(), unit: duration.unit },
     dueTime: master.due_time ?? '',
     dueDate: master.due_date ?? '',
     expirationBehavior: master.expiration_behavior,

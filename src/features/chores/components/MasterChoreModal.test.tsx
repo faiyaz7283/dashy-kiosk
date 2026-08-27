@@ -145,9 +145,9 @@ describe('MasterChoreModal', () => {
       expect(screen.getByText('Sun')).toBeTruthy()
     })
 
-    it('renders Estimated Minutes input', () => {
+    it('renders Estimated Duration input', () => {
       renderModal()
-      expect(screen.getByText('Estimated Minutes')).toBeTruthy()
+      expect(screen.getByText('Estimated Duration')).toBeTruthy()
     })
 
     it('renders When Overdue select', () => {
@@ -202,7 +202,7 @@ describe('MasterChoreModal', () => {
       expect(nameInput).toBeTruthy()
     })
 
-    it('pre-populates estimated minutes from master', () => {
+    it('pre-populates estimated duration from master', () => {
       renderModal({ mode: 'edit', master: makeMaster({ id: 'mc-1', estimated_minutes: 30 }) })
       const estInput = screen.getByDisplayValue('30')
       expect(estInput).toBeTruthy()
