@@ -11,6 +11,7 @@ import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '
 import { paletteBorderClasses, getMemberPaletteKey, type PaletteKey } from '@/shared/utils/memberColors'
 import { formatUtcTimeOfDay, useConfig } from '@/shared/date'
 import { getStatusLabel } from '@/shared/utils/chores'
+import { DifficultyDots } from './DifficultyDots'
 
 /** Props for the ChoreCard component. */
 export interface ChoreCardProps {
@@ -85,14 +86,7 @@ export function ChoreCard({
   const paletteKey = getMemberPaletteKey(memberKey, colorMap)
 
   // Difficulty dots (filled = active, empty = inactive)
-  const difficultyDots = Array.from({ length: 5 }, (_, i) => (
-    <span
-      key={i}
-      className={`h-1 w-1 rounded-full ${
-        i < masterChore.difficulty ? 'bg-chores-in-progress' : 'bg-border'
-      }`}
-    />
-  ))
+  const difficultyDots = <DifficultyDots level={masterChore.difficulty} size="sm" />
 
   // Format assignment text
   const getAssignmentText = () => {

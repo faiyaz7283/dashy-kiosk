@@ -488,7 +488,7 @@ _All mockups approved. No pending items._
 
 ### 3.2 Association Picker Modal (`mockups/association-picker-modal.html`)
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** `mockups/association-picker-modal.html` (approved)
 
 **Scope:**
@@ -496,18 +496,45 @@ _All mockups approved. No pending items._
 - Uses `createAssociation()` API
 - Filters available masters (not yet associated to target member/pool)
 - Opens from column `+` button (member or open pool)
+- Extracted shared `DifficultyDots` component (used in ChoreCard, AssociationPickerModal, will be used in MasterChoreCard)
 - Update tests
 
 **Files:**
 - `src/features/chores/components/AssociationPickerModal.tsx` — new
 - `src/features/chores/components/AssociationPickerModal.test.tsx` — new
+- `src/features/chores/components/DifficultyDots.tsx` — new (shared component)
+- `src/features/chores/components/DifficultyDots.test.tsx` — new
+- `src/features/chores/components/ChoreCard.tsx` — refactored to use DifficultyDots
 - `src/features/chores/views/ChoresBoard.tsx` — wire `+` button to open modal
 
 **Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
+- [x] Quality gates pass (lint, typecheck, test, build)
+- [x] Code review completed (extracted DifficultyDots to avoid duplication)
 - [ ] Git commit: `feat(chores): add association picker modal`
 - [ ] Git push to `development`
+
+**Phase 3.2 completion summary:**
+
+**What was built:**
+- Association picker modal with 3-column header (avatar, title, close button)
+- Search + filter toolbar (All/Recurring/One-off group toggle, sort dropdown)
+- Scrollable list with section headers (Recurring, One-off)
+- Filters available masters (excludes already-associated to target member/pool)
+- Wired column `+` buttons to open modal (member or open pool)
+- Extracted shared `DifficultyDots` component (sm/md size variants)
+- 19 new tests (13 for modal, 6 for DifficultyDots)
+
+**Tech stack usage:**
+- React hooks: useState, useMemo, useRef, useEffect
+- Tailwind: design tokens, dark mode, responsive layout
+- Shared utilities: formatRecurrence, formatDifficulty, findFirstAdult, palette utilities
+- API: createAssociation via useChoreActions hook
+
+**Code review findings addressed:**
+- Extracted DifficultyDots component (was duplicated in ChoreCard + AssociationPickerModal, will be used in MasterChoreCard)
+- Fixed test assertions (count mismatch, multiple element matches)
+- Fixed type imports (FamilyMember from @/types/family, not @/types/chores)
+- Used findFirstAdult utility instead of non-existent is_adult property
 
 ---
 

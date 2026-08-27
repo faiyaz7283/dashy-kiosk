@@ -10,7 +10,7 @@
  * Each column shows chore instances with status-colored left borders.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   User,
   Hand,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { ContentCard } from '@/shared/components/ContentCard'
 import { ChoreCard } from '../components/ChoreCard'
+import { AssociationPickerModal } from '../components/AssociationPickerModal'
 import {
   isOpenPoolInstance,
   getMemberInstances,
@@ -74,16 +75,19 @@ export function ChoresBoard({
   isLoading,
   error,
   onChoreClick,
-  onAddChore,
+  onAddChore: _onAddChore,
   onStartInstance,
   onCompleteInstance,
 }: ChoresBoardProps) {
+  const [pickerTarget, setPickerTarget] = useState<FamilyMember | null | undefined>(undefined)
+
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
 
   // Memoize destructured data to prevent unnecessary re-renders
   const instances = useMemo(() => data?.instances ?? [], [data])
   const masterChores = useMemo(() => data?.master_chores ?? [], [data])
   const categories = useMemo(() => data?.categories ?? [], [data])
+  const associations = useMemo(() => data?.associations ?? [], [data])
 
   // Get open pool instances (unclaimed and unassigned)
   const openPoolInstances = useMemo(
@@ -97,6 +101,19 @@ export function ChoresBoard({
     return (instance: ChoreInstance): MasterChore | undefined =>
       masterMap.get(instance.master_chore_id)
   }, [masterChores])
+
+  // Association picker modal state
+  const isPickerOpen = pickerTarget !== undefined
+
+  const handleOpenPicker = (memberKey?: string) => {
+    if (memberKey) {
+      setPickerTarget(members.find((m) => m.key === memberKey) ?? null)
+    } else {
+      setPickerTarget(null)
+    }
+  }
+
+  const handleClosePicker = () => setPickerTarget(undefined)
 
   if (isLoading) {
     return (
@@ -132,7 +149,7 @@ export function ChoresBoard({
             title="Open Pool"
             isGray
             metrics={getColumnMetrics(openPoolInstances)}
-            onAdd={() => onAddChore?.()}
+            onAdd={() => handleOpenPicker()}
           >
             {openPoolInstances.map((instance) => {
               const master = getMasterChore(instance)
@@ -163,7 +180,7 @@ export function ChoresBoard({
                 title={member.name}
                 paletteKey={paletteKey}
                 metrics={getColumnMetrics(memberInstances)}
-                onAdd={() => onAddChore?.(member.key)}
+                onAdd={() => handleOpenPicker(member.key)}
               >
                 {memberInstances.map((instance) => {
                   const master = getMasterChore(instance)
@@ -185,6 +202,19 @@ export function ChoresBoard({
             )
           })}
         </div>
+
+        {/* Association picker modal */}
+        {isPickerOpen && data && (
+          <AssociationPickerModal
+            targetMember={pickerTarget ?? null}
+            masterChores={masterChores}
+            categories={categories}
+            associations={associations}
+            members={members}
+            onClose={handleClosePicker}
+            onAssociationCreated={handleClosePicker}
+          />
+        )}
       </div>
     </ContentCard>
   )
