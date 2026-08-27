@@ -174,7 +174,9 @@ export function formatUtcTimeOfDay(
   timezone: string
 ): string {
   // Parse HH:MM into hours and minutes
-  const [hours, minutes] = utcTime.split(':').map(Number)
+  const parts = utcTime.split(':')
+  const hours = Number(parts[0])
+  const minutes = Number(parts[1])
 
   // Create a ZonedDateTime for today at the UTC time
   const todayUtc = Temporal.Now.zonedDateTimeISO('UTC')

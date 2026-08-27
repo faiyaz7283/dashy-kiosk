@@ -21,7 +21,7 @@ export function isAdult(member: FamilyMember): boolean {
   const today = Temporal.Now.plainDateISO()
 
   let age = today.year - dob.year
-  const monthDiff = today.monthNumber - dob.monthNumber
+  const monthDiff = today.month - dob.month
 
   // Adjust age if birthday hasn't occurred yet this year
   if (monthDiff < 0 || (monthDiff === 0 && today.day < dob.day)) {

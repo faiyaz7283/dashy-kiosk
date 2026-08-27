@@ -156,14 +156,15 @@ export function parseWeatherTime(timeStr: string, timezone: string): Temporal.Pl
     return zoned.toPlainTime()
   } else {
     // Simple HH:MM format - treat as UTC and convert to configured timezone
-    const [hours, minutes] = timeStr.split(':').map(Number)
-    const utcTime = Temporal.PlainTime.from({ hour: hours, minute: minutes })
-    
+    const parts = timeStr.split(':')
+    const hours = Number(parts[0])
+    const minutes = Number(parts[1])
+
     // Create a ZonedDateTime for today in UTC with this time
     const todayUtc = Temporal.Now.zonedDateTimeISO('UTC')
     const utcZoned = todayUtc.with({
-      hour: utcTime.hour,
-      minute: utcTime.minute,
+      hour: hours,
+      minute: minutes,
       second: 0,
       millisecond: 0,
       microsecond: 0,
