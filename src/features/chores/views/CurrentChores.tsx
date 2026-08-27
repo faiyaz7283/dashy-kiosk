@@ -1,20 +1,17 @@
 /**
- * Current Chores view — management interface for active and inactive master chores.
+ * CurrentChores — management view for active and inactive master chores.
  *
  * Displays a grid of master chore cards with:
  * - Active and Inactive (paused) masters only (no archived)
- * - Checkbox selection for bulk actions
+ * - Checkbox selection for bulk actions (controlled from parent)
  * - Card actions: Edit, Pause/Resume, Archive
  * - No internal header (app shell header provides controls)
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { ContentCard } from '@/shared/components/ContentCard'
 import { MasterChoreCard } from '../components/MasterChoreCard'
-import type {
-  ChoresData,
-  MasterChore,
-} from '@/types/chores'
+import type { ChoresData, MasterChore } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
 
 /** Props for the CurrentChores component. */
@@ -27,6 +24,10 @@ export interface CurrentChoresProps {
   isLoading: boolean
   /** Error message, if any. */
   error: string | null
+  /** IDs of selected master chores. */
+  selectedIds: Set<string>
+  /** Callback when a master chore selection is toggled. */
+  onToggleSelect: (masterId: string) => void
   /** Callback when Edit is clicked. */
   onEditMaster: (master: MasterChore) => void
   /** Callback when Pause/Resume is clicked. */
@@ -45,31 +46,18 @@ export function CurrentChores({
   data,
   isLoading,
   error,
+  selectedIds,
+  onToggleSelect,
   onEditMaster,
   onToggleStatus,
   onArchive,
 }: CurrentChoresProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-
-  // Filter to active + inactive masters only
   const currentMasters = useMemo(() => {
     if (!data) return []
     return data.master_chores.filter(
       (m) => m.status === 'active' || m.status === 'inactive',
     )
   }, [data])
-
-  const handleToggleSelect = (masterId: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(masterId)) {
-        next.delete(masterId)
-      } else {
-        next.add(masterId)
-      }
-      return next
-    })
-  }
 
   if (isLoading) {
     return (
@@ -115,7 +103,7 @@ export function CurrentChores({
                   associations={data.associations}
                   isSelected={selectedIds.has(master.id)}
                   actionVariant="current"
-                  onToggleSelect={handleToggleSelect}
+                  onToggleSelect={onToggleSelect}
                   onEdit={onEditMaster}
                   onToggleStatus={onToggleStatus}
                   onArchive={onArchive}

@@ -13,7 +13,7 @@
  * - Content: fills entire viewport, shell elements overlay on top
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useUiScale } from '@/shared/hooks/useUiScale'
 import { useAutoHide } from '@/shared/hooks/useAutoHide'
 import { useSidebarState } from '@/shared/hooks/useSidebarState'
@@ -22,41 +22,40 @@ import { useViewNavigation } from '@/shared/hooks/useViewNavigation'
 import { useFamilyData } from '@/shared/hooks/useFamilyData'
 import { useWeatherData } from '@/features/weather/hooks/useWeatherData'
 import { useChoresData } from '@/features/chores/hooks/useChoresData'
+import { useChoreActions } from '@/features/chores/hooks/useChoreActions'
 import { CalendarDataProvider, useCalendarContext } from '@/features/calendar/context'
 import { Header } from './Header'
 import { Sidebar, type Feature } from './Sidebar'
 import { StatusBar } from './StatusBar'
+import type { ChoresViewMode } from './HeaderChores'
 import { DayView } from '@/features/calendar/views/DayView'
 import { WeekView } from '@/features/calendar/views/WeekView'
 import { MonthView } from '@/features/calendar/views/MonthView'
 import { YearView } from '@/features/calendar/views/YearView'
 import { ChoresView } from '@/features/chores/views/ChoresView'
-import type { ChoreInstance, CalendarView } from '@/types'
-import type { CreateEntryPoint } from '@/features/chores/components/ChoreCreateModal'
+import type { CalendarView } from '@/types'
+import type { MasterChore } from '@/types/chores'
+import type { FamilyMember } from '@/types/family'
 
 /**
  * Root application layout component.
  *
  * Applies UI scaling, manages shell state (auto-hide, sidebar, theme, view),
  * and renders the interactive shell with Header, Sidebar, and StatusBar.
- * The content area displays a placeholder until Phase 2+ integrates feature views.
  *
  * @returns The full-viewport application shell with interactive navigation.
  */
 export default function AppShell() {
-  // UI scaling
   useUiScale()
 
-  // Shell state
   const [activeFeature, setActiveFeature] = useState<Feature>('calendar')
   const { isExpanded: isSidebarExpanded, toggle: toggleSidebar } = useSidebarState()
-  const { mode: themeMode, cycleMode: cycleTheme } = useTheme()
+  const { mode: themeMode, cycleMode } = useTheme()
   const { currentView, setCurrentView, currentDate, navigatePrevious, navigateNext, navigateToday } = useViewNavigation()
 
-  // Data hooks (must come after currentView/currentDate are declared)
   const { members } = useFamilyData()
   const { lastRefresh: weatherLastRefresh } = useWeatherData()
-  const { data: choresData } = useChoresData()
+  const { data: choresData, isLoading: choresLoading, refetch: refetchChores } = useChoresData()
 
   return (
     <CalendarDataProvider currentView={currentView} currentDate={currentDate}>
@@ -66,7 +65,7 @@ export default function AppShell() {
         isSidebarExpanded={isSidebarExpanded}
         toggleSidebar={toggleSidebar}
         themeMode={themeMode}
-        cycleTheme={cycleTheme}
+        cycleMode={cycleMode}
         currentView={currentView}
         setCurrentView={setCurrentView}
         currentDate={currentDate}
@@ -76,6 +75,8 @@ export default function AppShell() {
         members={members}
         weatherLastRefresh={weatherLastRefresh}
         choresData={choresData}
+        choresLoading={choresLoading}
+        refetchChores={refetchChores}
       />
     </CalendarDataProvider>
   )
@@ -92,16 +93,18 @@ interface AppShellContentProps {
   isSidebarExpanded: boolean
   toggleSidebar: () => void
   themeMode: ThemeMode
-  cycleTheme: () => void
+  cycleMode: () => void
   currentView: CalendarView
   setCurrentView: (view: CalendarView) => void
   currentDate: Temporal.PlainDate
   navigatePrevious: () => void
   navigateNext: () => void
   navigateToday: () => void
-  members: any[]
+  members: FamilyMember[]
   weatherLastRefresh: number | null
-  choresData: any
+  choresData: ReturnType<typeof useChoresData>['data']
+  choresLoading: boolean
+  refetchChores: () => void
 }
 
 function AppShellContent({
@@ -110,7 +113,7 @@ function AppShellContent({
   isSidebarExpanded,
   toggleSidebar,
   themeMode,
-  cycleTheme,
+  cycleMode,
   currentView,
   setCurrentView,
   currentDate,
@@ -120,14 +123,17 @@ function AppShellContent({
   members,
   weatherLastRefresh,
   choresData,
+  choresLoading,
+  refetchChores,
 }: AppShellContentProps) {
-  // Calendar data from context
   const { events, lastRefresh: calendarLastRefresh, refetch: refetchCalendar } = useCalendarContext()
+  const choreActions = useChoreActions(refetchChores)
 
-  // Chores modal state
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [createEntryPoint, setCreateEntryPoint] = useState<CreateEntryPoint>({ type: 'sidebar' })
-  const [editingInstance, setEditingInstance] = useState<ChoreInstance | null>(null)
+  // Chores view state
+  const [choresViewMode, setChoresViewMode] = useState<ChoresViewMode>('board')
+  const [selectedMasterIds, setSelectedMasterIds] = useState<Set<string>>(new Set())
+  const [showMasterModal, setShowMasterModal] = useState(false)
+  const [editingMaster, setEditingMaster] = useState<MasterChore | null>(null)
 
   // Auto-hide behavior
   const { isVisible: isHeaderVisible, elementRef: headerRef } = useAutoHide({ edge: 'top' })
@@ -139,19 +145,130 @@ function AppShellContent({
     setActiveFeature(feature)
   }, [setActiveFeature])
 
-  // Chores modal handlers
+  // Sidebar add chore → switch to chores + manage-current view
   const handleSidebarAddChore = useCallback(() => {
-    setCreateEntryPoint({ type: 'sidebar' })
-    setShowCreateModal(true)
+    setActiveFeature('chores')
+    setChoresViewMode('manage-current')
+  }, [setActiveFeature])
+
+  // Chores selection
+  const handleToggleSelect = useCallback((masterId: string) => {
+    setSelectedMasterIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(masterId)) {
+        next.delete(masterId)
+      } else {
+        next.add(masterId)
+      }
+      return next
+    })
   }, [])
 
-  const handleCloseCreateModal = useCallback(() => {
-    setShowCreateModal(false)
+  // Compute selectable IDs for the current view
+  const selectableIds = useMemo(() => {
+    if (!choresData) return []
+    if (choresViewMode === 'manage-current') {
+      return choresData.master_chores
+        .filter((m) => m.status === 'active' || m.status === 'inactive')
+        .map((m) => m.id)
+    }
+    if (choresViewMode === 'manage-archived') {
+      return choresData.master_chores
+        .filter((m) => m.status === 'archived')
+        .map((m) => m.id)
+    }
+    return []
+  }, [choresData, choresViewMode])
+
+  const handleSelectAll = useCallback(() => {
+    const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedMasterIds.has(id))
+    if (allSelected) {
+      setSelectedMasterIds(new Set())
+    } else {
+      setSelectedMasterIds(new Set(selectableIds))
+    }
+  }, [selectableIds, selectedMasterIds])
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedMasterIds(new Set())
   }, [])
 
-  const handleCloseEditModal = useCallback(() => {
-    setEditingInstance(null)
+  // Clear selection when view mode changes
+  const handleViewChange = useCallback((mode: ChoresViewMode) => {
+    setChoresViewMode(mode)
+    setSelectedMasterIds(new Set())
   }, [])
+
+  // Bulk actions
+  const selectedIdsArray = useMemo(() => Array.from(selectedMasterIds), [selectedMasterIds])
+
+  const handlePauseSelected = useCallback(async () => {
+    if (selectedIdsArray.length === 0) return
+    await choreActions.bulkUpdateMasterStatus(selectedIdsArray, 'inactive')
+    handleClearSelection()
+  }, [selectedIdsArray, choreActions, handleClearSelection])
+
+  const handleArchiveSelected = useCallback(async () => {
+    if (selectedIdsArray.length === 0) return
+    await choreActions.bulkUpdateMasterStatus(selectedIdsArray, 'archived')
+    handleClearSelection()
+  }, [selectedIdsArray, choreActions, handleClearSelection])
+
+  const handleRestoreSelected = useCallback(async () => {
+    if (selectedIdsArray.length === 0) return
+    await choreActions.bulkUpdateMasterStatus(selectedIdsArray, 'active')
+    handleClearSelection()
+  }, [selectedIdsArray, choreActions, handleClearSelection])
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedIdsArray.length === 0) return
+    await Promise.all(selectedIdsArray.map((id) => choreActions.deleteMaster(id)))
+    handleClearSelection()
+  }, [selectedIdsArray, choreActions, handleClearSelection])
+
+  // Master chore modal
+  const handleCreateMaster = useCallback(() => {
+    setEditingMaster(null)
+    setShowMasterModal(true)
+  }, [])
+
+  const handleEditMaster = useCallback((master: MasterChore) => {
+    setEditingMaster(master)
+    setShowMasterModal(true)
+  }, [])
+
+  const handleCloseMasterModal = useCallback(() => {
+    setShowMasterModal(false)
+    setEditingMaster(null)
+  }, [])
+
+  const handleMasterSuccess = useCallback(() => {
+    setShowMasterModal(false)
+    setEditingMaster(null)
+  }, [])
+
+  // Per-card actions (for manage views)
+  const handleToggleStatus = useCallback(
+    async (master: MasterChore) => {
+      const newStatus = master.status === 'active' ? 'inactive' : 'active'
+      await choreActions.bulkUpdateMasterStatus([master.id], newStatus)
+    },
+    [choreActions],
+  )
+
+  const handleArchive = useCallback(
+    async (master: MasterChore) => {
+      await choreActions.bulkUpdateMasterStatus([master.id], 'archived')
+    },
+    [choreActions],
+  )
+
+  const handleRestore = useCallback(
+    async (master: MasterChore) => {
+      await choreActions.bulkUpdateMasterStatus([master.id], 'active')
+    },
+    [choreActions],
+  )
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-bg font-sans text-text-primary">
@@ -169,7 +286,15 @@ function AppShellContent({
           onToday={navigateToday}
           members={members}
           events={events}
-          choresData={choresData}
+          choresViewMode={choresViewMode}
+          onChoresViewChange={handleViewChange}
+          selectedMasterCount={selectedMasterIds.size}
+          onSelectAll={handleSelectAll}
+          onPauseSelected={handlePauseSelected}
+          onArchiveSelected={handleArchiveSelected}
+          onRestoreSelected={handleRestoreSelected}
+          onDeleteSelected={handleDeleteSelected}
+          onCreateMaster={handleCreateMaster}
         />
       </div>
 
@@ -204,7 +329,7 @@ function AppShellContent({
         <StatusBar
           activeFeature={activeFeature}
           themeMode={themeMode}
-          onThemeCycle={cycleTheme}
+          onThemeCycle={cycleMode}
           calendarLastRefresh={calendarLastRefresh}
           weatherLastRefresh={weatherLastRefresh}
         />
@@ -231,11 +356,20 @@ function AppShellContent({
         {activeFeature === 'chores' && (
           <ChoresView
             members={members}
-            showCreateModal={showCreateModal}
-            createEntryPoint={createEntryPoint}
-            editingInstance={editingInstance}
-            onCloseCreateModal={handleCloseCreateModal}
-            onCloseEditModal={handleCloseEditModal}
+            viewMode={choresViewMode}
+            data={choresData}
+            isLoading={choresLoading}
+            error={null}
+            selectedIds={selectedMasterIds}
+            onToggleSelect={handleToggleSelect}
+            onEditMaster={handleEditMaster}
+            onToggleStatus={handleToggleStatus}
+            onArchive={handleArchive}
+            onRestore={handleRestore}
+            showMasterModal={showMasterModal}
+            editingMaster={editingMaster}
+            onCloseMasterModal={handleCloseMasterModal}
+            onMasterSuccess={handleMasterSuccess}
           />
         )}
       </main>

@@ -1,20 +1,17 @@
 /**
- * Archived Chores view — management interface for archived master chores.
+ * ArchivedChores — management view for archived master chores.
  *
  * Displays a grid of archived master chore cards with:
  * - Archived masters only (no active or inactive)
- * - Checkbox selection for bulk actions
+ * - Checkbox selection for bulk actions (controlled from parent)
  * - Card actions: Edit, Restore (no Archive or Pause/Resume)
  * - No internal header (app shell header provides controls)
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { ContentCard } from '@/shared/components/ContentCard'
 import { MasterChoreCard } from '../components/MasterChoreCard'
-import type {
-  ChoresData,
-  MasterChore,
-} from '@/types/chores'
+import type { ChoresData, MasterChore } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
 
 /** Props for the ArchivedChores component. */
@@ -27,6 +24,10 @@ export interface ArchivedChoresProps {
   isLoading: boolean
   /** Error message, if any. */
   error: string | null
+  /** IDs of selected master chores. */
+  selectedIds: Set<string>
+  /** Callback when a master chore selection is toggled. */
+  onToggleSelect: (masterId: string) => void
   /** Callback when Edit is clicked. */
   onEditMaster: (master: MasterChore) => void
   /** Callback when Restore is clicked. */
@@ -43,28 +44,15 @@ export function ArchivedChores({
   data,
   isLoading,
   error,
+  selectedIds,
+  onToggleSelect,
   onEditMaster,
   onRestore,
 }: ArchivedChoresProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-
-  // Filter to archived masters only
   const archivedMasters = useMemo(() => {
     if (!data) return []
     return data.master_chores.filter((m) => m.status === 'archived')
   }, [data])
-
-  const handleToggleSelect = (masterId: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(masterId)) {
-        next.delete(masterId)
-      } else {
-        next.add(masterId)
-      }
-      return next
-    })
-  }
 
   if (isLoading) {
     return (
@@ -110,7 +98,7 @@ export function ArchivedChores({
                   associations={data.associations}
                   isSelected={selectedIds.has(master.id)}
                   actionVariant="archived"
-                  onToggleSelect={handleToggleSelect}
+                  onToggleSelect={onToggleSelect}
                   onEdit={onEditMaster}
                   onRestore={onRestore}
                 />

@@ -67,7 +67,15 @@ describe('Header', () => {
       { key: 'trisha', name: 'Trisha', initial: 'T', color_key: 'pink', calendar_id: 'cal2', email: 'trisha@test.com', color: 'pink', date_of_birth: '1992-01-01', relation: 'mother' },
     ],
     events: [],
-    choresData: null,
+    choresViewMode: 'board' as const,
+    onChoresViewChange: vi.fn(),
+    selectedMasterCount: 0,
+    onSelectAll: vi.fn(),
+    onPauseSelected: vi.fn(),
+    onArchiveSelected: vi.fn(),
+    onRestoreSelected: vi.fn(),
+    onDeleteSelected: vi.fn(),
+    onCreateMaster: vi.fn(),
   }
 
   it('renders date', () => {

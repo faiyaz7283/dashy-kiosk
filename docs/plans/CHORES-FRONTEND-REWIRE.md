@@ -688,8 +688,8 @@ _All mockups approved. No pending items._
 - [x] `make typecheck-kiosk` passed
 - [x] `make test-kiosk` passed (371 tests, 37 files)
 - [x] `make build-kiosk` passed
-- [ ] Git commit: `feat(chores): add instance interaction popup`
-- [ ] Git push to `development`
+- [x] Git commit: `feat(chores): add instance interaction popup` (`f1e4cf1`)
+- [x] Git push to `development`
 
 **Summary:**
 - `InstanceInteraction` popup shows instance details with status-specific actions: Active→Start, In Progress→Complete, Overdue→Complete Now, Missed→disabled, Open Pool→Claim
@@ -707,7 +707,7 @@ _All mockups approved. No pending items._
 
 ### 3.7 Header + Shell Wiring (`mockups/header-chores.html`)
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** `mockups/header-chores.html` (approved)
 
 **Scope:**
@@ -727,22 +727,37 @@ _All mockups approved. No pending items._
 - Update tests
 
 **Files:**
+- `src/features/shell/HeaderLeft.tsx` — new (extracted shared date+clock+weather)
 - `src/features/shell/HeaderChores.tsx` — new
 - `src/features/shell/HeaderChores.test.tsx` — new
 - `src/features/shell/AppShell.tsx` — update
-- `src/features/shell/Sidebar.tsx` — update
 - `src/features/shell/Header.tsx` — update
+- `src/features/shell/Header.test.tsx` — update
 - `src/features/chores/views/ChoresView.tsx` — rewrite
-- `src/features/chores/views/ChoresView.test.tsx` — update
+- `src/features/chores/views/CurrentChores.tsx` — update (selection props)
+- `src/features/chores/views/CurrentChores.test.tsx` — update
+- `src/features/chores/views/ArchivedChores.tsx` — update (selection props)
+- `src/features/chores/views/ArchivedChores.test.tsx` — update
 
 **Verification:**
-- [ ] `/code-review-gate` passed (MUST run before commit)
-- [ ] `make lint-kiosk` passed
-- [ ] `make typecheck-kiosk` passed
-- [ ] `make test-kiosk` passed
-- [ ] `make build-kiosk` passed
+- [x] `/code-review-gate` passed (MUST run before commit)
+- [x] `make lint-kiosk` passed
+- [x] `make typecheck-kiosk` passed
+- [x] `make test-kiosk` passed (394 tests, 38 files)
+- [x] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add chores header and wire shell navigation`
 - [ ] Git push to `development`
+
+**Summary:**
+- `HeaderLeft.tsx` — extracted shared left section (date, clock, weather) from Header, used by both calendar and chores features
+- `HeaderChores.tsx` — view toggle (Board/Manage Current/Manage Archived) with context-aware bulk actions, Select All, and Create Master button
+- Bulk action buttons disabled when no selection (opacity-40), enabled when items selected
+- `Header.tsx` — refactored to use HeaderLeft + conditional center/right sections (calendar: family pills + view switcher; chores: empty center + HeaderChores)
+- `AppShell.tsx` — owns chores view state (viewMode, selectedIds, showMasterModal, editingMaster), useChoreActions for bulk operations, per-card actions, and modal management; sidebar `+` switches to chores + manage-current view
+- `ChoresView.tsx` — simplified to view router (board/current/archived) + MasterChoreModal rendering; all state and actions received as props from AppShell
+- `CurrentChores`/`ArchivedChores` — selection state lifted to parent (selectedIds + onToggleSelect props)
+- 23 new tests for HeaderChores (view toggle, bulk actions per view, disabled states, Create Master visibility)
+- Code review: no violations. exactOptionalPropertyTypes handled via spread conditional for MasterChoreModal master prop.
 
 ---
 

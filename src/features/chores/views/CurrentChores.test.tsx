@@ -100,6 +100,8 @@ const defaultProps = {
   data: mockData as ChoresData | null,
   isLoading: false,
   error: null as string | null,
+  selectedIds: new Set<string>(),
+  onToggleSelect: vi.fn(),
   onEditMaster: vi.fn(),
   onToggleStatus: vi.fn(),
   onArchive: vi.fn(),
