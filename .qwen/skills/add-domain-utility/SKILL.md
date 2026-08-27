@@ -37,6 +37,8 @@ src/domain/<domainName>/
 - `@/shared/utils/density` — `getRelativeDensity`, `getAbsoluteDensity`, `getEventCountsByDay`, etc.
 - `@/shared/utils/memberColors` — `getMemberColorPalette`, `MemberColorPalette`
 
+**See [Date/Time Guide](../../docs/guides/datetime.md)** for UTC wire format, timezone conversion patterns, and Temporal API usage rules.
+
 ## Steps
 
 ### 1. Determine scope — existing domain or new domain

@@ -7,6 +7,7 @@ It contains **hard behavior rules**, not project background. For project knowled
 - [Styling Guide](docs/guides/styling.md) — Tailwind rules, hardcoded values, common patterns
 - [Error Handling Guide](docs/guides/error-handling.md) — ApiError, useQuery errors, Error Boundary, mutation handling
 - [Workflow Guide](docs/guides/workflow.md) — Pre-implementation checklist, self-review, code review gate
+- [Date/Time Guide](docs/guides/datetime.md) — UTC wire format, timezone conversion, Temporal API, parse utilities
 
 ## 0. NO OLD CODE RULE (NON-NEGOTIABLE)
 
@@ -291,3 +292,38 @@ const handleSave = async (data) => {
 ## 13. When in doubt
 
 If you are about to run a command and are unsure whether it violates the pnpm-only rule or the no-old-code rule, stop and ask the user. It is better to confirm than to introduce the wrong pattern.
+
+## 14. Date/Time Handling (NON-NEGOTIABLE)
+
+All date/time handling follows the project-wide datetime standardization.
+
+### Rules
+
+1. **UTC wire format** — all API responses use UTC with timezone indicators (ISO 8601)
+2. **Temporal API only** — never use `new Date()`, `Date.now()`, or date strings (except in `src/shared/date/timezone.ts` for `Intl.DateTimeFormat`)
+3. **Parse at the boundary** — convert API responses to Temporal types in hooks/context, not in components
+4. **Components receive Temporal types** — components never parse ISO strings themselves
+5. **Always convert UTC → timezone** — use `useConfig()` hook to get configured timezone, never hardcode
+6. **Utilities in `src/shared/date/`** — all date/time utilities live here (not `src/shared/utils/`)
+
+### Quick Reference
+
+```typescript
+// Get configured timezone
+const { timezone } = useConfig()
+
+// Parse API responses
+import { parseCalendarEvent, parseWeatherTime } from '@/shared/date/parse'
+const event = parseCalendarEvent(rawEvent, timezone)
+const time = parseWeatherTime(utcTime, timezone)
+
+// Convert UTC → local
+import { convertUtcToTimezone, formatUtcTime } from '@/shared/date/timezone'
+const local = convertUtcToTimezone(utcIso, timezone)
+const formatted = formatUtcTime(utcIso, timezone)
+
+// Format Temporal types
+import { formatTime, formatDate } from '@/shared/date/format'
+```
+
+See [Date/Time Guide](docs/guides/datetime.md) for detailed patterns, examples, and domain-specific guidance (calendar, weather, chores).

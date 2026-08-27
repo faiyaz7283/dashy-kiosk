@@ -49,6 +49,8 @@ src/shared/
 
 **Note:** Date/time utilities live in `src/shared/date/` (not `src/shared/utils/`) and use the Temporal API. See the "When NOT to use" section for guidance on when to add to `shared/date/` vs `shared/utils/`.
 
+**See [Date/Time Guide](../../docs/guides/datetime.md)** for UTC wire format, timezone conversion patterns, and when to use which parse utility.
+
 ## Conventions
 
 - **camelCase filename** (e.g., `density.ts`, not `density-calculations.ts`)
