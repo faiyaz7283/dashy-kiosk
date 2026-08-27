@@ -861,6 +861,20 @@ All 8 sub-phases complete. The chores frontend is fully rewired to the new assoc
 - `src/features/shell/AppShell.tsx` — passed refetchChores to ChoresView
 **Verification:** ✅ lint, typecheck, test, build all pass
 
+#### Bug #2: Category Combobox Dropdown Too Large ✅ FIXED
+**Found:** 2026-08-27 during manual testing
+**Symptom:** When many categories exist, the dropdown expands beyond viewport without scrolling
+**Root Cause:** `Combobox.Options` had `overflow-hidden` which prevented scrolling
+**Fix:**
+- Changed `overflow-hidden` to `max-h-60 overflow-y-auto`
+- Limits visible options to ~6-8 items (240px max height)
+- Clean scrollbar appearance without layout shift
+- Follows HeadlessUI/Catalyst patterns for dropdown scrolling
+**Files Changed:**
+- `src/shared/components/Combobox.tsx` — added max-height and overflow-y-auto
+- `src/features/chores/components/MasterChoreModal.test.tsx` — added refetch to defaultProps
+**Verification:** ✅ lint, typecheck, test, build all pass
+
 ---
 
 ### Testing Checklist

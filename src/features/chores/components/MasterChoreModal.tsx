@@ -478,10 +478,40 @@ export function MasterChoreModal({
                   </div>
                 </div>
               )}
+
+              {/* End conditions (recurring only) */}
+              {showRecurrenceSection && (
+                <div className="grid grid-cols-2 gap-4 border-t border-border-light pt-4">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                      End Date <span className="font-normal text-text-faint">(optional)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={form.endDate}
+                      onChange={(e) => updateField('endDate', e.target.value)}
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                      Max Occurrences <span className="font-normal text-text-faint">(optional)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.maxOccurrences}
+                      onChange={(e) => updateField('maxOccurrences', e.target.value)}
+                      placeholder="No limit"
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary placeholder-text-faint focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Estimated Minutes + Due Time + Due Date row */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Estimated Minutes + Due Time + Due Date (one-time only) */}
+            <div className={form.frequency === 'once' ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-2 gap-4'}>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-text-secondary">
                   Estimated Minutes
@@ -505,17 +535,19 @@ export function MasterChoreModal({
                   className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                  Due Date <span className="font-normal text-text-faint">(optional)</span>
-                </label>
-                <input
-                  type="date"
-                  value={form.dueDate}
-                  onChange={(e) => updateField('dueDate', e.target.value)}
-                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+              {form.frequency === 'once' && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-text-secondary">
+                    Due Date <span className="font-normal text-text-faint">(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={form.dueDate}
+                    onChange={(e) => updateField('dueDate', e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Expiration behavior */}
@@ -538,34 +570,6 @@ export function MasterChoreModal({
               <p className="mt-1 text-xs text-text-faint">
                 What happens to an instance that passes its due date without being completed.
               </p>
-            </div>
-
-            {/* End conditions row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                  End Date <span className="font-normal text-text-faint">(optional)</span>
-                </label>
-                <input
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => updateField('endDate', e.target.value)}
-                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-                  Max Occurrences <span className="font-normal text-text-faint">(optional)</span>
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.maxOccurrences}
-                  onChange={(e) => updateField('maxOccurrences', e.target.value)}
-                  placeholder="No limit"
-                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary placeholder-text-faint focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
             </div>
 
             {/* Collaborative toggle */}
