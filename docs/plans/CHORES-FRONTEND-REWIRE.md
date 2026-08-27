@@ -540,7 +540,7 @@ _All mockups approved. No pending items._
 
 ### 3.3 Current Chores View (`mockups/current-chores.html`)
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** `mockups/current-chores.html` (approved)
 
 **Scope:**
@@ -554,12 +554,32 @@ _All mockups approved. No pending items._
 - `src/features/chores/views/CurrentChores.tsx` — new
 - `src/features/chores/views/CurrentChores.test.tsx` — new
 - `src/features/chores/components/MasterChoreCard.tsx` — new (shared card for current/archived)
+- `src/features/chores/components/MasterChoreCard.test.tsx` — new
 
 **Verification:**
-- [ ] Quality gates pass
-- [ ] Code review completed
+- [x] Quality gates pass (lint, typecheck, test, build)
+- [x] Code review completed
 - [ ] Git commit: `feat(chores): add current chores view`
 - [ ] Git push to `development`
+
+**Phase 3.3 completion summary:**
+
+**What was built:**
+- MasterChoreCard component with checkbox, status badge, labeled rows, difficulty dots, stats, action buttons
+- CurrentChores view with responsive grid (1/2/3 columns), filters to active+inactive only
+- Support for both "current" and "archived" action variants (Pause/Resume vs Restore)
+- 29 new tests (21 for MasterChoreCard, 8 for CurrentChores)
+
+**Tech stack usage:**
+- React hooks: useMemo, useState
+- Tailwind: design tokens, dark mode, responsive grid (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+- Shared utilities: formatRecurrence, formatDifficulty, DifficultyDots component
+- Type-safe action variants for different view modes
+
+**Code review findings addressed:**
+- Extracted MasterChoreCard as shared component (reused in Phase 3.4 Archived Chores)
+- Used static class maps for status badges (no dynamic Tailwind classes)
+- Proper type handling for optional callbacks (onArchive, onRestore)
 
 ---
 
