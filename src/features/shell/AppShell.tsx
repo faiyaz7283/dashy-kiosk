@@ -370,6 +370,7 @@ function AppShellContent({
             editingMaster={editingMaster}
             onCloseMasterModal={handleCloseMasterModal}
             onMasterSuccess={handleMasterSuccess}
+            refetch={refetchChores}
           />
         )}
       </main>

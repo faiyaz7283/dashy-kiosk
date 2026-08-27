@@ -120,6 +120,8 @@ export interface MasterChoreModalProps {
   onClose: () => void
   /** Callback after successful create/update. */
   onSuccess: () => void
+  /** Callback to refetch chores data (for inline category/tag creation). */
+  refetch: () => void
 }
 
 /**
@@ -136,6 +138,7 @@ export function MasterChoreModal({
   members,
   onClose,
   onSuccess,
+  refetch,
 }: MasterChoreModalProps) {
   const [form, setForm] = useState<FormState>(() => {
     if (mode === 'edit' && master) {
@@ -145,7 +148,7 @@ export function MasterChoreModal({
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const actions = useChoreActions(onSuccess)
+  const actions = useChoreActions(refetch)
 
   // Sync form when master changes (edit mode)
   useEffect(() => {
@@ -196,6 +199,7 @@ export function MasterChoreModal({
           created_by: createdBy,
         }
         await actions.createMaster(request)
+        onSuccess()
       } else if (master) {
         const request: UpdateMasterChoreRequest = {
           name: form.name.trim(),
@@ -212,6 +216,7 @@ export function MasterChoreModal({
           is_collaborative: form.isCollaborative,
         }
         await actions.updateMaster(master.id, request)
+        onSuccess()
       }
     } catch {
       // Error is logged by useChoreActions — re-enable form
@@ -266,6 +271,10 @@ export function MasterChoreModal({
                 options={categoryOptions}
                 value={form.categoryId}
                 onChange={(id) => updateField('categoryId', id)}
+                onCreate={async (name) => {
+                  const category = await actions.createCategory(name)
+                  updateField('categoryId', category.id)
+                }}
                 placeholder="Select category..."
               />
               <TagInput
@@ -273,6 +282,10 @@ export function MasterChoreModal({
                 availableTags={tagItems}
                 value={form.tagIds}
                 onChange={(ids) => updateField('tagIds', ids)}
+                onCreate={async (name) => {
+                  const tag = await actions.createTag(name)
+                  updateField('tagIds', [...form.tagIds, tag.id])
+                }}
                 placeholder="Add tag..."
               />
             </div>

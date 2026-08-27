@@ -829,62 +829,100 @@ All 8 sub-phases complete. The chores frontend is fully rewired to the new assoc
 
 ## Phase 4: Final Quality Gates & Verification
 
-**Status:** ⬜ Not Started
-**Goal:** End-to-end verification with real data.
+### Phase 4: Manual Testing & Bug Fixes
 
-### 4.1 Quality Gates
+**Status:** 🔄 In Progress
+**Goal:** Visual inspection, manual testing, and iterative bug fixing until all features work correctly.
 
-**Status:** ⬜ Not Started
+**Process:**
+1. Test features manually in dev environment
+2. Document bugs found in the Bugs section below
+3. Fix bugs one by one
+4. Each fix must pass quality gates (lint, typecheck, test, build)
+5. Commit and push fixes
+6. Repeat until all features verified working
+
+### Bugs Found & Fixed
+
+#### Bug #1: Category and Tag Inline Creation Not Working ✅ FIXED
+**Found:** 2026-08-27 during manual testing
+**Symptom:** Typing a new category name in the MasterChoreModal combobox did nothing. No "+ Create" option appeared.
+**Root Cause:** 
+- `MasterChoreModal` never passed `onCreate` prop to `Combobox` or `TagInput`
+- `useChoreActions(onSuccess)` was wrong — `onSuccess` closes the modal, but actions need `refetch` to update dropdown data
+**Fix:**
+- Added `refetch` prop to `MasterChoreModalProps`
+- Changed `useChoreActions(onSuccess)` → `useChoreActions(refetch)`
+- Added `onCreate` handlers to Combobox and TagInput that call `actions.createCategory()` / `actions.createTag()` and auto-select the new item
+- Threaded `refetch` through: AppShell → ChoresView → MasterChoreModal
+**Files Changed:**
+- `src/features/chores/components/MasterChoreModal.tsx` — added refetch prop, wired onCreate handlers
+- `src/features/chores/views/ChoresView.tsx` — added refetch prop, passed to modal
+- `src/features/shell/AppShell.tsx` — passed refetchChores to ChoresView
+**Verification:** ✅ lint, typecheck, test, build all pass
+
+---
+
+### Testing Checklist
+
+#### MasterChoreModal
+- [ ] Create mode: all form fields work
+- [ ] Edit mode: pre-populated from existing master
+- [ ] Category dropdown: shows existing categories
+- [ ] Category inline create: type new name → "+ Create" appears → creates and auto-selects
+- [ ] Tags: can add existing tags
+- [ ] Tags inline create: type new name + Enter → creates and adds to list
+- [ ] Recurrence: conditional fields work (weekly/monthly/yearly)
+- [ ] Submit: creates/updates master chore
+- [ ] Close: modal closes without saving
+
+#### ChoresBoard
+- [ ] Shows columns for each member + open pool
+- [ ] Per-column metrics display correctly
+- [ ] Click `+` on column → association picker opens
+- [ ] Select master chore in picker → creates association, instance appears
+- [ ] Click instance card → InstanceInteraction popup opens
+- [ ] Popup shows correct details (recurrence, period, due time, assignment)
+- [ ] Status-specific actions work (Start, Complete, Complete Now, Claim)
+- [ ] Missed instances show disabled action
+
+#### Manage Current View
+- [ ] Shows grid of active/inactive masters
+- [ ] Checkbox selection enables bulk actions
+- [ ] Select All / Pause Selected / Archive Selected work
+- [ ] Edit button → MasterChoreModal in edit mode
+- [ ] Pause/Resume buttons work
+- [ ] Archive button works
+
+#### Manage Archived View
+- [ ] Shows grid of archived masters only
+- [ ] Checkbox selection enables bulk actions
+- [ ] Restore Selected / Delete Permanently work
+- [ ] Edit and Restore buttons on cards work
+
+#### Header Controls
+- [ ] View toggle switches between Board/Manage Current/Manage Archived
+- [ ] Selection clears when switching views
+- [ ] Create Master button opens modal from any view
+- [ ] Bulk action buttons disabled when no selection
+
+#### Sidebar
+- [ ] `+` button switches to chores + manage-current view
+
+### Quality Gates (After Each Fix)
 
 - [ ] `make lint-kiosk` — oxlint passes
 - [ ] `make typecheck-kiosk` — tsc --noEmit passes
-- [ ] `make test-kiosk` — vitest passes (all existing + new tests)
+- [ ] `make test-kiosk` — vitest passes
 - [ ] `make build-kiosk` — production build succeeds
 
-### 4.2 Manual Verification
+### Final Commit
 
-**Status:** ⬜ Not Started
-
-- [ ] Start dev environment: `make dev-up`
-- [ ] Verify `CHORES_USE_MOCK=false` in `env/.env.dev`
-- [ ] Test full flow:
-  1. Open chores board — should show columns for each member + open pool
-  2. Click `+` on member column — association picker opens
-  3. Select a master chore — creates association, instance appears in column
-  4. Click instance card — instance interaction modal opens
-  5. Click "Start" — status changes to in_progress
-  6. Click "Complete" — status changes to completed, next instance auto-generated
-  7. Click "Manage Current" in header — current chores view opens
-  8. Click "Create Master" — master create modal opens
-  9. Fill form and save — new master appears in current chores view
-  10. Edit master — changes persist
-  11. Pause master — status changes to inactive
-  12. Click "Manage Archived" in header — archived chores view opens
-  13. Select archived master — Restore button restores to current
-  14. Return to board — paused master's instances no longer generate
-
-### 4.3 Code Quality Audit
-
-**Status:** ⬜ Not Started
-
-Before declaring done, audit for:
-- [ ] No hardcoded pixel/color values — all use tokens
-- [ ] No code duplication — shared components/hooks used
-- [ ] No prop drilling — Context API used if 3+ levels
-- [ ] Proper tokenization — shell dimensions, layout values reference CSS custom properties
-- [ ] No inline styles with `var(--dt-*)` — all Tailwind
-- [ ] All public functions/components have JSDoc
-- [ ] All new components have tests
-
-### 4.4 Final Commit
-
-**Status:** ⬜ Not Started
-
-- [ ] Git commit: `feat(chores): complete frontend rewire for association-based architecture`
+- [ ] Git commit: `fix(chores): manual testing bug fixes`
 - [ ] Git push to `development`
 - [ ] Update this document status to ✅ COMPLETE
 
-**Phase 4 completion summary:** _[To be filled after completion]_
+**Phase 4 completion summary:** _[To be filled after all bugs fixed and verified]_
 
 ---
 
