@@ -43,8 +43,8 @@ export interface MasterChoreCardProps {
   onToggleSelect: (masterId: string) => void
   /** Callback when Edit is clicked. */
   onEdit: (master: MasterChore) => void
-  /** Callback when Pause/Resume is clicked. */
-  onToggleStatus: (master: MasterChore) => void
+  /** Callback when Pause/Resume is clicked (only needed for "current" variant). */
+  onToggleStatus?: (master: MasterChore) => void
   /** Callback when Archive is clicked. */
   onArchive?: (master: MasterChore) => void
   /** Callback when Restore is clicked. */
@@ -219,7 +219,7 @@ export function MasterChoreCard({
       <div className="flex items-center gap-2 border-t border-border-light pt-3">
         <ActionButton onClick={() => onEdit(master)}>Edit</ActionButton>
 
-        {actionVariant === 'current' && (
+        {actionVariant === 'current' && onToggleStatus && (
           <ActionButton
             onClick={() => onToggleStatus(master)}
             className={isInactive ? 'text-success hover:bg-success/10' : 'text-warning hover:bg-warning/10'}

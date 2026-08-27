@@ -593,7 +593,7 @@ _All mockups approved. No pending items._
 
 ### 3.4 Archived Chores View (`mockups/archived-chores.html`)
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** `mockups/archived-chores.html` (approved)
 
 **Scope:**
@@ -605,16 +605,22 @@ _All mockups approved. No pending items._
 **Files:**
 - `src/features/chores/views/ArchivedChores.tsx` — new
 - `src/features/chores/views/ArchivedChores.test.tsx` — new
-- `src/features/chores/components/MasterChoreCard.tsx` — extend with action variants
+- `src/features/chores/components/MasterChoreCard.tsx` — made `onToggleStatus` optional
 
 **Verification:**
-- [ ] `/code-review-gate` passed (MUST run before commit)
-- [ ] `make lint-kiosk` passed
-- [ ] `make typecheck-kiosk` passed
-- [ ] `make test-kiosk` passed
-- [ ] `make build-kiosk` passed
+- [x] `/code-review-gate` passed (MUST run before commit)
+- [x] `make lint-kiosk` passed
+- [x] `make typecheck-kiosk` passed
+- [x] `make test-kiosk` passed (320 tests, 35 files)
+- [x] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add archived chores view`
 - [ ] Git push to `development`
+
+**Summary:**
+- `ArchivedChores` view filters to `status === 'archived'` masters, reuses `MasterChoreCard` with `actionVariant="archived"` (Edit + Restore buttons)
+- Made `onToggleStatus` optional in `MasterChoreCard` — only needed for "current" variant, eliminated noop pattern
+- 8 new tests covering: loading/error/null states, archived-only filtering, active/inactive exclusion, empty state
+- Code review: no violations found. Structural duplication with CurrentChores is acceptable (2 views, YAGNI)
 
 ---
 
