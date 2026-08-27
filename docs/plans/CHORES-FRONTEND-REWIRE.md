@@ -429,7 +429,7 @@ _All mockups approved. No pending items._
 
 ### 3.1 Chores Board (`mockups/chores-board.html`)
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** `mockups/chores-board.html` (v4 approved)
 
 **Scope:**
@@ -448,13 +448,41 @@ _All mockups approved. No pending items._
 - `src/features/chores/components/ChoreCard.test.tsx` — update
 
 **Verification:**
-- [ ] `make lint-kiosk` passes
-- [ ] `make typecheck-kiosk` passes
-- [ ] `make test-kiosk` passes
-- [ ] `make build-kiosk` passes
-- [ ] Code review completed
-- [ ] Git commit: `feat(chores): rewrite board and card for association-driven layout`
-- [ ] Git push to `development`
+- [x] `make lint-kiosk` passes
+- [x] `make typecheck-kiosk` passes
+- [x] `make test-kiosk` passes (264/264)
+- [x] `make build-kiosk` passes
+- [x] Code review completed
+- [x] Git commit: `feat(chores): Phase 3.1 — rewrite board and card for association-driven layout` (83710c9)
+- [x] Git push to `development`
+
+**Phase 3.1 completion summary:**
+
+**What was built:**
+- Rewrote `ChoresBoard.tsx` — equal-width columns (`flex-1 min-w-0`), per-column metric cards (Asn/Clm/Prog/Done/Over), member name as colored pill, + button as colored pill circle, Open Pool uses gray pills
+- Rewrote `ChoreCard.tsx` — compact styling (`text-xs` title, `text-[9px]` metadata, `w-1 h-1` dots), action buttons (Start/Complete), status icon badge, due time formatted via `formatUtcTimeOfDay`
+- Added `getColumnMetrics()` helper to `src/shared/utils/chores.ts` for per-column metric calculation
+- Added `paletteBorderOpacityClasses` map to `memberColors.ts` for `/50` opacity borders
+- Updated tests: ChoresBoard (6 tests), ChoreCard (15 tests), chores utils (46 tests including 7 new `getColumnMetrics` tests)
+
+**Tech stack usage:**
+- TypeScript: strict typing for `ColumnMetrics` interface, component props
+- Tailwind CSS: utility classes, dark mode (`dark:` variants), design tokens (`bg-chores-active`, `text-text-muted`)
+- lucide-react: `User`, `Hand`, `Play`, `CheckCircle`, `AlertTriangle`, `Plus`, `Clock`, `Archive`
+- React: `useMemo` for color map and data destructuring
+- Shared hooks: `useConfig` for timezone
+- Shared utils: `getColumnMetrics`, `getStatusLabel`, `isOpenPoolInstance`, `getMemberInstances`, palette utilities
+- vitest: 264 tests passing (11 new/updated)
+
+**Deviations:**
+- None
+
+**Code review signals:**
+- ✅ No hardcoded values — all colors use design tokens
+- ✅ No duplication — `getStatusLabel` imported from shared utils (removed local duplicate)
+- ✅ No prop drilling — max 2 levels (Board → Column, Board → ChoreCard)
+- ✅ Shared components/hooks used — `ContentCard`, `useConfig`, palette utilities
+- ✅ Tailwind only — no inline styles or const styles objects
 
 ---
 
