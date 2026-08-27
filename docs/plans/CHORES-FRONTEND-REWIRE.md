@@ -613,8 +613,8 @@ _All mockups approved. No pending items._
 - [x] `make typecheck-kiosk` passed
 - [x] `make test-kiosk` passed (320 tests, 35 files)
 - [x] `make build-kiosk` passed
-- [ ] Git commit: `feat(chores): add archived chores view`
-- [ ] Git push to `development`
+- [x] Git commit: `feat(chores): add archived chores view` (`9e1314b`)
+- [x] Git push to `development`
 
 **Summary:**
 - `ArchivedChores` view filters to `status === 'archived'` masters, reuses `MasterChoreCard` with `actionVariant="archived"` (Edit + Restore buttons)
@@ -626,7 +626,7 @@ _All mockups approved. No pending items._
 
 ### 3.5 Master Chore Modal (`mockups/master-chore-modal.html`)
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Mockup:** `mockups/master-chore-modal.html` (approved)
 
 **Scope:**
@@ -642,13 +642,24 @@ _All mockups approved. No pending items._
 - `src/features/chores/components/MasterChoreModal.test.tsx` — new
 
 **Verification:**
-- [ ] `/code-review-gate` passed (MUST run before commit)
-- [ ] `make lint-kiosk` passed
-- [ ] `make typecheck-kiosk` passed
-- [ ] `make test-kiosk` passed
-- [ ] `make build-kiosk` passed
+- [x] `/code-review-gate` passed (MUST run before commit)
+- [x] `make lint-kiosk` passed
+- [x] `make typecheck-kiosk` passed
+- [x] `make test-kiosk` passed (345 tests, 36 files)
+- [x] `make build-kiosk` passed
 - [ ] Git commit: `feat(chores): add master chore create/edit modal`
 - [ ] Git push to `development`
+
+**Summary:**
+- `MasterChoreModal` supports create/edit modes with full form: Name, Category (Combobox), Tags (TagInput), Difficulty (slider + dots), Recurrence Pattern (conditional fields per frequency), Est. minutes, Due time/date, Expiration behavior, End date, Max occurrences, Collaborative toggle
+- Conditional recurrence: Weekly → day-of-week buttons, Monthly → day-of-month + nth weekday, Yearly → month + day
+- Uses existing shared components: Combobox, TagInput, DifficultyDots
+- ToggleSwitch built as internal component (boolean toggle for collaborative)
+- `buildRecurrenceRule()` helper constructs RecurrenceRule from form state
+- `formFromMaster()` helper populates form from existing master (edit mode)
+- Conditions section shows "Coming soon" (deferred)
+- 25 new tests covering: create/edit titles, form fields, conditional recurrence, edit mode pre-population
+- Code review: no violations. Unused DifficultySlider import removed. Test type widened for mode override.
 
 ---
 
