@@ -94,10 +94,16 @@ export function ChoresBoard({
   const categories = useMemo(() => data?.categories ?? [], [data])
   const associations = useMemo(() => data?.associations ?? [], [data])
 
+  // Filter out archived instances at the board boundary
+  const visibleInstances = useMemo(
+    () => instances.filter((i) => i.status !== 'archived'),
+    [instances],
+  )
+
   // Get open pool instances (unclaimed and unassigned)
   const openPoolInstances = useMemo(
-    () => instances.filter(isOpenPoolInstance),
-    [instances],
+    () => visibleInstances.filter(isOpenPoolInstance),
+    [visibleInstances],
   )
 
   // Helper to get master chore for an instance
@@ -176,7 +182,7 @@ export function ChoresBoard({
 
           {/* Member columns */}
           {members.map((member) => {
-            const memberInstances = getMemberInstances(instances, member.key)
+            const memberInstances = getMemberInstances(visibleInstances, member.key)
             const paletteKey = getMemberPaletteKey(member.key, colorMap)
 
             return (

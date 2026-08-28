@@ -8,7 +8,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChoresBoard } from './ChoresBoard'
 import type { FamilyMember } from '@/types/family'
-import type { ChoresData } from '@/types/chores'
+import type { ChoresData, MasterChore } from '@/types/chores'
 
 // Mock useConfig to return a fixed timezone
 vi.mock('@/shared/date', async () => {
@@ -172,5 +172,69 @@ describe('ChoresBoard', () => {
       />
     )
     expect(container.firstChild).toBeNull()
+  })
+
+  it('filters out archived instances from board display', () => {
+    const archivedMaster: MasterChore = {
+      id: 'master-archived',
+      name: 'Archived Chore',
+      category: { id: 'cat-1', name: 'Kitchen' },
+      tags: [],
+      difficulty: 3,
+      recurrence_rule: { frequency: 'daily', time: '18:00' },
+      estimated_minutes: 10,
+      due_time: '18:00',
+      due_date: null,
+      expiration_behavior: 'disappear',
+      end_date: null,
+      max_occurrences: null,
+      occurrence_count: 0,
+      conditions: null,
+      is_collaborative: false,
+      created_by: 'faiyaz',
+      status: 'active',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+      deleted_at: null,
+    }
+
+    const dataWithArchived: ChoresData = {
+      ...mockData,
+      master_chores: [...mockData.master_chores, archivedMaster],
+      instances: [
+        ...mockData.instances,
+        {
+          id: 'instance-archived',
+          master_chore_id: 'master-archived',
+          association_id: null,
+          status: 'archived',
+          period_start: '2026-01-15',
+          period_end: '2026-01-16',
+          assigned_to: 'faiyaz',
+          assigned_by: 'trisha',
+          claimed_by: null,
+          completed_by: null,
+          started_at: null,
+          completed_at: null,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        },
+      ],
+    }
+
+    render(
+      <ChoresBoard
+        members={mockMembers}
+        data={dataWithArchived}
+        isLoading={false}
+        isRefreshing={false}
+        error={null}
+      />
+    )
+
+    // Archived instance's master chore should not appear on the board
+    expect(screen.queryByText('Archived Chore')).not.toBeInTheDocument()
+    // Active instances should still appear (2 instances of "Wipe Counter" — one in Faiyaz column, one in Open Pool)
+    expect(screen.getAllByText('Wipe Counter').length).toBe(2)
   })
 })
