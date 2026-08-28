@@ -15,11 +15,13 @@ vi.mock('@/shared/date', async () => {
   return {
     ...actual,
     useConfig: () => ({ timezone: 'America/New_York', isLoading: false, error: null }),
+    formatTime: (time: Temporal.PlainTime) => time.toString(),
   }
 })
 
 vi.mock('@/shared/date/format', () => ({
   formatDateParts: () => 'Monday, Aug 25',
+  formatTime: (time: Temporal.PlainTime) => time.toString(),
 }))
 
 const mockCategories: ChoreCategory[] = [

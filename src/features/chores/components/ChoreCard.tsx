@@ -9,7 +9,7 @@
 import { Clock, AlertTriangle, CheckCircle, Play, Archive } from 'lucide-react'
 import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '@/types/chores'
 import { paletteBorderClasses, getMemberPaletteKey, type PaletteKey } from '@/shared/utils/memberColors'
-import { formatUtcTimeOfDay, useConfig } from '@/shared/date'
+import { formatTime } from '@/shared/date'
 import { getStatusLabel } from '@/shared/utils/chores'
 import { DifficultyDots } from './DifficultyDots'
 
@@ -75,8 +75,6 @@ export function ChoreCard({
   onStart,
   onComplete,
 }: ChoreCardProps) {
-  const { timezone } = useConfig()
-
   // Get category name
   const category = categories.find((c) => c.id === masterChore.category.id)
   const categoryName = category?.name ?? 'Uncategorized'
@@ -102,9 +100,9 @@ export function ChoreCard({
     return 'Unclaimed'
   }
 
-  // Format due time
+  // Format due time (stored as local-time string, no UTC conversion needed)
   const formattedDueTime = masterChore.due_time
-    ? formatUtcTimeOfDay(masterChore.due_time, timezone)
+    ? formatTime(Temporal.PlainTime.from(masterChore.due_time))
     : null
 
   // Determine action button

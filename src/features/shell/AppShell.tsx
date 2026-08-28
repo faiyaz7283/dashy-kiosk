@@ -125,10 +125,10 @@ function AppShellContent({
   weatherLastRefresh,
   choresData,
   choresLoading,
-  refetchChores,
+  refetchChores: _refetchChores,
 }: AppShellContentProps) {
   const { events, lastRefresh: calendarLastRefresh, refetch: refetchCalendar } = useCalendarContext()
-  const choreActions = useChoreActions(refetchChores)
+  const choreActions = useChoreActions()
 
   // Instance action handlers — actor derived from instance context
   const handleStartInstance = useCallback(
@@ -469,7 +469,6 @@ function AppShellContent({
             editingMaster={editingMaster}
             onCloseMasterModal={handleCloseMasterModal}
             onMasterSuccess={handleMasterSuccess}
-            refetch={refetchChores}
           />
         )}
       </main>

@@ -155,9 +155,12 @@ describe('MasterChoreModal', () => {
       expect(screen.getByText('Estimated Duration')).toBeTruthy()
     })
 
-    it('renders Keep visible checkbox', () => {
+    it('renders expiration behavior options', () => {
       renderModal()
-      expect(screen.getByText('Keep missed instances visible')).toBeTruthy()
+      expect(screen.getByText('Disappear')).toBeTruthy()
+      expect(screen.getByText('Stay visible')).toBeTruthy()
+      expect(screen.getByText('Convert to open pool')).toBeTruthy()
+      expect(screen.getByText('Carry over')).toBeTruthy()
     })
 
     it('renders End Date and Max Occurrences inputs', () => {

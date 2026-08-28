@@ -12,7 +12,7 @@ import type {
   RecurrenceRule,
 } from '@/types/chores'
 import { colors } from '@/theme/tokens'
-import { formatUtcTimeOfDay } from '@/shared/date'
+import { formatTime } from '@/shared/date'
 
 /** Day-of-week names indexed by RecurrenceRule convention (0=Monday, 6=Sunday). */
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -194,12 +194,13 @@ function formatWeekOrdinal(week: number): string {
  *   If omitted, the raw UTC time is shown.
  * @returns Human-readable summary (e.g. "Weekly on Monday at 8:00 AM").
  */
-export function formatRecurrence(rule: RecurrenceRule | null, timezone?: string): string {
+export function formatRecurrence(rule: RecurrenceRule | null, _timezone?: string): string {
   if (!rule) return 'No recurrence'
 
-  const timeStr = timezone
-    ? formatUtcTimeOfDay(rule.time, timezone)
-    : rule.time
+  // rule.time is a local-time string (HH:MM), not UTC — no timezone conversion
+  const timeStr = rule.time
+    ? formatTime(Temporal.PlainTime.from(rule.time))
+    : ''
 
   switch (rule.frequency) {
     case 'once':

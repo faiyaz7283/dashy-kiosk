@@ -82,7 +82,7 @@ export function AssociationPickerModal({
   const assignDropdownRef = useRef<HTMLDivElement>(null)
 
   const { timezone } = useConfig()
-  const actions = useChoreActions(onAssociationCreated)
+  const actions = useChoreActions()
   const { addNotification } = useNotifications()
 
   // Close dropdowns on outside click
@@ -143,6 +143,8 @@ export function AssociationPickerModal({
       if (mc.status !== 'active') return false
       // Must not already be associated to target
       if (associatedMasterIds.has(mc.id)) return false
+      // Must not have reached max_occurrences
+      if (mc.max_occurrences !== null && mc.occurrence_count >= mc.max_occurrences) return false
       // Smart filter: hide non-collaborative masters that already have a member association
       if (!mc.is_collaborative) {
         const hasMemberAssociation = associations.some(

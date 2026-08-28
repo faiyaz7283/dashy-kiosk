@@ -31,7 +31,7 @@ import {
 import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
 import { formatRecurrence } from '@/shared/utils/chores'
-import { formatUtcTimeOfDay, formatUtcTime, useConfig } from '@/shared/date'
+import { formatTime, formatUtcTime, useConfig } from '@/shared/date'
 import { formatDateParts } from '@/shared/date/format'
 import {
   paletteBgClasses,
@@ -163,11 +163,11 @@ export function InstanceInteraction({
     return formatDateParts(plainDate, { weekday: 'long', month: 'short', day: 'numeric' })
   }, [instance.period_start])
 
-  // Format due time
+  // Format due time (stored as local-time string, no UTC conversion needed)
   const dueTimeFormatted = useMemo(() => {
     if (!masterChore.due_time) return null
-    return formatUtcTimeOfDay(masterChore.due_time, timezone)
-  }, [masterChore.due_time, timezone])
+    return formatTime(Temporal.PlainTime.from(masterChore.due_time))
+  }, [masterChore.due_time])
 
   // Format started time
   const startedTimeFormatted = useMemo(() => {

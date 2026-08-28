@@ -2,10 +2,11 @@
  * Hook for chore mutation actions.
  *
  * Provides typed wrappers around all chores API mutation functions.
- * Each action triggers a refetch after completion to keep data in sync.
+ * Each action invalidates the chores query cache after completion to keep data in sync.
  */
 
 import { useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   createMasterChore,
   updateMasterChore,
@@ -75,21 +76,26 @@ export interface UseChoreActionsReturn {
 }
 
 /**
- * Provides chore mutation actions with automatic refetch.
+ * Provides chore mutation actions with automatic cache invalidation.
  *
- * @param refetch - Function to trigger a data refetch after mutations.
+ * Uses React Query's invalidateQueries to force a refetch after mutations,
+ * bypassing the staleTime window that would otherwise prevent updates.
+ *
  * @returns All chore mutation actions.
  */
-export function useChoreActions(
-  refetch: () => void,
-): UseChoreActionsReturn {
+export function useChoreActions(): UseChoreActionsReturn {
+  const queryClient = useQueryClient()
   const { showApiError } = useErrorNotifications()
+
+  const invalidateChores = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['chores'] })
+  }, [queryClient])
 
   const createMaster = useCallback(
     async (data: CreateMasterChoreRequest) => {
       try {
         const result = await createMasterChore(data)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -97,14 +103,14 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const updateMaster = useCallback(
     async (choreId: string, data: UpdateMasterChoreRequest) => {
       try {
         const result = await updateMasterChore(choreId, data)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -112,28 +118,28 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const deleteMaster = useCallback(
     async (choreId: string) => {
       try {
         await deleteMasterChore(choreId)
-        refetch()
+        invalidateChores()
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
         else console.error('Failed to delete master chore:', error)
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const bulkUpdateMasterStatusAction = useCallback(
     async (masterIds: string[], status: MasterChoreStatus) => {
       try {
         const result = await bulkUpdateMasterStatus(masterIds, status)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -141,14 +147,14 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const createAssociationAction = useCallback(
     async (data: CreateAssociationRequest) => {
       try {
         const result = await createAssociation(data)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -156,28 +162,28 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const deleteAssociationAction = useCallback(
     async (associationId: string) => {
       try {
         await deleteAssociation(associationId)
-        refetch()
+        invalidateChores()
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
         else console.error('Failed to delete association:', error)
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const claimInstanceAction = useCallback(
     async (instanceId: string, memberId: string) => {
       try {
         const result = await claimInstance(instanceId, memberId)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -185,14 +191,14 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const assignInstanceAction = useCallback(
     async (instanceId: string, assigneeId: string, assignerId: string) => {
       try {
         const result = await assignInstance(instanceId, assigneeId, assignerId)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -200,14 +206,14 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const updateInstanceStatusAction = useCallback(
     async (instanceId: string, status: InstanceStatus, actorId: string) => {
       try {
         const result = await updateInstanceStatus(instanceId, status, actorId)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -215,14 +221,14 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const createCategoryAction = useCallback(
     async (name: string) => {
       try {
         const result = await createCategory(name)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -230,14 +236,14 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   const createTagAction = useCallback(
     async (name: string) => {
       try {
         const result = await createTag(name)
-        refetch()
+        invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
@@ -245,7 +251,7 @@ export function useChoreActions(
         throw error
       }
     },
-    [refetch, showApiError],
+    [invalidateChores, showApiError],
   )
 
   return {

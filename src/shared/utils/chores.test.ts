@@ -325,32 +325,32 @@ describe('chores utilities', () => {
 
     it('formats daily frequency', () => {
       const rule: RecurrenceRule = { frequency: 'daily', time: '08:00' }
-      expect(formatRecurrence(rule)).toBe('Daily at 08:00')
+      expect(formatRecurrence(rule)).toBe('Daily at 8:00 AM')
     })
 
     it('formats weekly frequency', () => {
       const rule: RecurrenceRule = { frequency: 'weekly', time: '09:00', day_of_week: 0 }
-      expect(formatRecurrence(rule)).toBe('Weekly on Monday at 09:00')
+      expect(formatRecurrence(rule)).toBe('Weekly on Monday at 9:00 AM')
     })
 
     it('formats monthly frequency with day_of_month', () => {
       const rule: RecurrenceRule = { frequency: 'monthly', time: '10:00', day_of_month: 3 }
-      expect(formatRecurrence(rule)).toBe('Monthly on the 3rd at 10:00')
+      expect(formatRecurrence(rule)).toBe('Monthly on the 3rd at 10:00 AM')
     })
 
     it('formats monthly frequency with nth weekday', () => {
       const rule: RecurrenceRule = { frequency: 'monthly', time: '08:00', day_of_week: 0, week_of_month: 1 }
-      expect(formatRecurrence(rule)).toBe('Monthly on the first Monday at 08:00')
+      expect(formatRecurrence(rule)).toBe('Monthly on the first Monday at 8:00 AM')
     })
 
     it('formats yearly frequency with month and day', () => {
       const rule: RecurrenceRule = { frequency: 'yearly', time: '09:00', month: 1, day_of_month: 15 }
-      expect(formatRecurrence(rule)).toBe('Yearly on January 15th at 09:00')
+      expect(formatRecurrence(rule)).toBe('Yearly on January 15th at 9:00 AM')
     })
 
     it('formats yearly frequency with nth weekday', () => {
       const rule: RecurrenceRule = { frequency: 'yearly', time: '12:00', month: 11, day_of_week: 3, week_of_month: 4 }
-      expect(formatRecurrence(rule)).toBe('Yearly on the fourth Thursday of November at 12:00')
+      expect(formatRecurrence(rule)).toBe('Yearly on the fourth Thursday of November at 12:00 PM')
     })
   })
 

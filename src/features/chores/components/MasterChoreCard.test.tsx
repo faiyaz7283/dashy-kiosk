@@ -17,6 +17,16 @@ vi.mock('@/shared/date', async () => {
   return {
     ...actual,
     useConfig: () => ({ timezone: 'America/New_York', isLoading: false, error: null }),
+    formatTime: (time: Temporal.PlainTime) => {
+      // Simple mock: convert HH:MM to 12-hour format
+      const timeStr = time.toString()
+      const [hStr, mStr] = timeStr.split(':')
+      const h = Number(hStr)
+      const m = Number(mStr)
+      const ampm = h >= 12 ? 'PM' : 'AM'
+      const hour = h % 12 || 12
+      return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
+    },
   }
 })
 
@@ -133,7 +143,7 @@ describe('MasterChoreCard', () => {
 
   it('renders frequency summary', () => {
     renderCard()
-    expect(screen.getByText('Daily at 2:00 PM')).toBeTruthy()
+    expect(screen.getByText('Daily at 6:00 PM')).toBeTruthy()
   })
 
   it('renders collaborative status', () => {

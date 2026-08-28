@@ -60,8 +60,6 @@ export interface ChoresViewProps {
   onCloseMasterModal: () => void
   /** Callback after successful master create/update. */
   onMasterSuccess: () => void
-  /** Callback to refetch chores data. */
-  refetch: () => void
 }
 
 /**
@@ -91,7 +89,6 @@ export function ChoresView({
   editingMaster,
   onCloseMasterModal,
   onMasterSuccess,
-  refetch,
 }: ChoresViewProps) {
   return (
     <>
@@ -146,7 +143,6 @@ export function ChoresView({
           members={members}
           onClose={onCloseMasterModal}
           onSuccess={onMasterSuccess}
-          refetch={refetch}
         />
       )}
     </>

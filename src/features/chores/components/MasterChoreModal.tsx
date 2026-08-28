@@ -70,7 +70,7 @@ interface FormState {
   estimatedDuration: { value: string; unit: DurationUnit }
   dueTime: string
   dueDate: string
-  keepVisible: boolean
+  expirationBehavior: 'disappear' | 'stay_visible' | 'convert_to_open' | 'carry_over'
   endDate: string
   maxOccurrences: string
   isCollaborative: boolean
@@ -93,7 +93,7 @@ const DEFAULT_FORM: FormState = {
   estimatedDuration: { value: '10', unit: 'minutes' },
   dueTime: '',
   dueDate: '',
-  keepVisible: false,
+  expirationBehavior: 'disappear',
   endDate: '',
   maxOccurrences: '',
   isCollaborative: false,
@@ -115,8 +115,6 @@ export interface MasterChoreModalProps {
   onClose: () => void
   /** Callback after successful create/update. */
   onSuccess: () => void
-  /** Callback to refetch chores data (for inline category/tag creation). */
-  refetch: () => void
 }
 
 /**
@@ -133,7 +131,6 @@ export function MasterChoreModal({
   members,
   onClose,
   onSuccess,
-  refetch,
 }: MasterChoreModalProps) {
   const [form, setForm] = useState<FormState>(() => {
     if (mode === 'edit' && master) {
@@ -143,7 +140,7 @@ export function MasterChoreModal({
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const actions = useChoreActions(refetch)
+  const actions = useChoreActions()
   const { addNotification } = useNotifications()
 
   // Sync form when master changes (edit mode)
@@ -193,7 +190,7 @@ export function MasterChoreModal({
           ...(estimatedMinutes ? { estimated_minutes: estimatedMinutes } : {}),
           ...(form.dueTime ? { due_time: form.dueTime } : {}),
           ...(form.dueDate ? { due_date: form.dueDate } : {}),
-          expiration_behavior: form.keepVisible ? 'stay_visible' : 'disappear',
+          expiration_behavior: form.expirationBehavior,
           ...(form.endDate ? { end_date: form.endDate } : {}),
           ...(form.maxOccurrences ? { max_occurrences: Number(form.maxOccurrences) } : {}),
           is_collaborative: form.isCollaborative,
@@ -216,7 +213,7 @@ export function MasterChoreModal({
           estimated_minutes: estimatedMinutes,
           due_time: form.dueTime || null,
           due_date: form.dueDate || null,
-          expiration_behavior: form.keepVisible ? 'stay_visible' : 'disappear',
+          expiration_behavior: form.expirationBehavior,
           end_date: form.endDate || null,
           max_occurrences: form.maxOccurrences ? Number(form.maxOccurrences) : null,
           is_collaborative: form.isCollaborative,
@@ -285,7 +282,7 @@ export function MasterChoreModal({
               <div>
                 <div className="mb-1.5 flex items-center gap-1.5">
                   <span className="text-xs font-medium text-text-muted">Category</span>
-                  <Tooltip content="Group chores by category. Create new categories inline by typing a name.">
+                  <Tooltip content="Primary classification — where or what type of chore. Each chore has one category (e.g., Kitchen, Bathroom). Create new categories inline by typing a name.">
                     <Info className="h-3 w-3 text-text-faint" />
                   </Tooltip>
                 </div>
@@ -304,7 +301,7 @@ export function MasterChoreModal({
               <div>
                 <div className="mb-1.5 flex items-center gap-1.5">
                   <span className="text-xs font-medium text-text-muted">Tags</span>
-                  <Tooltip content="Add optional tags for filtering. Create new tags inline by typing and pressing Enter.">
+                  <Tooltip content="Optional labels for filtering and grouping. Add multiple tags per chore (e.g., Quick, Daily, Heavy). Create new tags inline by typing and pressing Enter.">
                     <Info className="h-3 w-3 text-text-faint" />
                   </Tooltip>
                 </div>
@@ -624,20 +621,77 @@ export function MasterChoreModal({
               )}
             </div>
 
-            {/* Keep visible checkbox */}
+            {/* Expiration behavior selector */}
             <div className="flex items-start gap-3 border-t border-border-light py-3">
-              <ToggleSwitch
-                checked={form.keepVisible}
-                onChange={(val) => updateField('keepVisible', val)}
-              />
               <div className="flex-1">
-                <div className="text-sm font-medium text-text-secondary">
-                  {form.frequency === 'once' ? 'Keep overdue instance visible' : 'Keep missed instances visible'}
+                <div className="text-sm font-medium text-text-secondary mb-2">
+                  When instance period ends
                 </div>
-                <div className="text-xs text-text-faint">
-                  {form.frequency === 'once'
-                    ? 'If unchecked, the instance disappears when overdue. If checked, it stays visible marked as overdue.'
-                    : 'If unchecked, missed instances disappear. If checked, they stay visible marked as missed. New instances auto-generate regardless.'}
+                <div className="space-y-2">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="expirationBehavior"
+                      value="disappear"
+                      checked={form.expirationBehavior === 'disappear'}
+                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'disappear')}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm text-text-primary">Disappear</div>
+                      <div className="text-xs text-text-faint">
+                        Instance is removed from the board when completed or missed
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="expirationBehavior"
+                      value="stay_visible"
+                      checked={form.expirationBehavior === 'stay_visible'}
+                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'stay_visible')}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm text-text-primary">Stay visible</div>
+                      <div className="text-xs text-text-faint">
+                        Missed instances remain visible marked as missed
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="expirationBehavior"
+                      value="convert_to_open"
+                      checked={form.expirationBehavior === 'convert_to_open'}
+                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'convert_to_open')}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm text-text-primary">Convert to open pool</div>
+                      <div className="text-xs text-text-faint">
+                        Move instance to open pool when period expires
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="expirationBehavior"
+                      value="carry_over"
+                      checked={form.expirationBehavior === 'carry_over'}
+                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'carry_over')}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm text-text-primary">Carry over</div>
+                      <div className="text-xs text-text-faint">
+                        Mark as missed and generate new instance for next period
+                      </div>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
@@ -813,7 +867,7 @@ function formFromMaster(master: MasterChore): FormState {
     estimatedDuration: { value: duration.value.toString(), unit: duration.unit },
     dueTime: master.due_time ?? '',
     dueDate: master.due_date ?? '',
-    keepVisible: master.expiration_behavior === 'stay_visible',
+    expirationBehavior: master.expiration_behavior ?? 'disappear',
     endDate: master.end_date ?? '',
     maxOccurrences: master.max_occurrences?.toString() ?? '',
     isCollaborative: master.is_collaborative,
