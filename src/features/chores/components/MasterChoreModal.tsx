@@ -30,6 +30,7 @@ import { toMinutes, fromMinutes, type DurationUnit } from '@/shared/utils/durati
 import { useChoreActions } from '../hooks/useChoreActions'
 import { DifficultyDots } from './DifficultyDots'
 import { findFirstAdult } from '@/shared/utils/family'
+import { useNotifications } from '@/shared/context/NotificationContext'
 
 /** Recurrence frequency options (includes "once" for one-off). */
 type RecurrenceFrequency = 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly'
@@ -143,6 +144,7 @@ export function MasterChoreModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const actions = useChoreActions(refetch)
+  const { addNotification } = useNotifications()
 
   // Sync form when master changes (edit mode)
   useEffect(() => {
@@ -196,6 +198,11 @@ export function MasterChoreModal({
           created_by: createdBy,
         }
         await actions.createMaster(request)
+        addNotification({
+          type: 'success',
+          title: 'Chore template created',
+          message: form.name.trim(),
+        })
         onSuccess()
       } else if (master) {
         const request: UpdateMasterChoreRequest = {
@@ -213,6 +220,11 @@ export function MasterChoreModal({
           is_collaborative: form.isCollaborative,
         }
         await actions.updateMaster(master.id, request)
+        addNotification({
+          type: 'success',
+          title: 'Chore template updated',
+          message: form.name.trim(),
+        })
         onSuccess()
       }
     } catch {
@@ -541,31 +553,31 @@ export function MasterChoreModal({
                 </div>
               )}
 
-              {/* Due Time + Due Date (one-time only) */}
+              {/* Due Time — available for all frequencies */}
+              <div className="border-t border-border-light pt-4">
+                <label className="mb-1 block text-xs font-medium text-text-muted">
+                  Due Time <span className="font-normal text-text-faint">(optional)</span>
+                </label>
+                <input
+                  type="time"
+                  value={form.dueTime}
+                  onChange={(e) => updateField('dueTime', e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              {/* Due Date — one-time only */}
               {form.frequency === 'once' && (
-                <div className="grid grid-cols-2 gap-4 border-t border-border-light pt-4">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">
-                      Due Time <span className="font-normal text-text-faint">(optional)</span>
-                    </label>
-                    <input
-                      type="time"
-                      value={form.dueTime}
-                      onChange={(e) => updateField('dueTime', e.target.value)}
-                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">
-                      Due Date <span className="font-normal text-text-faint">(optional)</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={form.dueDate}
-                      onChange={(e) => updateField('dueDate', e.target.value)}
-                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-muted">
+                    Due Date <span className="font-normal text-text-faint">(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={form.dueDate}
+                    onChange={(e) => updateField('dueDate', e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
               )}
 

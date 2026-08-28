@@ -5,6 +5,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MasterChoreModal } from './MasterChoreModal'
+import { NotificationProvider } from '@/shared/context/NotificationContext'
 import type {
   MasterChore,
   ChoreCategory,
@@ -88,7 +89,11 @@ type ModalOverrides = {
 }
 
 function renderModal(overrides: ModalOverrides = {}) {
-  return render(<MasterChoreModal {...defaultProps} {...overrides} />)
+  return render(
+    <NotificationProvider>
+      <MasterChoreModal {...defaultProps} {...overrides} />
+    </NotificationProvider>
+  )
 }
 
 describe('MasterChoreModal', () => {
@@ -248,6 +253,58 @@ describe('MasterChoreModal', () => {
       renderModal({ mode: 'edit', master })
       expect(screen.getByText('Yearly Pattern')).toBeTruthy()
       expect(screen.getByText('Month')).toBeTruthy()
+    })
+  })
+
+  describe('due time and date fields', () => {
+    it('shows Due Time for weekly frequency', () => {
+      renderModal()
+      // Default frequency is weekly — Due Time should be visible
+      expect(screen.getByText('Due Time')).toBeTruthy()
+    })
+
+    it('shows Due Time for once frequency', () => {
+      const master = makeMaster({
+        id: 'mc-once',
+        recurrence_rule: null,
+      })
+      renderModal({ mode: 'edit', master })
+      expect(screen.getByText('Due Time')).toBeTruthy()
+    })
+
+    it('shows Due Date only for once frequency', () => {
+      const master = makeMaster({
+        id: 'mc-once',
+        recurrence_rule: null,
+        due_date: '2026-09-01',
+      })
+      renderModal({ mode: 'edit', master })
+      expect(screen.getByText('Due Date')).toBeTruthy()
+    })
+
+    it('hides Due Date for weekly frequency', () => {
+      renderModal()
+      // Default frequency is weekly — Due Date should not be visible
+      expect(screen.queryByText('Due Date')).toBeNull()
+    })
+
+    it('pre-populates due_time from master', () => {
+      const master = makeMaster({
+        id: 'mc-1',
+        due_time: '21:00',
+      })
+      renderModal({ mode: 'edit', master })
+      expect(screen.getByDisplayValue('21:00')).toBeTruthy()
+    })
+
+    it('pre-populates due_date from master for once frequency', () => {
+      const master = makeMaster({
+        id: 'mc-once',
+        recurrence_rule: null,
+        due_date: '2026-09-01',
+      })
+      renderModal({ mode: 'edit', master })
+      expect(screen.getByDisplayValue('2026-09-01')).toBeTruthy()
     })
   })
 })
