@@ -6,12 +6,16 @@
  * - In Progress: "Complete" button + "Started at" time
  * - Overdue: "Complete Now" button with overdue styling
  * - Missed: disabled "Cannot Complete (Missed)" button
- * - Open Pool: "Claim" button (no member assignment)
+ * - Open Pool: "Claim by" dropdown + "Assign" dropdown with two selectors
+ *
+ * Attribution display:
+ * - Claimed: "Claimed by {Name}"
+ * - Assigned: "Assigned by {Assigner} to {Assignee}"
  *
  * All variants include "View Template" link to navigate to the master chore.
  */
 
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   RotateCw,
   Calendar,
@@ -22,6 +26,7 @@ import {
   CheckCircle,
   Edit3,
   X,
+  ChevronDown,
 } from 'lucide-react'
 import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
@@ -34,6 +39,7 @@ import {
   type PaletteKey,
 } from '@/shared/utils/memberColors'
 import { isOpenPoolInstance } from '@/shared/utils/chores'
+import { useNotifications } from '@/shared/context/NotificationContext'
 
 /** Status badge config — static class map. */
 const statusBadgeClasses: Record<InstanceStatus, { container: string; dot: string }> = {
@@ -92,7 +98,9 @@ export interface InstanceInteractionProps {
   /** Callback when Complete action is triggered (in_progress → completed). */
   onComplete?: () => void
   /** Callback when Claim action is triggered (open pool). */
-  onClaim?: () => void
+  onClaim?: (memberId: string) => void
+  /** Callback when Assign action is triggered (open pool). */
+  onAssign?: (assigneeId: string, assignerId: string) => void
   /** Callback when View Template link is clicked. */
   onViewTemplate?: () => void
 }
@@ -113,9 +121,15 @@ export function InstanceInteraction({
   onStart,
   onComplete,
   onClaim,
+  onAssign,
   onViewTemplate,
 }: InstanceInteractionProps) {
   const { timezone } = useConfig()
+  const { addNotification } = useNotifications()
+
+  const [claimDropdownOpen, setClaimDropdownOpen] = useState(false)
+  const [assignTo, setAssignTo] = useState<string>('')
+  const [assignBy, setAssignBy] = useState<string>('')
 
   const isOpenPool = isOpenPoolInstance(instance)
   const badge = statusBadgeClasses[instance.status]
@@ -144,8 +158,6 @@ export function InstanceInteraction({
   // Format period date (e.g., "Monday, Aug 25")
   const periodDate = useMemo(() => {
     if (!instance.period_start) return null
-    // period_start is a date string (YYYY-MM-DD), may have trailing Z
-    // Strip timezone designator for PlainDate parsing
     const dateStr = instance.period_start.replace(/Z$/, '')
     const plainDate = Temporal.PlainDate.from(dateStr)
     return formatDateParts(plainDate, { weekday: 'long', month: 'short', day: 'numeric' })
@@ -163,16 +175,53 @@ export function InstanceInteraction({
     return formatUtcTime(instance.started_at, timezone)
   }, [instance.started_at, timezone])
 
-  // Determine assignment text
-  const assignmentText = useMemo(() => {
-    if (instance.claimed_by) return 'Claimed'
-    if (instance.assigned_to && instance.assigned_by) {
-      const assigner = members.find((m) => m.key === instance.assigned_by)
-      return `Assigned by ${assigner?.name ?? instance.assigned_by}`
+  // Attribution text
+  const attributionText = useMemo(() => {
+    if (instance.claimed_by) {
+      const member = members.find((m) => m.key === instance.claimed_by)
+      return `Claimed by ${member?.name ?? instance.claimed_by}`
     }
-    if (instance.assigned_to) return 'Assigned'
+    if (instance.assigned_to && instance.assigned_by) {
+      const assignee = members.find((m) => m.key === instance.assigned_to)
+      const assigner = members.find((m) => m.key === instance.assigned_by)
+      return `Assigned by ${assigner?.name ?? instance.assigned_by} to ${assignee?.name ?? instance.assigned_to}`
+    }
+    if (instance.assigned_to) {
+      const assignee = members.find((m) => m.key === instance.assigned_to)
+      return `Assigned to ${assignee?.name ?? instance.assigned_to}`
+    }
     return null
   }, [instance, members])
+
+  // Open pool action handlers
+  const handleClaim = (memberId: string) => {
+    if (onClaim) {
+      onClaim(memberId)
+      const member = members.find((m) => m.key === memberId)
+      addNotification({
+        type: 'success',
+        title: 'Instance claimed',
+        message: `${member?.name ?? 'Unknown'} claimed this chore`,
+      })
+    }
+    setClaimDropdownOpen(false)
+  }
+
+  const handleAssign = () => {
+    if (!assignTo || !assignBy) return
+    if (onAssign) {
+      onAssign(assignTo, assignBy)
+      const assignee = members.find((m) => m.key === assignTo)
+      const assigner = members.find((m) => m.key === assignBy)
+      addNotification({
+        type: 'success',
+        title: 'Instance assigned',
+        message: `${assigner?.name ?? 'Unknown'} assigned this chore to ${assignee?.name ?? assignTo}`,
+      })
+    }
+    setAssignTo('')
+    setAssignBy('')
+  }
 
   // Determine action button
   const actionButton = useMemo(() => {
@@ -220,19 +269,8 @@ export function InstanceInteraction({
         </button>
       )
     }
-    if (isOpenPool && instance.status === 'active') {
-      return (
-        <button
-          onClick={onClaim}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-        >
-          <Users className="h-4 w-4" />
-          Claim
-        </button>
-      )
-    }
     return null
-  }, [instance.status, isOpenPool, onStart, onComplete, onClaim])
+  }, [instance.status, isOpenPool, onStart, onComplete])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
@@ -312,8 +350,8 @@ export function InstanceInteraction({
                   {memberInfo.member.initial}
                 </div>
                 <span>{memberInfo.member.name}</span>
-                {assignmentText && (
-                  <span className="text-text-faint">· {assignmentText}</span>
+                {attributionText && (
+                  <span className="text-text-faint">· {attributionText}</span>
                 )}
               </div>
             </div>
@@ -339,6 +377,89 @@ export function InstanceInteraction({
         {/* Actions */}
         <div className="space-y-2 border-t border-border-light px-4 py-3">
           {actionButton}
+
+          {/* Open Pool actions */}
+          {isOpenPool && instance.status === 'active' && (
+            <div className="space-y-2">
+              {/* Claim by dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setClaimDropdownOpen(!claimDropdownOpen)}
+                  className="flex w-full items-center justify-between rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-bg-hover dark:bg-bg"
+                >
+                  <span className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Claim by
+                  </span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                {claimDropdownOpen && (
+                  <div className="absolute bottom-full left-0 right-0 z-10 mb-1 overflow-hidden rounded-lg border border-border bg-white shadow-popup dark:bg-bg">
+                    {members.map((member) => (
+                      <button
+                        key={member.key}
+                        onClick={() => handleClaim(member.key)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-bg-hover"
+                      >
+                        <div
+                          className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white ${paletteBgClasses[getMemberPaletteKey(member.key, colorMap)]}`}
+                        >
+                          {member.initial}
+                        </div>
+                        {member.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Assign section */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-text-muted">Assign to</span>
+                  <select
+                    value={assignTo}
+                    onChange={(e) => setAssignTo(e.target.value)}
+                    className="flex-1 rounded border border-border bg-white px-2 py-1 text-xs dark:bg-bg"
+                  >
+                    <option value="">Select member</option>
+                    {members.map((member) => (
+                      <option key={member.key} value={member.key}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-text-muted">Assign by</span>
+                  <select
+                    value={assignBy}
+                    onChange={(e) => setAssignBy(e.target.value)}
+                    className="flex-1 rounded border border-border bg-white px-2 py-1 text-xs dark:bg-bg"
+                    disabled={!assignTo}
+                  >
+                    <option value="">Select member</option>
+                    {members
+                      .filter((m) => m.key !== assignTo)
+                      .map((member) => (
+                        <option key={member.key} value={member.key}>
+                          {member.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <button
+                  onClick={handleAssign}
+                  disabled={!assignTo || !assignBy}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <User className="h-4 w-4" />
+                  Assign
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
             onClick={onViewTemplate}
             className="flex w-full items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary-light hover:text-primary-hover"

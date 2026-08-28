@@ -46,6 +46,10 @@ export interface ChoresViewProps {
   onStartInstance?: (instance: ChoreInstance) => void
   /** Callback when Complete action is triggered on an instance. */
   onCompleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when Claim action is triggered on an open pool instance. */
+  onClaimInstance?: (instanceId: string, memberId: string) => void
+  /** Callback when Assign action is triggered on an open pool instance. */
+  onAssignInstance?: (instanceId: string, assigneeId: string, assignerId: string) => void
   /** Callback when View Template is clicked (opens edit modal). */
   onViewTemplate?: (masterChore: MasterChore) => void
   /** Whether the master chore modal is open. */
@@ -80,6 +84,8 @@ export function ChoresView({
   onRestore,
   onStartInstance,
   onCompleteInstance,
+  onClaimInstance,
+  onAssignInstance,
   onViewTemplate,
   showMasterModal,
   editingMaster,
@@ -98,6 +104,8 @@ export function ChoresView({
           error={error}
           {...(onStartInstance ? { onStartInstance } : {})}
           {...(onCompleteInstance ? { onCompleteInstance } : {})}
+          {...(onClaimInstance ? { onClaimInstance } : {})}
+          {...(onAssignInstance ? { onAssignInstance } : {})}
           {...(onViewTemplate ? { onViewTemplate } : {})}
         />
       )}

@@ -158,6 +158,28 @@ function AppShellContent({
     [choreActions, actorId],
   )
 
+  const handleClaimInstance = useCallback(
+    async (instanceId: string, memberId: string) => {
+      try {
+        await choreActions.claimInstance(instanceId, memberId)
+      } catch (error) {
+        console.error('Failed to claim instance:', error)
+      }
+    },
+    [choreActions],
+  )
+
+  const handleAssignInstance = useCallback(
+    async (instanceId: string, assigneeId: string, assignerId: string) => {
+      try {
+        await choreActions.assignInstance(instanceId, assigneeId, assignerId)
+      } catch (error) {
+        console.error('Failed to assign instance:', error)
+      }
+    },
+    [choreActions],
+  )
+
   const handleViewTemplate = useCallback(
     (master: MasterChore) => {
       setEditingMaster(master)
@@ -405,6 +427,8 @@ function AppShellContent({
             onRestore={handleRestore}
             onStartInstance={handleStartInstance}
             onCompleteInstance={handleCompleteInstance}
+            onClaimInstance={handleClaimInstance}
+            onAssignInstance={handleAssignInstance}
             onViewTemplate={handleViewTemplate}
             showMasterModal={showMasterModal}
             editingMaster={editingMaster}

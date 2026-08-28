@@ -58,6 +58,10 @@ export interface ChoresBoardProps {
   onStartInstance?: (instance: ChoreInstance) => void
   /** Callback when Complete action is triggered on an instance. */
   onCompleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when Claim action is triggered on an open pool instance. */
+  onClaimInstance?: (instanceId: string, memberId: string) => void
+  /** Callback when Assign action is triggered on an open pool instance. */
+  onAssignInstance?: (instanceId: string, assigneeId: string, assignerId: string) => void
   /** Callback when View Template is clicked (opens edit modal). */
   onViewTemplate?: (masterChore: MasterChore) => void
 }
@@ -75,6 +79,8 @@ export function ChoresBoard({
   error,
   onStartInstance,
   onCompleteInstance,
+  onClaimInstance,
+  onAssignInstance,
   onViewTemplate,
 }: ChoresBoardProps) {
   const [pickerTarget, setPickerTarget] = useState<FamilyMember | null | undefined>(undefined)
@@ -235,8 +241,12 @@ export function ChoresBoard({
                 onCompleteInstance?.(selectedInstance)
                 setSelectedInstance(null)
               }}
-              onClaim={() => {
-                // Claim is handled by parent — for now just close
+              onClaim={(memberId: string) => {
+                onClaimInstance?.(selectedInstance.id, memberId)
+                setSelectedInstance(null)
+              }}
+              onAssign={(assigneeId: string, assignerId: string) => {
+                onAssignInstance?.(selectedInstance.id, assigneeId, assignerId)
                 setSelectedInstance(null)
               }}
               onViewTemplate={() => {

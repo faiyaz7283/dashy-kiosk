@@ -5,6 +5,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { InstanceInteraction } from './InstanceInteraction'
+import { NotificationProvider } from '@/shared/context/NotificationContext'
 import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
 import type { PaletteKey } from '@/shared/utils/memberColors'
@@ -90,11 +91,16 @@ const defaultProps = {
   onStart: vi.fn(),
   onComplete: vi.fn(),
   onClaim: vi.fn(),
+  onAssign: vi.fn(),
   onViewTemplate: vi.fn(),
 }
 
 function renderPopup(overrides: Partial<typeof defaultProps> = {}) {
-  return render(<InstanceInteraction {...defaultProps} {...overrides} />)
+  return render(
+    <NotificationProvider>
+      <InstanceInteraction {...defaultProps} {...overrides} />
+    </NotificationProvider>
+  )
 }
 
 describe('InstanceInteraction', () => {
@@ -285,7 +291,7 @@ describe('InstanceInteraction', () => {
       expect(screen.getByText('Open Pool')).toBeTruthy()
     })
 
-    it('renders Claim button', () => {
+    it('renders Claim by dropdown', () => {
       const instance = makeInstance({
         id: 'inst-5',
         status: 'active',
@@ -293,7 +299,19 @@ describe('InstanceInteraction', () => {
         assigned_to: null,
       })
       renderPopup({ instance })
-      expect(screen.getByText('Claim')).toBeTruthy()
+      expect(screen.getByText('Claim by')).toBeTruthy()
+    })
+
+    it('renders Assign section with dropdowns', () => {
+      const instance = makeInstance({
+        id: 'inst-5',
+        status: 'active',
+        claimed_by: null,
+        assigned_to: null,
+      })
+      renderPopup({ instance })
+      expect(screen.getByText('Assign to')).toBeTruthy()
+      expect(screen.getByText('Assign by')).toBeTruthy()
     })
 
     it('does not render Start button for open pool', () => {
