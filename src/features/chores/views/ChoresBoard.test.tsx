@@ -39,7 +39,7 @@ describe('ChoresBoard', () => {
         estimated_minutes: 10,
         due_time: '18:00',
         due_date: null,
-        expiration_behavior: 'carry_over',
+        expiration_behavior: 'stay_visible',
         end_date: null,
         max_occurrences: null,
         occurrence_count: 0,
@@ -152,13 +152,16 @@ describe('ChoresBoard', () => {
         error={null}
       />
     )
-    // Each column has 5 metric labels: Asn, Clm, Prog, Done, Over
-    // 3 columns (Open Pool + 2 members) = 15 of each label
-    expect(screen.getAllByText('Asn').length).toBe(3)
-    expect(screen.getAllByText('Clm').length).toBe(3)
-    expect(screen.getAllByText('Prog').length).toBe(3)
-    expect(screen.getAllByText('Done').length).toBe(3)
+    // Open Pool column has 3 metrics: Total, Over, Today
+    // Member columns have 5 metrics: Asn, Clm, Prog, Done, Over
+    // 1 Open Pool + 2 member columns
+    expect(screen.getAllByText('Total').length).toBe(1)
+    expect(screen.getAllByText('Asn').length).toBe(2)
+    expect(screen.getAllByText('Clm').length).toBe(2)
+    expect(screen.getAllByText('Prog').length).toBe(2)
+    expect(screen.getAllByText('Done').length).toBe(2)
     expect(screen.getAllByText('Over').length).toBe(3)
+    expect(screen.getAllByText('Today').length).toBe(1)
   })
 
   it('renders null when no data and not loading', () => {

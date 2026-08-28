@@ -15,6 +15,7 @@ import {
   getStatusLabel,
   formatRecurrence,
   getColumnMetrics,
+  getOpenPoolMetrics,
 } from './chores'
 import type { ChoreInstance, ChoreAssociation, InstanceStatus, RecurrenceRule } from '@/types/chores'
 
@@ -429,6 +430,62 @@ describe('chores utilities', () => {
       expect(metrics.inProgress).toBe(1)
       expect(metrics.completed).toBe(1)
       expect(metrics.overdue).toBe(1)
+    })
+  })
+
+  describe('getOpenPoolMetrics', () => {
+    it('returns zero counts for empty array', () => {
+      const metrics = getOpenPoolMetrics([])
+      expect(metrics).toEqual({
+        total: 0,
+        overdue: 0,
+        dueToday: 0,
+      })
+    })
+
+    it('counts total instances', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, id: '1' },
+        { ...openPoolInstance, id: '2' },
+        { ...openPoolInstance, id: '3' },
+      ]
+      const metrics = getOpenPoolMetrics(instances)
+      expect(metrics.total).toBe(3)
+    })
+
+    it('counts overdue instances', () => {
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, id: '1', status: 'overdue' },
+        { ...openPoolInstance, id: '2', status: 'active' },
+        { ...openPoolInstance, id: '3', status: 'overdue' },
+      ]
+      const metrics = getOpenPoolMetrics(instances)
+      expect(metrics.overdue).toBe(2)
+    })
+
+    it('counts instances due today', () => {
+      const todayStr = new Date().toISOString().split('T')[0]!
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, id: '1', period_start: todayStr },
+        { ...openPoolInstance, id: '2', period_start: '2026-01-01' },
+        { ...openPoolInstance, id: '3', period_start: todayStr },
+      ]
+      const metrics = getOpenPoolMetrics(instances)
+      expect(metrics.dueToday).toBe(2)
+    })
+
+    it('handles mixed instance types', () => {
+      const todayStr = new Date().toISOString().split('T')[0]!
+      const instances: ChoreInstance[] = [
+        { ...openPoolInstance, id: '1', period_start: todayStr, status: 'active' },
+        { ...openPoolInstance, id: '2', period_start: '2026-01-01', status: 'overdue' },
+        { ...openPoolInstance, id: '3', period_start: todayStr, status: 'overdue' },
+        { ...openPoolInstance, id: '4', period_start: '2026-12-31', status: 'active' },
+      ]
+      const metrics = getOpenPoolMetrics(instances)
+      expect(metrics.total).toBe(4)
+      expect(metrics.overdue).toBe(2)
+      expect(metrics.dueToday).toBe(2)
     })
   })
 })

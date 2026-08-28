@@ -52,7 +52,7 @@ function makeMaster(overrides: Partial<MasterChore> & { id: string }): MasterCho
     estimated_minutes: 10,
     due_time: null,
     due_date: null,
-    expiration_behavior: 'carry_over',
+    expiration_behavior: 'stay_visible',
     end_date: null,
     max_occurrences: null,
     occurrence_count: 45,
@@ -160,7 +160,6 @@ describe('MasterChoreModal', () => {
       expect(screen.getByText('Disappear')).toBeTruthy()
       expect(screen.getByText('Stay visible')).toBeTruthy()
       expect(screen.getByText('Convert to open pool')).toBeTruthy()
-      expect(screen.getByText('Carry over')).toBeTruthy()
     })
 
     it('renders End Date and Max Occurrences inputs', () => {

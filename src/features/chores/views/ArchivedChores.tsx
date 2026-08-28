@@ -32,6 +32,8 @@ export interface ArchivedChoresProps {
   onEditMaster: (master: MasterChore) => void
   /** Callback when Restore is clicked. */
   onRestore: (master: MasterChore) => void
+  /** Callback when Delete Permanently is clicked. */
+  onDelete?: (master: MasterChore) => void
 }
 
 /**
@@ -48,6 +50,7 @@ export function ArchivedChores({
   onToggleSelect,
   onEditMaster,
   onRestore,
+  onDelete,
 }: ArchivedChoresProps) {
   const archivedMasters = useMemo(() => {
     if (!data) return []
@@ -101,6 +104,7 @@ export function ArchivedChores({
                   onToggleSelect={onToggleSelect}
                   onEdit={onEditMaster}
                   onRestore={onRestore}
+                  {...(onDelete ? { onDelete } : {})}
                 />
               ))}
             </div>

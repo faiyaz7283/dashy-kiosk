@@ -11,9 +11,10 @@
  */
 
 import { useState, useEffect, useMemo, type FormEvent } from 'react'
-import { X, RotateCw, Info } from 'lucide-react'
+import { X, RotateCw, Info, Trash2, Users, UserPlus } from 'lucide-react'
 import type {
   MasterChore,
+  ChoreAssociation,
   ChoreCategory,
   ChoreTag,
   RecurrenceRule,
@@ -70,7 +71,7 @@ interface FormState {
   estimatedDuration: { value: string; unit: DurationUnit }
   dueTime: string
   dueDate: string
-  expirationBehavior: 'disappear' | 'stay_visible' | 'convert_to_open' | 'carry_over'
+  expirationBehavior: 'disappear' | 'stay_visible' | 'convert_to_open'
   endDate: string
   maxOccurrences: string
   isCollaborative: boolean
@@ -109,6 +110,8 @@ export interface MasterChoreModalProps {
   categories: ChoreCategory[]
   /** Available tags. */
   tags: ChoreTag[]
+  /** All associations (filtered by master in component). */
+  associations?: ChoreAssociation[]
   /** Family members (for created_by lookup). */
   members: FamilyMember[]
   /** Callback to close the modal. */
@@ -128,6 +131,7 @@ export function MasterChoreModal({
   master,
   categories,
   tags,
+  associations: allAssociations,
   members,
   onClose,
   onSuccess,
@@ -139,9 +143,40 @@ export function MasterChoreModal({
     return { ...DEFAULT_FORM }
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState<'template' | 'associations'>('template')
 
   const actions = useChoreActions()
   const { addNotification } = useNotifications()
+
+  // Filter associations for this master chore
+  const masterAssociations = useMemo(() => {
+    if (!master || !allAssociations) return []
+    return allAssociations.filter(
+      (a) => a.master_chore_id === master.id && a.removed_at === null,
+    )
+  }, [master, allAssociations])
+
+  // Build member lookup for association display
+  const memberMap = useMemo(
+    () => new Map(members.map((m) => [m.key, m.name])),
+    [members],
+  )
+
+  // Members not yet associated (for adding new associations)
+  const availableMembers = useMemo(() => {
+    if (!master) return members
+    const associatedKeys = new Set(
+      masterAssociations
+        .filter((a) => a.member_id !== null)
+        .map((a) => a.member_id!),
+    )
+    return members.filter((m) => !associatedKeys.has(m.key))
+  }, [master, members, masterAssociations])
+
+  const hasOpenPool = useMemo(
+    () => masterAssociations.some((a) => a.is_open_pool),
+    [masterAssociations],
+  )
 
   // Sync form when master changes (edit mode)
   useEffect(() => {
@@ -253,10 +288,44 @@ export function MasterChoreModal({
               <X className="h-5 w-5" />
             </button>
           </div>
+
+          {/* Tab bar — only show in edit mode */}
+          {mode === 'edit' && (
+            <div className="mt-4 flex gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab('template')}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === 'template'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-text-muted hover:bg-bg-hover hover:text-text-primary'
+                }`}
+              >
+                Template
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('associations')}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === 'associations'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-text-muted hover:bg-bg-hover hover:text-text-primary'
+                }`}
+              >
+                Associations
+                {masterAssociations.length > 0 && (
+                  <span className="ml-1.5 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                    {masterAssociations.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Scrollable form body */}
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          {activeTab === 'template' ? (
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
             {/* Name */}
             <div>
@@ -676,22 +745,6 @@ export function MasterChoreModal({
                       </div>
                     </div>
                   </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="expirationBehavior"
-                      value="carry_over"
-                      checked={form.expirationBehavior === 'carry_over'}
-                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'carry_over')}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm text-text-primary">Carry over</div>
-                      <div className="text-xs text-text-faint">
-                        Mark as missed and generate new instance for next period
-                      </div>
-                    </div>
-                  </label>
                 </div>
               </div>
             </div>
@@ -728,6 +781,21 @@ export function MasterChoreModal({
               </span>
             </div>
           </div>
+          ) : (
+            /* Associations tab */
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <AssociationsTab
+                master={master!}
+                associations={masterAssociations}
+                members={members}
+                memberMap={memberMap}
+                availableMembers={availableMembers}
+                hasOpenPool={hasOpenPool}
+                actions={actions}
+                addNotification={addNotification}
+              />
+            </div>
+          )}
 
           {/* Footer */}
           <div className="shrink-0 border-t border-border bg-bg-hover/50 px-6 py-4">
@@ -872,4 +940,307 @@ function formFromMaster(master: MasterChore): FormState {
     maxOccurrences: master.max_occurrences?.toString() ?? '',
     isCollaborative: master.is_collaborative,
   }
+}
+
+/** Props for the AssociationsTab component. */
+interface AssociationsTabProps {
+  /** The master chore being edited. */
+  master: MasterChore
+  /** Active associations for this master. */
+  associations: ChoreAssociation[]
+  /** All family members. */
+  members: FamilyMember[]
+  /** Member key → name lookup. */
+  memberMap: Map<string, string>
+  /** Members not yet associated. */
+  availableMembers: FamilyMember[]
+  /** Whether open pool association exists. */
+  hasOpenPool: boolean
+  /** Chore actions hook. */
+  actions: ReturnType<typeof useChoreActions>
+  /** Notification callback. */
+  addNotification: (notification: { type: 'success' | 'error'; title: string; message: string }) => void
+}
+
+/**
+ * Associations tab — manage member assignments and open pool.
+ *
+ * @param props - Component props.
+ * @returns The associations tab UI.
+ */
+function AssociationsTab({
+  master,
+  associations,
+  members,
+  memberMap,
+  availableMembers,
+  hasOpenPool,
+  actions,
+  addNotification,
+}: AssociationsTabProps) {
+  const [showAddMember, setShowAddMember] = useState(false)
+
+  const handleRemoveAssociation = async (associationId: string) => {
+    try {
+      await actions.deleteAssociation(associationId)
+      addNotification({
+        type: 'success',
+        title: 'Association removed',
+        message: 'Member has been unassigned from this chore',
+      })
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to remove association',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  const handleSendToOpenPool = async (associationId: string) => {
+    try {
+      // Remove the member association
+      await actions.deleteAssociation(associationId)
+      // Create open pool association
+      const createdBy = members[0]?.key ?? 'unknown'
+      await actions.createAssociation({
+        master_chore_id: master.id,
+        is_open_pool: true,
+        created_by: createdBy,
+      })
+      addNotification({
+        type: 'success',
+        title: 'Sent to open pool',
+        message: 'Chore is now available for anyone to claim',
+      })
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to send to open pool',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  const handleReassignMember = async (oldAssociationId: string, newMemberKey: string) => {
+    try {
+      // Remove old association
+      await actions.deleteAssociation(oldAssociationId)
+      // Create new association with new member
+      const createdBy = members[0]?.key ?? 'unknown'
+      await actions.createAssociation({
+        master_chore_id: master.id,
+        member_id: newMemberKey,
+        created_by: createdBy,
+      })
+      const newMemberName = memberMap.get(newMemberKey) ?? 'Unknown'
+      addNotification({
+        type: 'success',
+        title: 'Member reassigned',
+        message: `Chore reassigned to ${newMemberName}`,
+      })
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to reassign member',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  const handleAddMember = async (memberKey: string) => {
+    try {
+      const createdBy = members[0]?.key ?? 'unknown'
+      await actions.createAssociation({
+        master_chore_id: master.id,
+        member_id: memberKey,
+        created_by: createdBy,
+      })
+      const memberName = memberMap.get(memberKey) ?? 'Unknown'
+      addNotification({
+        type: 'success',
+        title: 'Member added',
+        message: `${memberName} has been assigned to this chore`,
+      })
+      setShowAddMember(false)
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to add member',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  const handleAddToOpenPool = async () => {
+    try {
+      const createdBy = members[0]?.key ?? 'unknown'
+      await actions.createAssociation({
+        master_chore_id: master.id,
+        is_open_pool: true,
+        created_by: createdBy,
+      })
+      addNotification({
+        type: 'success',
+        title: 'Added to open pool',
+        message: 'Chore is now available for anyone to claim',
+      })
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to add to open pool',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-text-primary">Assigned Members</h3>
+          <p className="text-xs text-text-muted">
+            {associations.length === 0
+              ? 'No members assigned yet'
+              : `${associations.length} member${associations.length !== 1 ? 's' : ''} assigned`}
+          </p>
+        </div>
+        {!showAddMember && availableMembers.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAddMember(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            Add Member
+          </button>
+        )}
+      </div>
+
+      {/* Add member dropdown */}
+      {showAddMember && (
+        <div className="rounded-lg border border-border bg-bg-hover p-3">
+          <div className="mb-2 text-xs font-medium text-text-secondary">Select a member to assign:</div>
+          <div className="space-y-1">
+            {availableMembers.map((member) => (
+              <button
+                key={member.key}
+                type="button"
+                onClick={() => handleAddMember(member.key)}
+                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-text-primary transition-colors hover:bg-bg-hover"
+              >
+                <span>{member.name}</span>
+                <span className="text-xs text-text-faint">Assign</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAddMember(false)}
+            className="mt-2 w-full rounded-md px-3 py-1.5 text-xs text-text-muted transition-colors hover:bg-bg-hover hover:text-text-primary"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Associations list */}
+      {associations.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border p-8 text-center">
+          <Users className="mx-auto mb-2 h-8 w-8 text-text-faint" />
+          <p className="text-sm text-text-muted">No associations yet</p>
+          <p className="mt-1 text-xs text-text-faint">
+            Add members or send to open pool to start generating instances
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {associations.map((assoc) => {
+            const memberName = assoc.member_id ? memberMap.get(assoc.member_id) ?? 'Unknown' : 'Open Pool'
+            const isPool = assoc.is_open_pool
+
+            return (
+              <div
+                key={assoc.id}
+                className="flex items-center justify-between rounded-lg border border-border bg-bg-hover p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${
+                      isPool ? 'bg-gray-400' : 'bg-primary'
+                    }`}
+                  >
+                    {isPool ? 'OP' : memberName.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-text-primary">{memberName}</div>
+                    <div className="text-xs text-text-faint">
+                      {isPool ? 'Open Pool — anyone can claim' : 'Assigned member'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {!isPool && availableMembers.length > 0 && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleReassignMember(assoc.id, e.target.value)
+                          e.target.value = ''
+                        }
+                      }}
+                      defaultValue=""
+                      className="rounded-md border border-border bg-white px-2 py-1 text-xs text-text-secondary focus:border-transparent focus:outline-none focus:ring-1 focus:ring-primary dark:bg-bg"
+                    >
+                      <option value="" disabled>
+                        Reassign to...
+                      </option>
+                      {availableMembers.map((m) => (
+                        <option key={m.key} value={m.key}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {!isPool && !hasOpenPool && (
+                    <button
+                      type="button"
+                      onClick={() => handleSendToOpenPool(assoc.id)}
+                      className="rounded-md border border-border bg-white px-2 py-1 text-xs text-text-secondary transition-colors hover:bg-bg-hover dark:bg-bg"
+                      title="Send to open pool"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAssociation(assoc.id)}
+                    className="rounded-md p-1 text-text-faint transition-colors hover:bg-danger/10 hover:text-danger"
+                    title="Remove association"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Add to open pool button */}
+      {!hasOpenPool && (
+        <button
+          type="button"
+          onClick={handleAddToOpenPool}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-bg-hover p-3 text-sm text-text-muted transition-colors hover:border-primary hover:text-primary"
+        >
+          <Users className="h-4 w-4" />
+          Add to Open Pool
+        </button>
+      )}
+    </div>
+  )
 }

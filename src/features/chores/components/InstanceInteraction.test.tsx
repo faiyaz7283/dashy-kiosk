@@ -68,7 +68,7 @@ function makeMaster(overrides: Partial<MasterChore> = {}): MasterChore {
     estimated_minutes: 20,
     due_time: '21:00',
     due_date: null,
-    expiration_behavior: 'carry_over',
+    expiration_behavior: 'stay_visible',
     end_date: null,
     max_occurrences: null,
     occurrence_count: 45,

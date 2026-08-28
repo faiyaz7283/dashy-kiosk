@@ -111,6 +111,23 @@ export async function deleteMasterChore(choreId: string): Promise<void> {
 }
 
 /**
+ * Permanently delete a master chore and all related data.
+ *
+ * Hard-deletes the master, its associations, and all instances.
+ * This action cannot be undone.
+ *
+ * @param choreId - The master chore ID to permanently delete.
+ */
+export async function permanentDeleteMasterChore(choreId: string): Promise<void> {
+  const response = await fetch(`${BASE}/masters/${choreId}?permanent=true`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+}
+
+/**
  * Bulk update the status of multiple master chores.
  *
  * @param masterIds - Array of master chore IDs to update.
@@ -231,6 +248,66 @@ export async function updateInstanceStatus(
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status, actor_id: actorId }),
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+  return response.json()
+}
+
+/**
+ * Delete (archive) a chore instance.
+ *
+ * Only instances with status ACTIVE or ARCHIVED can be deleted.
+ * Instances with status IN_PROGRESS, COMPLETED, MISSED, or OVERDUE
+ * cannot be deleted — they must be resolved first.
+ *
+ * @param instanceId - Instance identifier.
+ * @returns The archived instance.
+ */
+export async function deleteInstance(instanceId: string): Promise<ChoreInstance> {
+  const response = await fetch(`${BASE}/instances/${instanceId}`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+  return response.json()
+}
+
+/**
+ * Revert an instance's status by one step.
+ *
+ * Status reversal flow:
+ * - completed → in_progress (clears completed_at, completed_by)
+ * - in_progress → active (clears started_at)
+ * - missed → active
+ * - overdue → active
+ *
+ * @param instanceId - Instance identifier.
+ * @returns The updated instance.
+ */
+export async function revertInstanceStatus(instanceId: string): Promise<ChoreInstance> {
+  const response = await fetch(`${BASE}/instances/${instanceId}/revert`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+  return response.json()
+}
+
+/**
+ * Reset an instance to active status regardless of current status.
+ *
+ * Clears all progress tracking fields (started_at, completed_at, completed_by).
+ *
+ * @param instanceId - Instance identifier.
+ * @returns The reset instance.
+ */
+export async function resetInstance(instanceId: string): Promise<ChoreInstance> {
+  const response = await fetch(`${BASE}/instances/${instanceId}/reset`, {
+    method: 'POST',
   })
   if (!response.ok) {
     throw await parseApiError(response)

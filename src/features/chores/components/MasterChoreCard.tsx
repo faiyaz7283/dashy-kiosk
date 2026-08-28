@@ -49,6 +49,8 @@ export interface MasterChoreCardProps {
   onArchive?: (master: MasterChore) => void
   /** Callback when Restore is clicked. */
   onRestore?: (master: MasterChore) => void
+  /** Callback when Delete Permanently is clicked (archived only). */
+  onDelete?: (master: MasterChore) => void
 }
 
 /** Status badge config — static class map. */
@@ -92,6 +94,7 @@ export function MasterChoreCard({
   onToggleStatus,
   onArchive,
   onRestore,
+  onDelete,
 }: MasterChoreCardProps) {
   const { timezone } = useConfig()
 
@@ -234,6 +237,15 @@ export function MasterChoreCard({
             className="text-success hover:bg-success/10"
           >
             Restore
+          </ActionButton>
+        )}
+
+        {actionVariant === 'archived' && onDelete && (
+          <ActionButton
+            onClick={() => onDelete(master)}
+            className="text-danger hover:bg-danger/10"
+          >
+            Delete
           </ActionButton>
         )}
 

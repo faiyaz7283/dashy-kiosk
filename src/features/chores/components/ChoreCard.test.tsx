@@ -35,7 +35,7 @@ describe('ChoreCard', () => {
     estimated_minutes: 10,
     due_time: '22:00',
     due_date: null,
-    expiration_behavior: 'carry_over',
+    expiration_behavior: 'stay_visible',
     end_date: null,
     max_occurrences: null,
     occurrence_count: 0,

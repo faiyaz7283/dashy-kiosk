@@ -42,10 +42,16 @@ export interface ChoresViewProps {
   onArchive: (master: MasterChore) => void
   /** Callback when Restore is clicked on a master chore card. */
   onRestore: (master: MasterChore) => void
+  /** Callback when Delete Permanently is clicked on an archived master chore card. */
+  onDeleteArchived?: (master: MasterChore) => void
   /** Callback when Start action is triggered on an instance. */
   onStartInstance?: (instance: ChoreInstance) => void
   /** Callback when Complete action is triggered on an instance. */
   onCompleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when Delete action is triggered on an instance. */
+  onDeleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when Revert (undo) action is triggered on an instance. */
+  onRevertInstance?: (instance: ChoreInstance) => void
   /** Callback when Claim action is triggered on an open pool instance. */
   onClaimInstance?: (instanceId: string, memberId: string) => void
   /** Callback when Assign action is triggered on an open pool instance. */
@@ -80,8 +86,11 @@ export function ChoresView({
   onToggleStatus,
   onArchive,
   onRestore,
+  onDeleteArchived,
   onStartInstance,
   onCompleteInstance,
+  onDeleteInstance,
+  onRevertInstance,
   onClaimInstance,
   onAssignInstance,
   onViewTemplate,
@@ -101,6 +110,8 @@ export function ChoresView({
           error={error}
           {...(onStartInstance ? { onStartInstance } : {})}
           {...(onCompleteInstance ? { onCompleteInstance } : {})}
+          {...(onDeleteInstance ? { onDeleteInstance } : {})}
+          {...(onRevertInstance ? { onRevertInstance } : {})}
           {...(onClaimInstance ? { onClaimInstance } : {})}
           {...(onAssignInstance ? { onAssignInstance } : {})}
           {...(onViewTemplate ? { onViewTemplate } : {})}
@@ -131,6 +142,7 @@ export function ChoresView({
           onToggleSelect={onToggleSelect}
           onEditMaster={onEditMaster}
           onRestore={onRestore}
+          {...(onDeleteArchived ? { onDelete: onDeleteArchived } : {})}
         />
       )}
 
@@ -140,6 +152,7 @@ export function ChoresView({
           {...(editingMaster ? { master: editingMaster } : {})}
           categories={data.categories}
           tags={data.tags}
+          associations={data.associations}
           members={members}
           onClose={onCloseMasterModal}
           onSuccess={onMasterSuccess}

@@ -25,7 +25,7 @@ export interface RecurrenceRule {
 }
 
 /** What happens to an instance when its period expires. */
-export type ExpirationBehavior = 'disappear' | 'carry_over' | 'stay_visible' | 'convert_to_open'
+export type ExpirationBehavior = 'disappear' | 'stay_visible' | 'convert_to_open'
 
 /** Lifecycle status of a master chore template. */
 export type MasterChoreStatus = 'active' | 'inactive' | 'archived'

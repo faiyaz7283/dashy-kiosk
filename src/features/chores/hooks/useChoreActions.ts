@@ -11,12 +11,16 @@ import {
   createMasterChore,
   updateMasterChore,
   deleteMasterChore,
+  permanentDeleteMasterChore,
   bulkUpdateMasterStatus,
   createAssociation,
   deleteAssociation,
   claimInstance,
   assignInstance,
   updateInstanceStatus,
+  deleteInstance,
+  revertInstanceStatus,
+  resetInstance,
   createCategory,
   createTag,
 } from '../api/choresApi'
@@ -46,6 +50,8 @@ export interface UseChoreActionsReturn {
   ) => Promise<MasterChore>
   /** Soft-delete a master chore template. */
   deleteMaster: (choreId: string) => Promise<void>
+  /** Permanently delete a master chore and all related data. */
+  permanentDeleteMaster: (choreId: string) => Promise<void>
   /** Bulk update status of multiple master chores. */
   bulkUpdateMasterStatus: (
     masterIds: string[],
@@ -69,6 +75,12 @@ export interface UseChoreActionsReturn {
     status: InstanceStatus,
     actorId: string,
   ) => Promise<ChoreInstance>
+  /** Delete (archive) an instance. Only active/archived instances can be deleted. */
+  deleteInstance: (instanceId: string) => Promise<ChoreInstance>
+  /** Revert an instance's status by one step (completed→in_progress→active). */
+  revertInstanceStatus: (instanceId: string) => Promise<ChoreInstance>
+  /** Reset an instance to active status regardless of current status. */
+  resetInstance: (instanceId: string) => Promise<ChoreInstance>
   /** Create a new chore category. */
   createCategory: (name: string) => Promise<ChoreCategory>
   /** Create a new chore tag. */
@@ -129,6 +141,20 @@ export function useChoreActions(): UseChoreActionsReturn {
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
         else console.error('Failed to delete master chore:', error)
+        throw error
+      }
+    },
+    [invalidateChores, showApiError],
+  )
+
+  const permanentDeleteMaster = useCallback(
+    async (choreId: string) => {
+      try {
+        await permanentDeleteMasterChore(choreId)
+        invalidateChores()
+      } catch (error) {
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to permanently delete master chore:', error)
         throw error
       }
     },
@@ -224,6 +250,51 @@ export function useChoreActions(): UseChoreActionsReturn {
     [invalidateChores, showApiError],
   )
 
+  const deleteInstanceAction = useCallback(
+    async (instanceId: string) => {
+      try {
+        const result = await deleteInstance(instanceId)
+        invalidateChores()
+        return result
+      } catch (error) {
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to delete instance:', error)
+        throw error
+      }
+    },
+    [invalidateChores, showApiError],
+  )
+
+  const revertInstanceStatusAction = useCallback(
+    async (instanceId: string) => {
+      try {
+        const result = await revertInstanceStatus(instanceId)
+        invalidateChores()
+        return result
+      } catch (error) {
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to revert instance status:', error)
+        throw error
+      }
+    },
+    [invalidateChores, showApiError],
+  )
+
+  const resetInstanceAction = useCallback(
+    async (instanceId: string) => {
+      try {
+        const result = await resetInstance(instanceId)
+        invalidateChores()
+        return result
+      } catch (error) {
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to reset instance:', error)
+        throw error
+      }
+    },
+    [invalidateChores, showApiError],
+  )
+
   const createCategoryAction = useCallback(
     async (name: string) => {
       try {
@@ -258,12 +329,16 @@ export function useChoreActions(): UseChoreActionsReturn {
     createMaster,
     updateMaster,
     deleteMaster,
+    permanentDeleteMaster,
     bulkUpdateMasterStatus: bulkUpdateMasterStatusAction,
     createAssociation: createAssociationAction,
     deleteAssociation: deleteAssociationAction,
     claimInstance: claimInstanceAction,
     assignInstance: assignInstanceAction,
     updateInstanceStatus: updateInstanceStatusAction,
+    deleteInstance: deleteInstanceAction,
+    revertInstanceStatus: revertInstanceStatusAction,
+    resetInstance: resetInstanceAction,
     createCategory: createCategoryAction,
     createTag: createTagAction,
   }

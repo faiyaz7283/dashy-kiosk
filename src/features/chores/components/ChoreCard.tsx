@@ -6,7 +6,7 @@
  * assignment info, and action button (Start/Complete).
  */
 
-import { Clock, AlertTriangle, CheckCircle, Play, Archive } from 'lucide-react'
+import { Clock, AlertTriangle, CheckCircle, Play, Archive, Undo2 } from 'lucide-react'
 import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '@/types/chores'
 import { paletteBorderClasses, getMemberPaletteKey, type PaletteKey } from '@/shared/utils/memberColors'
 import { formatTime } from '@/shared/date'
@@ -29,6 +29,10 @@ export interface ChoreCardProps {
   onStart?: () => void
   /** Callback when Complete button is clicked. */
   onComplete?: () => void
+  /** Callback when Delete button is clicked. */
+  onDelete?: () => void
+  /** Callback when Revert (undo) button is clicked. */
+  onRevert?: () => void
 }
 
 /** Static map for status icon colors. */
@@ -74,6 +78,8 @@ export function ChoreCard({
   onClick,
   onStart,
   onComplete,
+  onDelete,
+  onRevert,
 }: ChoreCardProps) {
   // Get category name
   const category = categories.find((c) => c.id === masterChore.category.id)
@@ -109,27 +115,65 @@ export function ChoreCard({
   const getActionButton = () => {
     if (instance.status === 'active') {
       return (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onStart?.()
-          }}
-          className="w-full rounded py-1 px-2 text-[10px] font-medium text-white bg-chores-active hover:bg-chores-active/90 transition-colors"
-        >
-          Start
-        </button>
+        <div className="flex gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onStart?.()
+            }}
+            className="flex-1 rounded py-1 px-2 text-[10px] font-medium text-white bg-chores-active hover:bg-chores-active/90 transition-colors"
+          >
+            Start
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete?.()
+            }}
+            className="rounded py-1 px-2 text-[10px] font-medium text-white bg-chores-archived hover:bg-chores-archived/90 transition-colors"
+            title="Delete instance"
+          >
+            <Archive className="h-2.5 w-2.5" />
+          </button>
+        </div>
       )
     }
     if (instance.status === 'in_progress') {
       return (
+        <div className="flex gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onComplete?.()
+            }}
+            className="flex-1 rounded py-1 px-2 text-[10px] font-medium text-white bg-chores-completed hover:bg-chores-completed/90 transition-colors"
+          >
+            Complete
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onRevert?.()
+            }}
+            className="rounded py-1 px-2 text-[10px] font-medium text-white bg-chores-active hover:bg-chores-active/90 transition-colors"
+            title="Revert to active"
+          >
+            <Undo2 className="h-2.5 w-2.5" />
+          </button>
+        </div>
+      )
+    }
+    if (instance.status === 'completed') {
+      return (
         <button
           onClick={(e) => {
             e.stopPropagation()
-            onComplete?.()
+            onRevert?.()
           }}
-          className="w-full rounded py-1 px-2 text-[10px] font-medium text-white bg-chores-completed hover:bg-chores-completed/90 transition-colors"
+          className="w-full rounded py-1 px-2 text-[10px] font-medium text-white bg-chores-in-progress hover:bg-chores-in-progress/90 transition-colors"
+          title="Revert to in-progress"
         >
-          Complete
+          Undo Complete
         </button>
       )
     }

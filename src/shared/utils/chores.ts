@@ -12,7 +12,7 @@ import type {
   RecurrenceRule,
 } from '@/types/chores'
 import { colors } from '@/theme/tokens'
-import { formatTime } from '@/shared/date'
+import { formatTime, today } from '@/shared/date'
 
 /** Day-of-week names indexed by RecurrenceRule convention (0=Monday, 6=Sunday). */
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -97,6 +97,37 @@ export function getColumnMetrics(instances: ChoreInstance[]): ColumnMetrics {
     inProgress: instances.filter((i) => i.status === 'in_progress').length,
     completed: instances.filter((i) => i.status === 'completed').length,
     overdue: instances.filter((i) => i.status === 'overdue').length,
+  }
+}
+
+/** Metrics for the open pool column. */
+export interface OpenPoolMetrics {
+  /** Total instances in the open pool. */
+  total: number
+  /** Overdue instances. */
+  overdue: number
+  /** Instances due today. */
+  dueToday: number
+}
+
+/**
+ * Calculate metrics for the open pool column.
+ *
+ * Open pool instances are unclaimed and unassigned, so member-specific
+ * metrics (assigned, claimed) don't apply. Instead, we show:
+ * - Total: all open pool instances
+ * - Overdue: instances past their period
+ * - Due Today: instances with period_start = today
+ *
+ * @param instances - Open pool instances.
+ * @returns Open pool metric counts for display.
+ */
+export function getOpenPoolMetrics(instances: ChoreInstance[]): OpenPoolMetrics {
+  const todayStr = today().toString()
+  return {
+    total: instances.length,
+    overdue: instances.filter((i) => i.status === 'overdue').length,
+    dueToday: instances.filter((i) => i.period_start === todayStr).length,
   }
 }
 

@@ -27,7 +27,9 @@ import {
   isOpenPoolInstance,
   getMemberInstances,
   getColumnMetrics,
+  getOpenPoolMetrics,
 } from '@/shared/utils/chores'
+import type { OpenPoolMetrics } from '@/shared/utils/chores'
 import type {
   ChoresData,
   ChoreInstance,
@@ -58,6 +60,10 @@ export interface ChoresBoardProps {
   onStartInstance?: (instance: ChoreInstance) => void
   /** Callback when Complete action is triggered on an instance. */
   onCompleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when Delete action is triggered on an instance. */
+  onDeleteInstance?: (instance: ChoreInstance) => void
+  /** Callback when Revert (undo) action is triggered on an instance. */
+  onRevertInstance?: (instance: ChoreInstance) => void
   /** Callback when Claim action is triggered on an open pool instance. */
   onClaimInstance?: (instanceId: string, memberId: string) => void
   /** Callback when Assign action is triggered on an open pool instance. */
@@ -79,6 +85,8 @@ export function ChoresBoard({
   error,
   onStartInstance,
   onCompleteInstance,
+  onDeleteInstance,
+  onRevertInstance,
   onClaimInstance,
   onAssignInstance,
   onViewTemplate,
@@ -159,7 +167,7 @@ export function ChoresBoard({
           <Column
             title="Open Pool"
             isGray
-            metrics={getColumnMetrics(openPoolInstances)}
+            metrics={getOpenPoolMetrics(openPoolInstances)}
             onAdd={() => handleOpenPicker()}
           >
             {openPoolInstances.map((instance) => {
@@ -175,6 +183,8 @@ export function ChoresBoard({
                   onClick={() => setSelectedInstance(instance)}
                   onStart={() => onStartInstance?.(instance)}
                   onComplete={() => onCompleteInstance?.(instance)}
+                  onDelete={() => onDeleteInstance?.(instance)}
+                  onRevert={() => onRevertInstance?.(instance)}
                 />
               )
             })}
@@ -206,6 +216,8 @@ export function ChoresBoard({
                       onClick={() => setSelectedInstance(instance)}
                       onStart={() => onStartInstance?.(instance)}
                       onComplete={() => onCompleteInstance?.(instance)}
+                      onDelete={() => onDeleteInstance?.(instance)}
+                      onRevert={() => onRevertInstance?.(instance)}
                     />
                   )
                 })}
@@ -275,14 +287,16 @@ interface ColumnProps {
   isGray?: boolean
   /** Palette key for member color. */
   paletteKey?: PaletteKey
-  /** Metric counts for display. */
-  metrics: {
-    assigned: number
-    claimed: number
-    inProgress: number
-    completed: number
-    overdue: number
-  }
+  /** Metric counts for display — member column metrics or open pool metrics. */
+  metrics:
+    | {
+        assigned: number
+        claimed: number
+        inProgress: number
+        completed: number
+        overdue: number
+      }
+    | OpenPoolMetrics
   /** Callback when add button is clicked. */
   onAdd?: () => void
   /** Child chore cards. */
@@ -335,41 +349,67 @@ function Column({
           </button>
         </div>
 
-        {/* Metric cards */}
-        <div className="grid grid-cols-5 gap-1.5">
-          <MetricCard
-            icon={<User className="h-2.5 w-2.5 text-text-muted" />}
-            label="Asn"
-            value={metrics.assigned}
-          />
-          <MetricCard
-            icon={<Hand className="h-2.5 w-2.5 text-text-muted" />}
-            label="Clm"
-            value={metrics.claimed}
-          />
-          <MetricCard
-            icon={<Play className="h-2.5 w-2.5 text-chores-in-progress" />}
-            label="Prog"
-            value={metrics.inProgress}
-            valueClass="text-chores-in-progress"
-          />
-          <MetricCard
-            icon={
-              <CheckCircle className="h-2.5 w-2.5 text-chores-completed" />
-            }
-            label="Done"
-            value={metrics.completed}
-            valueClass="text-chores-completed"
-          />
-          <MetricCard
-            icon={
-              <AlertTriangle className="h-2.5 w-2.5 text-chores-overdue" />
-            }
-            label="Over"
-            value={metrics.overdue}
-            valueClass="text-chores-overdue"
-          />
-        </div>
+        {/* Metric cards — different layout for open pool vs member columns */}
+        {'total' in metrics ? (
+          <div className="grid grid-cols-3 gap-1.5">
+            <MetricCard
+              icon={<User className="h-2.5 w-2.5 text-text-muted" />}
+              label="Total"
+              value={metrics.total}
+            />
+            <MetricCard
+              icon={
+                <AlertTriangle className="h-2.5 w-2.5 text-chores-overdue" />
+              }
+              label="Over"
+              value={metrics.overdue}
+              valueClass="text-chores-overdue"
+            />
+            <MetricCard
+              icon={
+                <CheckCircle className="h-2.5 w-2.5 text-chores-active" />
+              }
+              label="Today"
+              value={metrics.dueToday}
+              valueClass="text-chores-active"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-5 gap-1.5">
+            <MetricCard
+              icon={<User className="h-2.5 w-2.5 text-text-muted" />}
+              label="Asn"
+              value={metrics.assigned}
+            />
+            <MetricCard
+              icon={<Hand className="h-2.5 w-2.5 text-text-muted" />}
+              label="Clm"
+              value={metrics.claimed}
+            />
+            <MetricCard
+              icon={<Play className="h-2.5 w-2.5 text-chores-in-progress" />}
+              label="Prog"
+              value={metrics.inProgress}
+              valueClass="text-chores-in-progress"
+            />
+            <MetricCard
+              icon={
+                <CheckCircle className="h-2.5 w-2.5 text-chores-completed" />
+              }
+              label="Done"
+              value={metrics.completed}
+              valueClass="text-chores-completed"
+            />
+            <MetricCard
+              icon={
+                <AlertTriangle className="h-2.5 w-2.5 text-chores-overdue" />
+              }
+              label="Over"
+              value={metrics.overdue}
+              valueClass="text-chores-overdue"
+            />
+          </div>
+        )}
       </div>
 
       {/* Chore cards */}

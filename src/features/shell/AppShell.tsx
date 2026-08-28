@@ -163,6 +163,28 @@ function AppShellContent({
     [choreActions],
   )
 
+  const handleDeleteInstance = useCallback(
+    async (instance: ChoreInstance) => {
+      try {
+        await choreActions.deleteInstance(instance.id)
+      } catch (error) {
+        console.error('Failed to delete instance:', error)
+      }
+    },
+    [choreActions],
+  )
+
+  const handleRevertInstance = useCallback(
+    async (instance: ChoreInstance) => {
+      try {
+        await choreActions.revertInstanceStatus(instance.id)
+      } catch (error) {
+        console.error('Failed to revert instance:', error)
+      }
+    },
+    [choreActions],
+  )
+
   const handleClaimInstance = useCallback(
     async (instanceId: string, memberId: string) => {
       try {
@@ -204,6 +226,7 @@ function AppShellContent({
     | { type: 'archive'; ids: string[] }
     | { type: 'restore'; ids: string[] }
     | { type: 'delete'; ids: string[] }
+    | { type: 'permanent_delete'; ids: string[] }
     | null
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [isConfirming, setIsConfirming] = useState(false)
@@ -293,8 +316,10 @@ function AppShellContent({
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedIdsArray.length === 0) return
-    setPendingAction({ type: 'delete', ids: [...selectedIdsArray] })
-  }, [selectedIdsArray])
+    // In archived view, delete means permanent; otherwise archive
+    const actionType = choresViewMode === 'manage-archived' ? 'permanent_delete' : 'delete'
+    setPendingAction({ type: actionType, ids: [...selectedIdsArray] })
+  }, [selectedIdsArray, choresViewMode])
 
   const handleConfirmAction = useCallback(async () => {
     if (!pendingAction) return
@@ -306,6 +331,8 @@ function AppShellContent({
         await choreActions.bulkUpdateMasterStatus(pendingAction.ids, 'active')
       } else if (pendingAction.type === 'delete') {
         await Promise.all(pendingAction.ids.map((id) => choreActions.deleteMaster(id)))
+      } else if (pendingAction.type === 'permanent_delete') {
+        await Promise.all(pendingAction.ids.map((id) => choreActions.permanentDeleteMaster(id)))
       }
       handleClearSelection()
       setPendingAction(null)
@@ -360,6 +387,13 @@ function AppShellContent({
   const handleRestore = useCallback(
     (master: MasterChore) => {
       setPendingAction({ type: 'restore', ids: [master.id] })
+    },
+    [],
+  )
+
+  const handleDeleteArchived = useCallback(
+    (master: MasterChore) => {
+      setPendingAction({ type: 'permanent_delete', ids: [master.id] })
     },
     [],
   )
@@ -460,8 +494,11 @@ function AppShellContent({
             onToggleStatus={handleToggleStatus}
             onArchive={handleArchive}
             onRestore={handleRestore}
+            onDeleteArchived={handleDeleteArchived}
             onStartInstance={handleStartInstance}
             onCompleteInstance={handleCompleteInstance}
+            onDeleteInstance={handleDeleteInstance}
+            onRevertInstance={handleRevertInstance}
             onClaimInstance={handleClaimInstance}
             onAssignInstance={handleAssignInstance}
             onViewTemplate={handleViewTemplate}
@@ -494,9 +531,18 @@ function AppShellContent({
       />
       <ConfirmDialog
         open={pendingAction?.type === 'delete'}
+        title="Archive chore?"
+        message="Active instances will be archived. You can restore it later."
+        confirmLabel="Archive"
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+        isConfirming={isConfirming}
+      />
+      <ConfirmDialog
+        open={pendingAction?.type === 'permanent_delete'}
         title="Permanently delete chore?"
-        message="This cannot be undone. All instances and history will be removed."
-        confirmLabel="Delete"
+        message="This cannot be undone. All instances, associations, and history will be removed."
+        confirmLabel="Delete Permanently"
         variant="danger"
         onConfirm={handleConfirmAction}
         onCancel={handleCancelAction}
