@@ -22,7 +22,6 @@ import {
 import type {
   MasterChore,
   ChoreInstance,
-  ChoreAssociation,
   ChoreCategory,
   ChoreTag,
   InstanceStatus,
@@ -30,6 +29,7 @@ import type {
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
   CreateAssociationRequest,
+  AssociationCreateResponse,
 } from '@/types/chores'
 
 /** Return type of useChoreActions. */
@@ -49,7 +49,7 @@ export interface UseChoreActionsReturn {
     status: MasterChoreStatus,
   ) => Promise<{ updated_count: number }>
   /** Create a new association between a master chore and a member/pool. */
-  createAssociation: (data: CreateAssociationRequest) => Promise<ChoreAssociation>
+  createAssociation: (data: CreateAssociationRequest) => Promise<AssociationCreateResponse>
   /** Delete (soft-remove) a chore association. */
   deleteAssociation: (associationId: string) => Promise<void>
   /** Claim an open-pool instance for a member. */

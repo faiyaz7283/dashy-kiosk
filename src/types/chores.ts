@@ -267,4 +267,33 @@ export interface CreateAssociationRequest {
   is_open_pool?: boolean
   /** Member ID creating the association. */
   created_by: string
+  /** If true, automatically claim the generated instance for member_id. */
+  auto_claim?: boolean
+  /** If provided, automatically assign the generated instance. */
+  auto_assign?: {
+    /** Member ID making the assignment. */
+    assigner_id: string
+  }
+}
+
+/** Response from creating an association with optional auto-claim/assign. */
+export interface AssociationCreateResponse {
+  /** Association ID. */
+  id: string
+  /** Master chore ID. */
+  master_chore_id: string
+  /** Member ID (null for open pool). */
+  member_id?: string
+  /** Whether this is an open pool. */
+  is_open_pool: boolean
+  /** Member ID who created the association. */
+  created_by: string
+  /** Creation timestamp. */
+  created_at: string
+  /** Last update timestamp. */
+  updated_at: string
+  /** Soft-delete timestamp (null if active). */
+  removed_at?: string
+  /** The generated instance (null if generation was skipped). */
+  instance?: ChoreInstance
 }

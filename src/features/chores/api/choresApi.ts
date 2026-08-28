@@ -11,7 +11,6 @@ import type {
   ChoresData,
   MasterChore,
   ChoreInstance,
-  ChoreAssociation,
   ChoreCategory,
   ChoreTag,
   InstanceStatus,
@@ -19,6 +18,7 @@ import type {
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
   CreateAssociationRequest,
+  AssociationCreateResponse,
 } from '@/types/chores'
 
 const BASE = ENDPOINTS.chores.url
@@ -135,12 +135,14 @@ export async function bulkUpdateMasterStatus(
 /**
  * Create a new association between a master chore and a member/pool.
  *
- * @param data - Association creation request.
- * @returns The created association.
+ * Supports optional auto_claim and auto_assign to eliminate chained calls.
+ *
+ * @param data - Association creation request with optional auto_claim/auto_assign.
+ * @returns The created association with generated instance.
  */
 export async function createAssociation(
   data: CreateAssociationRequest,
-): Promise<ChoreAssociation> {
+): Promise<AssociationCreateResponse> {
   const response = await fetch(`${BASE}/associations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

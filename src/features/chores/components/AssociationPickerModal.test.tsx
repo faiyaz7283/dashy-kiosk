@@ -5,6 +5,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { AssociationPickerModal } from './AssociationPickerModal'
+import { NotificationProvider } from '@/shared/context/NotificationContext'
 import type {
   MasterChore,
   ChoreAssociation,
@@ -88,7 +89,11 @@ const defaultProps = {
 }
 
 function renderModal(overrides: Partial<typeof defaultProps> = {}) {
-  return render(<AssociationPickerModal {...defaultProps} {...overrides} />)
+  return render(
+    <NotificationProvider>
+      <AssociationPickerModal {...defaultProps} {...overrides} />
+    </NotificationProvider>,
+  )
 }
 
 describe('AssociationPickerModal', () => {
@@ -99,7 +104,7 @@ describe('AssociationPickerModal', () => {
 
   it('renders open pool title when target is null', () => {
     renderModal({ targetMember: null })
-    expect(screen.getByText('Assign to Open Pool')).toBeTruthy()
+    expect(screen.getByText('Add to Open Pool')).toBeTruthy()
   })
 
   it('renders member avatar with initial', () => {
@@ -138,7 +143,7 @@ describe('AssociationPickerModal', () => {
     expect(screen.getByText('2 available')).toBeTruthy()
   })
 
-  it('does not filter masters associated to a different member', () => {
+  it('filters out non-collaborative masters that have any member association', () => {
     const associations: ChoreAssociation[] = [
       {
         id: 'a-1',
@@ -152,8 +157,10 @@ describe('AssociationPickerModal', () => {
       },
     ]
     renderModal({ associations })
-    expect(screen.getByText('Wipe Counter')).toBeTruthy()
-    expect(screen.getByText('3 available')).toBeTruthy()
+    // mc-1 is non-collaborative and has a member association, so it should be hidden
+    expect(screen.queryByText('Wipe Counter')).toBeNull()
+    expect(screen.getByText('Cook Dinner')).toBeTruthy()
+    expect(screen.getByText('2 available')).toBeTruthy()
   })
 
   it('shows section headers in "all" group mode', () => {
@@ -164,10 +171,10 @@ describe('AssociationPickerModal', () => {
     expect(screen.getAllByText('One-off').length).toBeGreaterThanOrEqual(1)
   })
 
-  it('renders Assign buttons for each item', () => {
+  it('renders Claim buttons for each item', () => {
     renderModal()
-    const assignButtons = screen.getAllByText('Assign')
-    expect(assignButtons.length).toBe(3)
+    const claimButtons = screen.getAllByText('Claim')
+    expect(claimButtons.length).toBe(3)
   })
 
   it('shows empty state when no masters available', () => {

@@ -1,13 +1,20 @@
 /**
  * Association picker modal — select a master chore to associate with a member or open pool.
  *
- * Displays available master chores (not yet associated to the target) with
- * search, group filter (All/Recurring/One-off), and sort options.
- * Opens from the column `+` button on the chores board.
+ * Displays available master chores with search, group filter (All/Recurring/One-off),
+ * and sort options. Opens from the column `+` button on the chores board.
+ *
+ * Member column flow:
+ * - Title: "Assign Chores to {MemberName}"
+ * - Each chore shows Claim button + Assign by dropdown
+ *
+ * Open pool flow:
+ * - Title: "Add to Open Pool"
+ * - Each chore shows Add button only
  */
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { Search, ArrowUpDown, X } from 'lucide-react'
+import { Search, ArrowUpDown, X, ChevronDown } from 'lucide-react'
 import type {
   MasterChore,
   ChoreAssociation,
@@ -24,8 +31,8 @@ import {
 import { formatRecurrence, formatDifficulty } from '@/shared/utils/chores'
 import { useConfig } from '@/shared/date'
 import { useChoreActions } from '../hooks/useChoreActions'
+import { useNotifications } from '@/shared/context/NotificationContext'
 import { DifficultyDots } from './DifficultyDots'
-import { findFirstAdult } from '@/shared/utils/family'
 
 /** Sort options for the master chore list. */
 type SortOption = 'name-asc' | 'name-desc' | 'category' | 'difficulty'
@@ -43,7 +50,7 @@ export interface AssociationPickerModalProps {
   categories: ChoreCategory[]
   /** All associations (to filter already-associated masters). */
   associations: ChoreAssociation[]
-  /** Family members (for created_by lookup). */
+  /** Family members (for assigner dropdown). */
   members: FamilyMember[]
   /** Callback to close the modal. */
   onClose: () => void
@@ -70,25 +77,32 @@ export function AssociationPickerModal({
   const [groupFilter, setGroupFilter] = useState<GroupFilter>('all')
   const [sortOption, setSortOption] = useState<SortOption>('name-asc')
   const [sortOpen, setSortOpen] = useState(false)
+  const [assignDropdownOpen, setAssignDropdownOpen] = useState<string | null>(null)
   const sortRef = useRef<HTMLDivElement>(null)
+  const assignDropdownRef = useRef<HTMLDivElement>(null)
 
   const { timezone } = useConfig()
   const actions = useChoreActions(onAssociationCreated)
+  const { addNotification } = useNotifications()
 
-  // Close sort dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
-    if (!sortOpen) return
+    if (!sortOpen && !assignDropdownOpen) return
     const handleClickOutside = (event: MouseEvent) => {
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
         setSortOpen(false)
       }
+      if (assignDropdownRef.current && !assignDropdownRef.current.contains(event.target as Node)) {
+        setAssignDropdownOpen(null)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [sortOpen])
+  }, [sortOpen, assignDropdownOpen])
 
   const targetName = targetMember?.name ?? 'Open Pool'
   const targetKey = targetMember?.key ?? null
+  const isMemberTarget = targetMember !== null
 
   // Category lookup map
   const categoryMap = useMemo(
@@ -112,7 +126,7 @@ export function AssociationPickerModal({
     ? getMemberPaletteKey(targetMember.key, colorMap)
     : null
 
-  // Available masters: active, not yet associated to target
+  // Smart filtering: available masters
   const availableMasters = useMemo(() => {
     const associatedMasterIds = new Set(
       associations
@@ -124,9 +138,23 @@ export function AssociationPickerModal({
         .map((a) => a.master_chore_id),
     )
 
-    return masterChores.filter(
-      (mc) => mc.status === 'active' && !associatedMasterIds.has(mc.id),
-    )
+    return masterChores.filter((mc) => {
+      // Must be active
+      if (mc.status !== 'active') return false
+      // Must not already be associated to target
+      if (associatedMasterIds.has(mc.id)) return false
+      // Smart filter: hide non-collaborative masters that already have a member association
+      if (!mc.is_collaborative) {
+        const hasMemberAssociation = associations.some(
+          (a) =>
+            a.master_chore_id === mc.id &&
+            a.removed_at === null &&
+            !a.is_open_pool,
+        )
+        if (hasMemberAssociation) return false
+      }
+      return true
+    })
   }, [masterChores, associations, targetKey])
 
   // Apply group filter
@@ -184,20 +212,85 @@ export function AssociationPickerModal({
 
   const showSections = groupFilter === 'all'
 
-  const handleAssign = async (masterChoreId: string) => {
-    const adult = findFirstAdult(members)
-    const createdBy = adult?.key ?? members[0]?.key ?? 'unknown'
+  // Members available for "Assign by" dropdown (exclude target member)
+  const assignerMembers = useMemo(
+    () => members.filter((m) => m.key !== targetKey),
+    [members, targetKey],
+  )
 
-    const associationData = {
-      master_chore_id: masterChoreId,
-      created_by: createdBy,
-      ...(targetKey
-        ? { member_id: targetKey }
-        : { is_open_pool: true as const }),
+  const handleClaim = async (masterChoreId: string) => {
+    if (!targetKey) return
+
+    try {
+      await actions.createAssociation({
+        master_chore_id: masterChoreId,
+        member_id: targetKey,
+        created_by: targetKey,
+        auto_claim: true,
+      })
+      addNotification({
+        type: 'success',
+        title: 'Chore claimed',
+        message: `${targetName} has claimed this chore`,
+      })
+      onAssociationCreated()
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to claim chore',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
     }
+  }
 
-    await actions.createAssociation(associationData)
-    onClose()
+  const handleAssign = async (masterChoreId: string, assignerId: string) => {
+    if (!targetKey) return
+
+    try {
+      await actions.createAssociation({
+        master_chore_id: masterChoreId,
+        member_id: targetKey,
+        created_by: targetKey,
+        auto_assign: { assigner_id: assignerId },
+      })
+      const assigner = members.find((m) => m.key === assignerId)
+      addNotification({
+        type: 'success',
+        title: 'Chore assigned',
+        message: `${assigner?.name ?? 'Unknown'} assigned this chore to ${targetName}`,
+      })
+      onAssociationCreated()
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to assign chore',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+    setAssignDropdownOpen(null)
+  }
+
+  const handleAddToPool = async (masterChoreId: string) => {
+    try {
+      const createdBy = members[0]?.key ?? 'unknown'
+      await actions.createAssociation({
+        master_chore_id: masterChoreId,
+        is_open_pool: true,
+        created_by: createdBy,
+      })
+      addNotification({
+        type: 'success',
+        title: 'Added to open pool',
+        message: 'Chore is now available for claiming',
+      })
+      onAssociationCreated()
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Failed to add to open pool',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
   }
 
   /** Render a master chore list item. */
@@ -211,7 +304,7 @@ export function AssociationPickerModal({
     return (
       <div
         key={master.id}
-        className="cursor-pointer border-b border-border-light px-6 py-3 transition-colors hover:bg-bg-hover"
+        className="border-b border-border-light px-6 py-3"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -250,13 +343,56 @@ export function AssociationPickerModal({
             </div>
           </div>
 
-          {/* Assign button */}
-          <button
-            onClick={() => handleAssign(master.id)}
-            className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-          >
-            Assign
-          </button>
+          {/* Action buttons */}
+          <div className="flex shrink-0 items-center gap-2">
+            {isMemberTarget ? (
+              <>
+                {/* Claim button */}
+                <button
+                  onClick={() => handleClaim(master.id)}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+                >
+                  Claim
+                </button>
+
+                {/* Assign by dropdown */}
+                <div className="relative" ref={assignDropdownOpen === master.id ? assignDropdownRef : undefined}>
+                  <button
+                    onClick={() =>
+                      setAssignDropdownOpen(
+                        assignDropdownOpen === master.id ? null : master.id,
+                      )
+                    }
+                    className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-bg-hover dark:bg-bg"
+                  >
+                    Assign by
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  {assignDropdownOpen === master.id && (
+                    <div className="absolute top-full right-0 z-10 mt-1 w-40 overflow-hidden rounded-lg border border-border bg-white shadow-popup dark:bg-bg">
+                      {assignerMembers.map((member) => (
+                        <button
+                          key={member.key}
+                          onClick={() => handleAssign(master.id, member.key)}
+                          className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-bg-hover"
+                        >
+                          {member.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* Open pool: Add button only */
+              <button
+                onClick={() => handleAddToPool(master.id)}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+              >
+                Add
+              </button>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -291,7 +427,9 @@ export function AssociationPickerModal({
 
             {/* Title — centered */}
             <h2 className="whitespace-nowrap text-center text-lg font-semibold text-text-primary">
-              {targetMember ? `Assign Chores to ${targetName}` : 'Assign to Open Pool'}
+              {isMemberTarget
+                ? `Assign Chores to ${targetName}`
+                : 'Add to Open Pool'}
             </h2>
 
             {/* Close button — right */}
