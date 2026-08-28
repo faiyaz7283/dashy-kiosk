@@ -34,6 +34,7 @@ import { MonthView } from '@/features/calendar/views/MonthView'
 import { YearView } from '@/features/calendar/views/YearView'
 import { findFirstAdult } from '@/shared/utils/family'
 import { ChoresView } from '@/features/chores/views/ChoresView'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import type { CalendarView } from '@/types'
 import type { ChoreInstance, MasterChore } from '@/types/chores'
 import type { FamilyMember } from '@/types/family'
@@ -194,6 +195,15 @@ function AppShellContent({
   const [showMasterModal, setShowMasterModal] = useState(false)
   const [editingMaster, setEditingMaster] = useState<MasterChore | null>(null)
 
+  // Confirmation dialog state
+  type PendingAction =
+    | { type: 'archive'; ids: string[] }
+    | { type: 'restore'; ids: string[] }
+    | { type: 'delete'; ids: string[] }
+    | null
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
+  const [isConfirming, setIsConfirming] = useState(false)
+
   // Auto-hide behavior
   const { isVisible: isHeaderVisible, elementRef: headerRef } = useAutoHide({ edge: 'top' })
   const { isVisible: isSidebarVisible, elementRef: sidebarRef } = useAutoHide({ edge: 'left' })
@@ -267,23 +277,44 @@ function AppShellContent({
     handleClearSelection()
   }, [selectedIdsArray, choreActions, handleClearSelection])
 
-  const handleArchiveSelected = useCallback(async () => {
+  const handleArchiveSelected = useCallback(() => {
     if (selectedIdsArray.length === 0) return
-    await choreActions.bulkUpdateMasterStatus(selectedIdsArray, 'archived')
-    handleClearSelection()
-  }, [selectedIdsArray, choreActions, handleClearSelection])
+    setPendingAction({ type: 'archive', ids: [...selectedIdsArray] })
+  }, [selectedIdsArray])
 
-  const handleRestoreSelected = useCallback(async () => {
+  const handleRestoreSelected = useCallback(() => {
     if (selectedIdsArray.length === 0) return
-    await choreActions.bulkUpdateMasterStatus(selectedIdsArray, 'active')
-    handleClearSelection()
-  }, [selectedIdsArray, choreActions, handleClearSelection])
+    setPendingAction({ type: 'restore', ids: [...selectedIdsArray] })
+  }, [selectedIdsArray])
 
-  const handleDeleteSelected = useCallback(async () => {
+  const handleDeleteSelected = useCallback(() => {
     if (selectedIdsArray.length === 0) return
-    await Promise.all(selectedIdsArray.map((id) => choreActions.deleteMaster(id)))
-    handleClearSelection()
-  }, [selectedIdsArray, choreActions, handleClearSelection])
+    setPendingAction({ type: 'delete', ids: [...selectedIdsArray] })
+  }, [selectedIdsArray])
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!pendingAction) return
+    setIsConfirming(true)
+    try {
+      if (pendingAction.type === 'archive') {
+        await choreActions.bulkUpdateMasterStatus(pendingAction.ids, 'archived')
+      } else if (pendingAction.type === 'restore') {
+        await choreActions.bulkUpdateMasterStatus(pendingAction.ids, 'active')
+      } else if (pendingAction.type === 'delete') {
+        await Promise.all(pendingAction.ids.map((id) => choreActions.deleteMaster(id)))
+      }
+      handleClearSelection()
+      setPendingAction(null)
+    } catch {
+      // Error logged by choreActions
+    } finally {
+      setIsConfirming(false)
+    }
+  }, [pendingAction, choreActions, handleClearSelection])
+
+  const handleCancelAction = useCallback(() => {
+    setPendingAction(null)
+  }, [])
 
   // Master chore modal
   const handleCreateMaster = useCallback(() => {
@@ -316,17 +347,17 @@ function AppShellContent({
   )
 
   const handleArchive = useCallback(
-    async (master: MasterChore) => {
-      await choreActions.bulkUpdateMasterStatus([master.id], 'archived')
+    (master: MasterChore) => {
+      setPendingAction({ type: 'archive', ids: [master.id] })
     },
-    [choreActions],
+    [],
   )
 
   const handleRestore = useCallback(
-    async (master: MasterChore) => {
-      await choreActions.bulkUpdateMasterStatus([master.id], 'active')
+    (master: MasterChore) => {
+      setPendingAction({ type: 'restore', ids: [master.id] })
     },
-    [choreActions],
+    [],
   )
 
   return (
@@ -438,6 +469,36 @@ function AppShellContent({
           />
         )}
       </main>
+
+      {/* Confirmation dialogs */}
+      <ConfirmDialog
+        open={pendingAction?.type === 'archive'}
+        title="Archive chore?"
+        message="Active instances will be archived. You can restore it later."
+        confirmLabel="Archive"
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+        isConfirming={isConfirming}
+      />
+      <ConfirmDialog
+        open={pendingAction?.type === 'restore'}
+        title="Restore chore?"
+        message="New instances will be generated for the current period."
+        confirmLabel="Restore"
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+        isConfirming={isConfirming}
+      />
+      <ConfirmDialog
+        open={pendingAction?.type === 'delete'}
+        title="Permanently delete chore?"
+        message="This cannot be undone. All instances and history will be removed."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+        isConfirming={isConfirming}
+      />
     </div>
   )
 }
