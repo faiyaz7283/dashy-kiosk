@@ -225,7 +225,10 @@ export function InstanceInteraction({
 
   // Determine action button
   const actionButton = useMemo(() => {
-    if (instance.status === 'active' && !isOpenPool) {
+    // Open pool instances don't get Start/Complete actions
+    if (isOpenPool) return null
+
+    if (instance.status === 'active') {
       return (
         <button
           onClick={onStart}
