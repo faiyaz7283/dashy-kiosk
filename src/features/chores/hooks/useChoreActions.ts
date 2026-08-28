@@ -19,6 +19,8 @@ import {
   createCategory,
   createTag,
 } from '../api/choresApi'
+import { useErrorNotifications } from '@/shared/hooks/useErrorNotifications'
+import { ApiError } from '@/shared/errors/ApiError'
 import type {
   MasterChore,
   ChoreInstance,
@@ -81,6 +83,8 @@ export interface UseChoreActionsReturn {
 export function useChoreActions(
   refetch: () => void,
 ): UseChoreActionsReturn {
+  const { showApiError } = useErrorNotifications()
+
   const createMaster = useCallback(
     async (data: CreateMasterChoreRequest) => {
       try {
@@ -88,11 +92,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to create master chore:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to create master chore:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const updateMaster = useCallback(
@@ -102,11 +107,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to update master chore:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to update master chore:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const deleteMaster = useCallback(
@@ -115,11 +121,12 @@ export function useChoreActions(
         await deleteMasterChore(choreId)
         refetch()
       } catch (error) {
-        console.error('Failed to delete master chore:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to delete master chore:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const bulkUpdateMasterStatusAction = useCallback(
@@ -129,11 +136,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to bulk update master status:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to bulk update master status:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const createAssociationAction = useCallback(
@@ -143,11 +151,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to create association:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to create association:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const deleteAssociationAction = useCallback(
@@ -156,11 +165,12 @@ export function useChoreActions(
         await deleteAssociation(associationId)
         refetch()
       } catch (error) {
-        console.error('Failed to delete association:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to delete association:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const claimInstanceAction = useCallback(
@@ -170,11 +180,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to claim instance:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to claim instance:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const assignInstanceAction = useCallback(
@@ -184,11 +195,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to assign instance:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to assign instance:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const updateInstanceStatusAction = useCallback(
@@ -198,11 +210,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to update instance status:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to update instance status:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const createCategoryAction = useCallback(
@@ -212,11 +225,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to create category:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to create category:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   const createTagAction = useCallback(
@@ -226,11 +240,12 @@ export function useChoreActions(
         refetch()
         return result
       } catch (error) {
-        console.error('Failed to create tag:', error)
+        if (error instanceof ApiError) showApiError(error)
+        else console.error('Failed to create tag:', error)
         throw error
       }
     },
-    [refetch],
+    [refetch, showApiError],
   )
 
   return {

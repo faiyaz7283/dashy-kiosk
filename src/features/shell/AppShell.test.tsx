@@ -8,6 +8,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AppShell from './AppShell'
+import { NotificationProvider } from '@/shared/context/NotificationContext'
 import { formatHeaderDate, today } from '@/shared/date'
 
 function renderWithQueryClient(ui: React.ReactElement) {
@@ -15,7 +16,11 @@ function renderWithQueryClient(ui: React.ReactElement) {
     defaultOptions: { queries: { retry: false } },
   })
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NotificationProvider>
+        {ui}
+      </NotificationProvider>
+    </QueryClientProvider>
   )
 }
 
