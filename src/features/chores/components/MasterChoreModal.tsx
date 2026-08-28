@@ -175,6 +175,8 @@ export function MasterChoreModal({
 
     try {
       const recurrenceRule = buildRecurrenceRule(form)
+      // Template creation has no UI context (no column/instance), so use first adult as default creator.
+      // This is metadata about who created the template, not an action actor.
       const adult = findFirstAdult(members)
       const createdBy = adult?.key ?? members[0]?.key ?? 'unknown'
       const estimatedMinutes = form.estimatedDuration.value

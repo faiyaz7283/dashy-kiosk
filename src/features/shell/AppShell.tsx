@@ -32,7 +32,6 @@ import { DayView } from '@/features/calendar/views/DayView'
 import { WeekView } from '@/features/calendar/views/WeekView'
 import { MonthView } from '@/features/calendar/views/MonthView'
 import { YearView } from '@/features/calendar/views/YearView'
-import { findFirstAdult } from '@/shared/utils/family'
 import { ChoresView } from '@/features/chores/views/ChoresView'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import type { CalendarView } from '@/types'
@@ -131,32 +130,37 @@ function AppShellContent({
   const { events, lastRefresh: calendarLastRefresh, refetch: refetchCalendar } = useCalendarContext()
   const choreActions = useChoreActions(refetchChores)
 
-  // Instance action handlers
-  const actorId = useMemo(() => {
-    const adult = findFirstAdult(members)
-    return adult?.key ?? members[0]?.key ?? 'unknown'
-  }, [members])
-
+  // Instance action handlers — actor derived from instance context
   const handleStartInstance = useCallback(
     async (instance: ChoreInstance) => {
+      const actorId = instance.claimed_by ?? instance.assigned_to
+      if (!actorId) {
+        console.error('Cannot start instance: no member assigned')
+        return
+      }
       try {
         await choreActions.updateInstanceStatus(instance.id, 'in_progress', actorId)
       } catch (error) {
         console.error('Failed to start instance:', error)
       }
     },
-    [choreActions, actorId],
+    [choreActions],
   )
 
   const handleCompleteInstance = useCallback(
     async (instance: ChoreInstance) => {
+      const actorId = instance.claimed_by ?? instance.assigned_to
+      if (!actorId) {
+        console.error('Cannot complete instance: no member assigned')
+        return
+      }
       try {
         await choreActions.updateInstanceStatus(instance.id, 'completed', actorId)
       } catch (error) {
         console.error('Failed to complete instance:', error)
       }
     },
-    [choreActions, actorId],
+    [choreActions],
   )
 
   const handleClaimInstance = useCallback(
