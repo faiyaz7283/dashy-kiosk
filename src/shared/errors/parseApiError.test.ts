@@ -118,4 +118,77 @@ describe('parseApiError', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect(error.message).toBe('Server Error')
   })
+
+  it('parses RFC 9457 Problem Details format', async () => {
+    const responseBody = {
+      type: 'https://dashy.local/errors/validation-error',
+      title: 'validation-error',
+      status: 422,
+      detail: 'Request validation failed',
+      errors: [
+        { loc: ['body', 'name'], msg: 'Field required', type: 'missing' },
+        { loc: ['body', 'email'], msg: 'Invalid email', type: 'value_error' },
+      ],
+    }
+    const response = new Response(JSON.stringify(responseBody), {
+      status: 422,
+      statusText: 'Unprocessable Entity',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const error = await parseApiError(response)
+
+    expect(error.message).toBe('Request validation failed')
+    expect(error.status).toBe(422)
+    expect(error.detail).toBe('Request validation failed')
+    expect(error.type).toBe('https://dashy.local/errors/validation-error')
+    expect(error.title).toBe('validation-error')
+    expect(error.errors).toEqual([
+      { loc: ['body', 'name'], msg: 'Field required', type: 'missing' },
+      { loc: ['body', 'email'], msg: 'Invalid email', type: 'value_error' },
+    ])
+  })
+
+  it('parses RFC 9457 conflict error', async () => {
+    const responseBody = {
+      type: 'https://dashy.local/errors/conflict',
+      title: 'conflict',
+      status: 409,
+      detail: 'Instance is already claimed by another member',
+    }
+    const response = new Response(JSON.stringify(responseBody), {
+      status: 409,
+      statusText: 'Conflict',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const error = await parseApiError(response)
+
+    expect(error.message).toBe('Instance is already claimed by another member')
+    expect(error.status).toBe(409)
+    expect(error.type).toBe('https://dashy.local/errors/conflict')
+    expect(error.title).toBe('conflict')
+    expect(error.errors).toBeUndefined()
+  })
+
+  it('parses RFC 9457 not-found error', async () => {
+    const responseBody = {
+      type: 'https://dashy.local/errors/not-found',
+      title: 'not-found',
+      status: 404,
+      detail: 'Master chore with id "xyz" not found',
+    }
+    const response = new Response(JSON.stringify(responseBody), {
+      status: 404,
+      statusText: 'Not Found',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const error = await parseApiError(response)
+
+    expect(error.message).toBe('Master chore with id "xyz" not found')
+    expect(error.status).toBe(404)
+    expect(error.type).toBe('https://dashy.local/errors/not-found')
+    expect(error.title).toBe('not-found')
+  })
 })

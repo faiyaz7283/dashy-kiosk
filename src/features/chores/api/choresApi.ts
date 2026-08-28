@@ -37,6 +37,24 @@ export async function fetchChores(): Promise<ChoresData> {
 }
 
 /**
+ * Synchronize chore instance state.
+ *
+ * Triggers the safety net to generate missing instances, mark overdue
+ * instances, and process expired instances. Must be called explicitly
+ * by the frontend on mount/refresh — GET is read-only.
+ *
+ * @returns void (204 No Content on success).
+ */
+export async function syncChores(): Promise<void> {
+  const response = await fetch(`${BASE}/sync`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseApiError(response)
+  }
+}
+
+/**
  * Create a new master chore template.
  *
  * @param data - Master chore fields.
@@ -60,7 +78,7 @@ export async function createMasterChore(
  * Update an existing master chore template.
  *
  * @param choreId - The master chore ID to update.
- * @param data - Updated master chore fields.
+ * @param data - Updated master chore fields (partial update).
  * @returns The updated master chore.
  */
 export async function updateMasterChore(
@@ -68,7 +86,7 @@ export async function updateMasterChore(
   data: UpdateMasterChoreRequest,
 ): Promise<MasterChore> {
   const response = await fetch(`${BASE}/masters/${choreId}`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
@@ -95,8 +113,6 @@ export async function deleteMasterChore(choreId: string): Promise<void> {
 /**
  * Bulk update the status of multiple master chores.
  *
- * Uses query parameters (not JSON body) per backend endpoint design.
- *
  * @param masterIds - Array of master chore IDs to update.
  * @param status - New status to apply.
  * @returns Object with updated_count.
@@ -105,14 +121,10 @@ export async function bulkUpdateMasterStatus(
   masterIds: string[],
   status: MasterChoreStatus,
 ): Promise<{ updated_count: number }> {
-  const params = new URLSearchParams()
-  for (const id of masterIds) {
-    params.append('master_ids', id)
-  }
-  params.append('status', status)
-
-  const response = await fetch(`${BASE}/masters/bulk-status?${params.toString()}`, {
-    method: 'POST',
+  const response = await fetch(`${BASE}/masters/bulk-status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ master_ids: masterIds, status }),
   })
   if (!response.ok) {
     throw await parseApiError(response)
@@ -214,7 +226,7 @@ export async function updateInstanceStatus(
   actorId: string,
 ): Promise<ChoreInstance> {
   const response = await fetch(`${BASE}/instances/${instanceId}/status`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status, actor_id: actorId }),
   })

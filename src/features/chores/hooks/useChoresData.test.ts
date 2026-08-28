@@ -93,6 +93,11 @@ describe('useChoresData', () => {
   })
 
   it('returns chores data after successful fetch', async () => {
+    // First call: sync (POST /sync) — 204 No Content
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+    } as Response)
+    // Second call: fetch (GET /chores) — returns data
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(mockChoresData),
@@ -111,6 +116,11 @@ describe('useChoresData', () => {
   })
 
   it('returns null data when fetch returns null', async () => {
+    // First call: sync (POST /sync) — 204 No Content
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+    } as Response)
+    // Second call: fetch (GET /chores) — returns null
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(null),

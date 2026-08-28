@@ -12,7 +12,7 @@
 export interface RecurrenceRule {
   /** How often the chore recurs. */
   frequency: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly'
-  /** Time of day in HH:MM 24-hour format (UTC). */
+  /** Time of day in HH:MM 24-hour format (local time, interpreted by backend in configured timezone). */
   time: string
   /** Day of week (0=Monday, 6=Sunday). Required for weekly. */
   day_of_week?: number

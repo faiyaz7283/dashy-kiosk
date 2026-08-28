@@ -6,8 +6,13 @@
  * scaling and serves as the container for all feature views.
  */
 
+import { NotificationProvider } from '@/shared/context/NotificationContext'
 import AppShell from '@/features/shell/AppShell'
 
 export default function App() {
-  return <AppShell />
+  return (
+    <NotificationProvider>
+      <AppShell />
+    </NotificationProvider>
+  )
 }

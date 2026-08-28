@@ -23,6 +23,24 @@ describe('ApiError', () => {
     expect(error.detail).toBe('Email is required')
   })
 
+  it('includes RFC 9457 fields (type, title, errors)', () => {
+    const errors = [
+      { loc: ['body', 'email'], msg: 'Field required', type: 'missing' },
+    ]
+    const error = new ApiError(
+      'Request validation failed',
+      422,
+      'Request validation failed',
+      'https://dashy.local/errors/validation-error',
+      'validation-error',
+      errors,
+    )
+
+    expect(error.type).toBe('https://dashy.local/errors/validation-error')
+    expect(error.title).toBe('validation-error')
+    expect(error.errors).toEqual(errors)
+  })
+
   it('marks 5xx errors as retryable', () => {
     expect(new ApiError('Server error', 500).isRetryable).toBe(true)
     expect(new ApiError('Bad gateway', 502).isRetryable).toBe(true)
