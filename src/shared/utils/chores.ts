@@ -9,12 +9,12 @@ import type {
   ChoreInstance,
   ChoreAssociation,
   InstanceStatus,
-  RecurrenceRule,
+  MasterChore,
 } from '@/types/chores'
 import { colors } from '@/theme/tokens'
-import { formatTime, today } from '@/shared/date'
+import { formatTime } from '@/shared/date'
 
-/** Day-of-week names indexed by RecurrenceRule convention (0=Monday, 6=Sunday). */
+/** Day-of-week names indexed by backend convention (0=Monday, 6=Sunday). */
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 /** Month names indexed 1-12. */
@@ -29,29 +29,28 @@ const ORDINAL_SUFFIXES: Record<number, string> = {
 }
 
 /**
- * Checks whether a chore instance is in the open pool (unclaimed and unassigned).
+ * Checks whether a chore instance is in the open pool (unassigned).
  *
- * An instance is in the open pool when both `claimed_by` and `assigned_to`
- * are null — nobody has taken ownership yet.
+ * An instance is in the open pool when `member_id` is null.
  *
  * @param instance - The chore instance to check.
- * @returns True if the instance is unclaimed and unassigned.
+ * @returns True if the instance is unassigned.
  */
 export function isOpenPoolInstance(instance: ChoreInstance): boolean {
-  return instance.claimed_by === null && instance.assigned_to === null
+  return instance.member_id === null
 }
 
 /**
  * Returns instances belonging to a specific member.
  *
- * A member "owns" an instance if they claimed it or were assigned to it.
+ * A member "owns" an instance if their member_id matches.
  *
  * @param instances - All chore instances.
  * @param memberId - The member's key/ID.
- * @returns Instances where claimed_by or assigned_to matches the member.
+ * @returns Instances where member_id matches the member.
  */
 export function getMemberInstances(instances: ChoreInstance[], memberId: string): ChoreInstance[] {
-  return instances.filter((inst) => inst.claimed_by === memberId || inst.assigned_to === memberId)
+  return instances.filter((inst) => inst.member_id === memberId)
 }
 
 /**
@@ -72,15 +71,15 @@ export function getMemberAssociations(
 
 /** Metrics for a board column (member or open pool). */
 export interface ColumnMetrics {
-  /** Total assigned instances. */
+  /** Assigned instances (ACTIVE with assigned_by != null). */
   assigned: number
-  /** Claimed instances (voluntary). */
+  /** Claimed instances (ACTIVE with assigned_by == null). */
   claimed: number
   /** In-progress instances. */
   inProgress: number
   /** Completed instances. */
   completed: number
-  /** Overdue instances. */
+  /** Overdue/missed instances. */
   overdue: number
 }
 
@@ -92,42 +91,34 @@ export interface ColumnMetrics {
  */
 export function getColumnMetrics(instances: ChoreInstance[]): ColumnMetrics {
   return {
-    assigned: instances.filter((i) => i.assigned_to !== null).length,
-    claimed: instances.filter((i) => i.claimed_by !== null).length,
+    assigned: instances.filter((i) => i.status === 'active' && i.assigned_by !== null).length,
+    claimed: instances.filter((i) => i.status === 'active' && i.assigned_by === null).length,
     inProgress: instances.filter((i) => i.status === 'in_progress').length,
     completed: instances.filter((i) => i.status === 'completed').length,
-    overdue: instances.filter((i) => i.status === 'overdue').length,
+    overdue: instances.filter((i) => i.status === 'overdue' || i.status === 'missed').length,
   }
 }
 
 /** Metrics for the open pool column. */
 export interface OpenPoolMetrics {
-  /** Total instances in the open pool. */
-  total: number
-  /** Overdue instances. */
+  /** Available instances (ACTIVE). */
+  available: number
+  /** Overdue/missed instances. */
   overdue: number
-  /** Instances due today. */
-  dueToday: number
 }
 
 /**
  * Calculate metrics for the open pool column.
  *
- * Open pool instances are unclaimed and unassigned, so member-specific
- * metrics (assigned, claimed) don't apply. Instead, we show:
- * - Total: all open pool instances
- * - Overdue: instances past their period
- * - Due Today: instances with period_start = today
+ * Open pool instances are unassigned (member_id === null).
  *
  * @param instances - Open pool instances.
  * @returns Open pool metric counts for display.
  */
 export function getOpenPoolMetrics(instances: ChoreInstance[]): OpenPoolMetrics {
-  const todayStr = today().toString()
   return {
-    total: instances.length,
-    overdue: instances.filter((i) => i.status === 'overdue').length,
-    dueToday: instances.filter((i) => i.period_start === todayStr).length,
+    available: instances.filter((i) => i.status === 'active').length,
+    overdue: instances.filter((i) => i.status === 'overdue' || i.status === 'missed').length,
   }
 }
 
@@ -135,11 +126,11 @@ export function getOpenPoolMetrics(instances: ChoreInstance[]): OpenPoolMetrics 
  * Returns all active open pool associations.
  *
  * @param associations - All chore associations.
- * @returns Associations where is_open_pool is true and not removed.
+ * @returns Associations where member_id is null and not removed.
  */
 export function getOpenPoolAssociations(associations: ChoreAssociation[]): ChoreAssociation[] {
   return associations.filter(
-    (assoc) => assoc.is_open_pool && assoc.removed_at === null,
+    (assoc) => assoc.member_id === null && assoc.removed_at === null,
   )
 }
 
@@ -216,60 +207,64 @@ function formatWeekOrdinal(week: number): string {
 }
 
 /**
- * Format a recurrence rule as a human-readable summary.
+ * Format a master chore's recurrence pattern as a human-readable summary.
  *
- * Converts UTC time to the configured timezone for display.
+ * Reads the flattened recurrence fields from the master chore.
  *
- * @param rule - Recurrence rule to format, or null.
+ * @param master - Master chore to format recurrence for.
  * @param timezone - IANA timezone for time display (e.g. "America/New_York").
- *   If omitted, the raw UTC time is shown.
+ *   If omitted, the raw time is shown.
  * @returns Human-readable summary (e.g. "Weekly on Monday at 8:00 AM").
  */
-export function formatRecurrence(rule: RecurrenceRule | null, _timezone?: string): string {
-  if (!rule) return 'No recurrence'
-
-  // rule.time is a local-time string (HH:MM), not UTC — no timezone conversion
-  const timeStr = rule.time
-    ? formatTime(Temporal.PlainTime.from(rule.time))
+export function formatRecurrence(master: MasterChore, _timezone?: string): string {
+  const timeStr = master.due_time
+    ? formatTime(Temporal.PlainTime.from(master.due_time))
     : ''
 
-  switch (rule.frequency) {
+  switch (master.frequency) {
     case 'once':
       return 'One-time'
 
     case 'daily':
-      return `Daily at ${timeStr}`
+      return master.frequency_interval === 1
+        ? `Daily at ${timeStr}`
+        : `Every ${master.frequency_interval} days at ${timeStr}`
 
     case 'weekly': {
-      const dayName = rule.day_of_week != null
-        ? DAY_NAMES[rule.day_of_week]
-        : 'unknown day'
-      return `Weekly on ${dayName} at ${timeStr}`
+      if (master.day_of_week && master.day_of_week.length > 0) {
+        const dayNames = master.day_of_week.map((d) => DAY_NAMES[d] ?? `day ${d}`).join(', ')
+        return master.frequency_interval === 1
+          ? `Weekly on ${dayNames} at ${timeStr}`
+          : `Every ${master.frequency_interval} weeks on ${dayNames} at ${timeStr}`
+      }
+      return `Weekly at ${timeStr}`
     }
 
     case 'monthly': {
-      if (rule.day_of_month != null) {
-        return `Monthly on the ${formatOrdinalDay(rule.day_of_month)} at ${timeStr}`
+      if (master.day_of_month != null) {
+        return `Monthly on the ${formatOrdinalDay(master.day_of_month)} at ${timeStr}`
       }
-      if (rule.day_of_week != null && rule.week_of_month != null) {
-        const dayName = DAY_NAMES[rule.day_of_week]
-        const weekOrd = formatWeekOrdinal(rule.week_of_month)
+      if (master.day_of_week && master.day_of_week.length > 0 && master.week_of_month != null) {
+        const firstDay = master.day_of_week[0]
+        const dayName = firstDay != null ? (DAY_NAMES[firstDay] ?? `day ${firstDay}`) : 'unknown day'
+        const weekOrd = formatWeekOrdinal(master.week_of_month)
         return `Monthly on the ${weekOrd} ${dayName} at ${timeStr}`
       }
       return `Monthly at ${timeStr}`
     }
 
     case 'yearly': {
-      const monthName = rule.month != null
-        ? MONTH_NAMES[rule.month]
+      const monthName = master.month != null
+        ? MONTH_NAMES[master.month]
         : 'unknown month'
 
-      if (rule.day_of_month != null) {
-        return `Yearly on ${monthName} ${formatOrdinalDay(rule.day_of_month)} at ${timeStr}`
+      if (master.day_of_month != null) {
+        return `Yearly on ${monthName} ${formatOrdinalDay(master.day_of_month)} at ${timeStr}`
       }
-      if (rule.day_of_week != null && rule.week_of_month != null) {
-        const dayName = DAY_NAMES[rule.day_of_week]
-        const weekOrd = formatWeekOrdinal(rule.week_of_month)
+      if (master.day_of_week && master.day_of_week.length > 0 && master.week_of_month != null) {
+        const firstDay = master.day_of_week[0]
+        const dayName = firstDay != null ? (DAY_NAMES[firstDay] ?? `day ${firstDay}`) : 'unknown day'
+        const weekOrd = formatWeekOrdinal(master.week_of_month)
         return `Yearly on the ${weekOrd} ${dayName} of ${monthName} at ${timeStr}`
       }
       return `Yearly in ${monthName} at ${timeStr}`

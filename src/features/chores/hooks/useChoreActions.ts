@@ -15,12 +15,8 @@ import {
   bulkUpdateMasterStatus,
   createAssociation,
   deleteAssociation,
-  claimInstance,
-  assignInstance,
-  updateInstanceStatus,
+  updateInstance,
   deleteInstance,
-  revertInstanceStatus,
-  resetInstance,
   createCategory,
   createTag,
 } from '../api/choresApi'
@@ -31,12 +27,12 @@ import type {
   ChoreInstance,
   ChoreCategory,
   ChoreTag,
-  InstanceStatus,
   MasterChoreStatus,
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
   CreateAssociationRequest,
   AssociationCreateResponse,
+  UpdateInstanceRequest,
 } from '@/types/chores'
 
 /** Return type of useChoreActions. */
@@ -61,26 +57,13 @@ export interface UseChoreActionsReturn {
   createAssociation: (data: CreateAssociationRequest) => Promise<AssociationCreateResponse>
   /** Delete (soft-remove) a chore association. */
   deleteAssociation: (associationId: string) => Promise<void>
-  /** Claim an open-pool instance for a member. */
-  claimInstance: (instanceId: string, memberId: string) => Promise<ChoreInstance>
-  /** Assign an instance to a member. */
-  assignInstance: (
-    instanceId: string,
-    assigneeId: string,
-    assignerId: string,
-  ) => Promise<ChoreInstance>
-  /** Update an instance's status. */
-  updateInstanceStatus: (
-    instanceId: string,
-    status: InstanceStatus,
-    actorId: string,
+  /** Update a chore instance (claim, assign, revert, reset, or status change). */
+  updateInstance: (
+    id: string,
+    data: UpdateInstanceRequest,
   ) => Promise<ChoreInstance>
   /** Delete (archive) an instance. Only active/archived instances can be deleted. */
   deleteInstance: (instanceId: string) => Promise<ChoreInstance>
-  /** Revert an instance's status by one step (completed→in_progress→active). */
-  revertInstanceStatus: (instanceId: string) => Promise<ChoreInstance>
-  /** Reset an instance to active status regardless of current status. */
-  resetInstance: (instanceId: string) => Promise<ChoreInstance>
   /** Create a new chore category. */
   createCategory: (name: string) => Promise<ChoreCategory>
   /** Create a new chore tag. */
@@ -205,45 +188,15 @@ export function useChoreActions(): UseChoreActionsReturn {
     [invalidateChores, showApiError],
   )
 
-  const claimInstanceAction = useCallback(
-    async (instanceId: string, memberId: string) => {
+  const updateInstanceAction = useCallback(
+    async (id: string, data: UpdateInstanceRequest) => {
       try {
-        const result = await claimInstance(instanceId, memberId)
+        const result = await updateInstance(id, data)
         invalidateChores()
         return result
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
-        else console.error('Failed to claim instance:', error)
-        throw error
-      }
-    },
-    [invalidateChores, showApiError],
-  )
-
-  const assignInstanceAction = useCallback(
-    async (instanceId: string, assigneeId: string, assignerId: string) => {
-      try {
-        const result = await assignInstance(instanceId, assigneeId, assignerId)
-        invalidateChores()
-        return result
-      } catch (error) {
-        if (error instanceof ApiError) showApiError(error)
-        else console.error('Failed to assign instance:', error)
-        throw error
-      }
-    },
-    [invalidateChores, showApiError],
-  )
-
-  const updateInstanceStatusAction = useCallback(
-    async (instanceId: string, status: InstanceStatus, actorId: string) => {
-      try {
-        const result = await updateInstanceStatus(instanceId, status, actorId)
-        invalidateChores()
-        return result
-      } catch (error) {
-        if (error instanceof ApiError) showApiError(error)
-        else console.error('Failed to update instance status:', error)
+        else console.error('Failed to update instance:', error)
         throw error
       }
     },
@@ -259,36 +212,6 @@ export function useChoreActions(): UseChoreActionsReturn {
       } catch (error) {
         if (error instanceof ApiError) showApiError(error)
         else console.error('Failed to delete instance:', error)
-        throw error
-      }
-    },
-    [invalidateChores, showApiError],
-  )
-
-  const revertInstanceStatusAction = useCallback(
-    async (instanceId: string) => {
-      try {
-        const result = await revertInstanceStatus(instanceId)
-        invalidateChores()
-        return result
-      } catch (error) {
-        if (error instanceof ApiError) showApiError(error)
-        else console.error('Failed to revert instance status:', error)
-        throw error
-      }
-    },
-    [invalidateChores, showApiError],
-  )
-
-  const resetInstanceAction = useCallback(
-    async (instanceId: string) => {
-      try {
-        const result = await resetInstance(instanceId)
-        invalidateChores()
-        return result
-      } catch (error) {
-        if (error instanceof ApiError) showApiError(error)
-        else console.error('Failed to reset instance:', error)
         throw error
       }
     },
@@ -333,12 +256,8 @@ export function useChoreActions(): UseChoreActionsReturn {
     bulkUpdateMasterStatus: bulkUpdateMasterStatusAction,
     createAssociation: createAssociationAction,
     deleteAssociation: deleteAssociationAction,
-    claimInstance: claimInstanceAction,
-    assignInstance: assignInstanceAction,
-    updateInstanceStatus: updateInstanceStatusAction,
+    updateInstance: updateInstanceAction,
     deleteInstance: deleteInstanceAction,
-    revertInstanceStatus: revertInstanceStatusAction,
-    resetInstance: resetInstanceAction,
     createCategory: createCategoryAction,
     createTag: createTagAction,
   }

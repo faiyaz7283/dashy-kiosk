@@ -142,7 +142,7 @@ export function InstanceInteraction({
 
   // Get member info for avatar
   const memberInfo = useMemo(() => {
-    const memberKey = instance.claimed_by ?? instance.assigned_to
+    const memberKey = instance.member_id
     if (!memberKey) return null
 
     const member = members.find((m) => m.key === memberKey)
@@ -153,7 +153,7 @@ export function InstanceInteraction({
   }, [instance, members, colorMap])
 
   // Format recurrence summary
-  const recurrenceSummary = formatRecurrence(masterChore.recurrence_rule, timezone)
+  const recurrenceSummary = formatRecurrence(masterChore, timezone)
 
   // Format period date (e.g., "Monday, Aug 25")
   const periodDate = useMemo(() => {
@@ -177,18 +177,14 @@ export function InstanceInteraction({
 
   // Attribution text
   const attributionText = useMemo(() => {
-    if (instance.claimed_by) {
-      const member = members.find((m) => m.key === instance.claimed_by)
-      return `Claimed by ${member?.name ?? instance.claimed_by}`
-    }
-    if (instance.assigned_to && instance.assigned_by) {
-      const assignee = members.find((m) => m.key === instance.assigned_to)
+    if (instance.member_id && instance.assigned_by) {
+      const assignee = members.find((m) => m.key === instance.member_id)
       const assigner = members.find((m) => m.key === instance.assigned_by)
-      return `Assigned by ${assigner?.name ?? instance.assigned_by} to ${assignee?.name ?? instance.assigned_to}`
+      return `Assigned by ${assigner?.name ?? instance.assigned_by} to ${assignee?.name ?? instance.member_id}`
     }
-    if (instance.assigned_to) {
-      const assignee = members.find((m) => m.key === instance.assigned_to)
-      return `Assigned to ${assignee?.name ?? instance.assigned_to}`
+    if (instance.member_id) {
+      const member = members.find((m) => m.key === instance.member_id)
+      return `Claimed by ${member?.name ?? instance.member_id}`
     }
     return null
   }, [instance, members])

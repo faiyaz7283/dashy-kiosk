@@ -118,7 +118,7 @@ export function MasterChoreCard({
 
   const badge = statusBadgeClasses[master.status]
   const isInactive = master.status === 'inactive'
-  const recurrenceSummary = formatRecurrence(master.recurrence_rule, timezone)
+  const recurrenceSummary = formatRecurrence(master, timezone)
 
   const conditionsLabel = master.conditions && Object.keys(master.conditions).length > 0
     ? `${Object.keys(master.conditions).length} active`

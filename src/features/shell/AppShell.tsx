@@ -133,13 +133,13 @@ function AppShellContent({
   // Instance action handlers — actor derived from instance context
   const handleStartInstance = useCallback(
     async (instance: ChoreInstance) => {
-      const actorId = instance.claimed_by ?? instance.assigned_to
+      const actorId = instance.member_id
       if (!actorId) {
         console.error('Cannot start instance: no member assigned')
         return
       }
       try {
-        await choreActions.updateInstanceStatus(instance.id, 'in_progress', actorId)
+        await choreActions.updateInstance(instance.id, { status: 'in_progress', actor_id: actorId })
       } catch (error) {
         console.error('Failed to start instance:', error)
       }
@@ -149,13 +149,13 @@ function AppShellContent({
 
   const handleCompleteInstance = useCallback(
     async (instance: ChoreInstance) => {
-      const actorId = instance.claimed_by ?? instance.assigned_to
+      const actorId = instance.member_id
       if (!actorId) {
         console.error('Cannot complete instance: no member assigned')
         return
       }
       try {
-        await choreActions.updateInstanceStatus(instance.id, 'completed', actorId)
+        await choreActions.updateInstance(instance.id, { status: 'completed', actor_id: actorId })
       } catch (error) {
         console.error('Failed to complete instance:', error)
       }
@@ -177,7 +177,7 @@ function AppShellContent({
   const handleRevertInstance = useCallback(
     async (instance: ChoreInstance) => {
       try {
-        await choreActions.revertInstanceStatus(instance.id)
+        await choreActions.updateInstance(instance.id, { action: 'revert' })
       } catch (error) {
         console.error('Failed to revert instance:', error)
       }
@@ -188,7 +188,7 @@ function AppShellContent({
   const handleClaimInstance = useCallback(
     async (instanceId: string, memberId: string) => {
       try {
-        await choreActions.claimInstance(instanceId, memberId)
+        await choreActions.updateInstance(instanceId, { action: 'claim', member_id: memberId })
       } catch (error) {
         console.error('Failed to claim instance:', error)
       }
@@ -199,7 +199,7 @@ function AppShellContent({
   const handleAssignInstance = useCallback(
     async (instanceId: string, assigneeId: string, assignerId: string) => {
       try {
-        await choreActions.assignInstance(instanceId, assigneeId, assignerId)
+        await choreActions.updateInstance(instanceId, { action: 'assign', member_id: assigneeId, assigned_by: assignerId })
       } catch (error) {
         console.error('Failed to assign instance:', error)
       }

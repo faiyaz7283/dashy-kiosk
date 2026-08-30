@@ -17,7 +17,6 @@ import type {
   ChoreAssociation,
   ChoreCategory,
   ChoreTag,
-  RecurrenceRule,
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
 } from '@/types/chores'
@@ -71,7 +70,6 @@ interface FormState {
   estimatedDuration: { value: string; unit: DurationUnit }
   dueTime: string
   dueDate: string
-  expirationBehavior: 'disappear' | 'stay_visible' | 'convert_to_open'
   endDate: string
   maxOccurrences: string
   isCollaborative: boolean
@@ -94,7 +92,6 @@ const DEFAULT_FORM: FormState = {
   estimatedDuration: { value: '10', unit: 'minutes' },
   dueTime: '',
   dueDate: '',
-  expirationBehavior: 'disappear',
   endDate: '',
   maxOccurrences: '',
   isCollaborative: false,
@@ -174,7 +171,7 @@ export function MasterChoreModal({
   }, [master, members, masterAssociations])
 
   const hasOpenPool = useMemo(
-    () => masterAssociations.some((a) => a.is_open_pool),
+    () => masterAssociations.some((a) => a.member_id === null),
     [masterAssociations],
   )
 
@@ -206,7 +203,6 @@ export function MasterChoreModal({
     setIsSubmitting(true)
 
     try {
-      const recurrenceRule = buildRecurrenceRule(form)
       // Template creation has no UI context (no column/instance), so use first adult as default creator.
       // This is metadata about who created the template, not an action actor.
       const adult = findFirstAdult(members)
@@ -215,17 +211,19 @@ export function MasterChoreModal({
         ? toMinutes(Number(form.estimatedDuration.value), form.estimatedDuration.unit)
         : null
 
+      // Build flattened recurrence fields from form state
+      const recurrenceFields = buildRecurrenceFields(form)
+
       if (mode === 'create') {
         const request: CreateMasterChoreRequest = {
           name: form.name.trim(),
           category_id: form.categoryId,
           ...(form.tagIds.length > 0 ? { tag_ids: form.tagIds } : {}),
           difficulty: form.difficulty,
-          ...(recurrenceRule !== null ? { recurrence_rule: recurrenceRule } : {}),
+          ...recurrenceFields,
           ...(estimatedMinutes ? { estimated_minutes: estimatedMinutes } : {}),
           ...(form.dueTime ? { due_time: form.dueTime } : {}),
           ...(form.dueDate ? { due_date: form.dueDate } : {}),
-          expiration_behavior: form.expirationBehavior,
           ...(form.endDate ? { end_date: form.endDate } : {}),
           ...(form.maxOccurrences ? { max_occurrences: Number(form.maxOccurrences) } : {}),
           is_collaborative: form.isCollaborative,
@@ -244,11 +242,10 @@ export function MasterChoreModal({
           category_id: form.categoryId,
           tag_ids: form.tagIds,
           difficulty: form.difficulty,
-          recurrence_rule: recurrenceRule,
+          ...recurrenceFields,
           estimated_minutes: estimatedMinutes,
           due_time: form.dueTime || null,
           due_date: form.dueDate || null,
-          expiration_behavior: form.expirationBehavior,
           end_date: form.endDate || null,
           max_occurrences: form.maxOccurrences ? Number(form.maxOccurrences) : null,
           is_collaborative: form.isCollaborative,
@@ -690,65 +687,6 @@ export function MasterChoreModal({
               )}
             </div>
 
-            {/* Expiration behavior selector */}
-            <div className="flex items-start gap-3 border-t border-border-light py-3">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-text-secondary mb-2">
-                  When instance period ends
-                </div>
-                <div className="space-y-2">
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="expirationBehavior"
-                      value="disappear"
-                      checked={form.expirationBehavior === 'disappear'}
-                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'disappear')}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm text-text-primary">Disappear</div>
-                      <div className="text-xs text-text-faint">
-                        Instance is removed from the board when completed or missed
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="expirationBehavior"
-                      value="stay_visible"
-                      checked={form.expirationBehavior === 'stay_visible'}
-                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'stay_visible')}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm text-text-primary">Stay visible</div>
-                      <div className="text-xs text-text-faint">
-                        Missed instances remain visible marked as missed
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="expirationBehavior"
-                      value="convert_to_open"
-                      checked={form.expirationBehavior === 'convert_to_open'}
-                      onChange={(e) => updateField('expirationBehavior', e.target.value as 'convert_to_open')}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm text-text-primary">Convert to open pool</div>
-                      <div className="text-xs text-text-faint">
-                        Move instance to open pool when period expires
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
             {/* Collaborative toggle */}
             <div className="flex items-start gap-3 border-t border-border-light py-3">
               <ToggleSwitch
@@ -879,30 +817,54 @@ function ChevronDownIcon() {
 }
 
 /**
- * Build a RecurrenceRule from form state, or null for "once" frequency.
+ * Build flattened recurrence fields from form state for the API request.
+ *
+ * Returns an object with frequency, frequency_interval, and the relevant
+ * day/week/month fields based on the selected frequency. Returns an empty
+ * object for "once" frequency (no recurrence fields).
  *
  * @param form - Current form state.
- * @returns The recurrence rule, or null for one-off chores.
+ * @returns Partial request fields for recurrence.
  */
-function buildRecurrenceRule(form: FormState): RecurrenceRule | null {
+function buildRecurrenceFields(
+  form: FormState,
+): Pick<
+  CreateMasterChoreRequest,
+  'frequency' | 'frequency_interval' | 'day_of_week' | 'day_of_month' | 'week_of_month' | 'month'
+> {
   switch (form.frequency) {
     case 'once':
-      return null
+      return { frequency: 'once' }
     case 'daily':
-      return { frequency: 'daily', time: form.time }
+      return { frequency: 'daily', frequency_interval: 1 }
     case 'weekly':
-      return { frequency: 'weekly', time: form.time, day_of_week: form.dayOfWeek }
-    case 'monthly':
-      return { frequency: 'monthly', time: form.time, day_of_month: Number(form.dayOfMonth) || 1 }
+      return {
+        frequency: 'weekly',
+        frequency_interval: 1,
+        day_of_week: [form.dayOfWeek],
+      }
+    case 'monthly': {
+      const dayOfMonth = Number(form.dayOfMonth) || null
+      // Nth weekday pattern (e.g. "3rd Tuesday") uses week_of_month + day_of_week
+      const hasNthWeekday = form.nthWeekOfMonth > 0
+      return {
+        frequency: 'monthly',
+        frequency_interval: 1,
+        ...(dayOfMonth ? { day_of_month: dayOfMonth } : {}),
+        ...(hasNthWeekday
+          ? { week_of_month: form.nthWeekOfMonth, day_of_week: [form.nthDayOfWeek] }
+          : {}),
+      }
+    }
     case 'yearly':
       return {
         frequency: 'yearly',
-        time: form.time,
+        frequency_interval: 1,
         month: form.yearMonth,
         day_of_month: Number(form.yearDay) || 1,
       }
     default:
-      return null
+      return { frequency: form.frequency }
   }
 }
 
@@ -913,11 +875,13 @@ function buildRecurrenceRule(form: FormState): RecurrenceRule | null {
  * @returns The initialized form state.
  */
 function formFromMaster(master: MasterChore): FormState {
-  const rule = master.recurrence_rule
-  const frequency: RecurrenceFrequency = rule?.frequency ?? 'once'
+  const frequency: RecurrenceFrequency = master.frequency ?? 'once'
   const duration = master.estimated_minutes
     ? fromMinutes(master.estimated_minutes)
     : { value: 10, unit: 'minutes' as DurationUnit }
+
+  // Extract first day_of_week for the single-select UI (schema supports arrays)
+  const firstDayOfWeek = master.day_of_week?.[0] ?? 0
 
   return {
     name: master.name,
@@ -925,17 +889,16 @@ function formFromMaster(master: MasterChore): FormState {
     tagIds: master.tags.map((t) => t.id),
     difficulty: master.difficulty,
     frequency,
-    time: rule?.time ?? '18:00',
-    dayOfWeek: rule?.day_of_week ?? 0,
-    dayOfMonth: rule?.day_of_month?.toString() ?? '1',
-    nthWeekOfMonth: rule?.week_of_month ?? 1,
-    nthDayOfWeek: rule?.day_of_week ?? 0,
-    yearMonth: rule?.month ?? 1,
-    yearDay: rule?.day_of_month?.toString() ?? '1',
+    time: master.due_time ?? '18:00',
+    dayOfWeek: firstDayOfWeek,
+    dayOfMonth: master.day_of_month?.toString() ?? '1',
+    nthWeekOfMonth: master.week_of_month ?? 1,
+    nthDayOfWeek: firstDayOfWeek,
+    yearMonth: master.month ?? 1,
+    yearDay: master.day_of_month?.toString() ?? '1',
     estimatedDuration: { value: duration.value.toString(), unit: duration.unit },
     dueTime: master.due_time ?? '',
     dueDate: master.due_date ?? '',
-    expirationBehavior: master.expiration_behavior ?? 'disappear',
     endDate: master.end_date ?? '',
     maxOccurrences: master.max_occurrences?.toString() ?? '',
     isCollaborative: master.is_collaborative,
@@ -1001,11 +964,10 @@ function AssociationsTab({
     try {
       // Remove the member association
       await actions.deleteAssociation(associationId)
-      // Create open pool association
+      // Create open pool association (member_id omitted = open pool)
       const createdBy = members[0]?.key ?? 'unknown'
       await actions.createAssociation({
         master_chore_id: master.id,
-        is_open_pool: true,
         created_by: createdBy,
       })
       addNotification({
@@ -1077,7 +1039,6 @@ function AssociationsTab({
       const createdBy = members[0]?.key ?? 'unknown'
       await actions.createAssociation({
         master_chore_id: master.id,
-        is_open_pool: true,
         created_by: createdBy,
       })
       addNotification({
@@ -1158,7 +1119,7 @@ function AssociationsTab({
         <div className="space-y-2">
           {associations.map((assoc) => {
             const memberName = assoc.member_id ? memberMap.get(assoc.member_id) ?? 'Unknown' : 'Open Pool'
-            const isPool = assoc.is_open_pool
+            const isPool = assoc.member_id === null
 
             return (
               <div

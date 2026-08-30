@@ -45,10 +45,8 @@ function makeInstance(overrides: Partial<ChoreInstance> & { id: string; status: 
     association_id: 'assoc-1',
     period_start: '2026-08-25T00:00:00Z',
     period_end: '2026-08-26T00:00:00Z',
-    claimed_by: null,
-    assigned_to: null,
+    member_id: null,
     assigned_by: null,
-    completed_by: null,
     started_at: null,
     completed_at: null,
     created_at: '2026-08-25T00:00:00Z',
@@ -64,11 +62,15 @@ function makeMaster(overrides: Partial<MasterChore> = {}): MasterChore {
     category: { id: 'cat-2', name: 'Family' },
     tags: [],
     difficulty: 3,
-    recurrence_rule: { frequency: 'daily', time: '20:00' },
+    frequency: 'daily',
+    frequency_interval: 1,
+    day_of_week: null,
+    day_of_month: null,
+    week_of_month: null,
+    month: null,
     estimated_minutes: 20,
     due_time: '21:00',
     due_date: null,
-    expiration_behavior: 'stay_visible',
     end_date: null,
     max_occurrences: null,
     occurrence_count: 45,
@@ -84,7 +86,7 @@ function makeMaster(overrides: Partial<MasterChore> = {}): MasterChore {
 }
 
 const defaultProps = {
-  instance: makeInstance({ id: 'inst-1', status: 'active', assigned_to: 'faiyaz', assigned_by: 'trisha' }),
+  instance: makeInstance({ id: 'inst-1', status: 'active', member_id: 'faiyaz', assigned_by: 'trisha' }),
   masterChore: makeMaster(),
   categories: mockCategories,
   members: mockMembers,
@@ -166,7 +168,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        claimed_by: 'faiyaz',
+        member_id: 'faiyaz',
         started_at: '2026-08-25T18:45:00Z',
       })
       renderPopup({ instance })
@@ -177,7 +179,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        claimed_by: 'faiyaz',
+        member_id: 'faiyaz',
       })
       renderPopup({ instance })
       expect(screen.getByText('Complete')).toBeTruthy()
@@ -187,7 +189,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        claimed_by: 'faiyaz',
+        member_id: 'faiyaz',
         started_at: '2026-08-25T18:45:00Z',
       })
       renderPopup({ instance })
@@ -198,7 +200,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        claimed_by: 'faiyaz',
+        member_id: 'faiyaz',
       })
       renderPopup({ instance })
       expect(screen.getByText(/Claimed/)).toBeTruthy()
@@ -210,7 +212,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-3',
         status: 'overdue',
-        assigned_to: 'faiyaz',
+        member_id: 'faiyaz',
       })
       renderPopup({ instance })
       expect(screen.getByText('Overdue')).toBeTruthy()
@@ -220,7 +222,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-3',
         status: 'overdue',
-        assigned_to: 'faiyaz',
+        member_id: 'faiyaz',
       })
       renderPopup({ instance })
       expect(screen.getByText('Complete Now')).toBeTruthy()
@@ -230,7 +232,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-3',
         status: 'overdue',
-        assigned_to: 'faiyaz',
+        member_id: 'faiyaz',
       })
       renderPopup({ instance })
       expect(screen.getByText(/Due by.*Late/)).toBeTruthy()
@@ -242,7 +244,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        assigned_to: 'trisha',
+        member_id: 'trisha',
       })
       renderPopup({ instance })
       expect(screen.getByText('Missed')).toBeTruthy()
@@ -252,7 +254,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        assigned_to: 'trisha',
+        member_id: 'trisha',
       })
       renderPopup({ instance })
       const button = screen.getByText('Cannot Complete (Missed)')
@@ -263,7 +265,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        assigned_to: 'trisha',
+        member_id: 'trisha',
       })
       renderPopup({ instance })
       expect(screen.getByText(/Due by.*Period ended/)).toBeTruthy()
@@ -273,7 +275,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        assigned_to: 'trisha',
+        member_id: 'trisha',
       })
       const { container } = renderPopup({ instance })
       const popup = container.querySelector('.opacity-75')
@@ -286,8 +288,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-5',
         status: 'active',
-        claimed_by: null,
-        assigned_to: null,
+        member_id: null,
       })
       renderPopup({ instance })
       expect(screen.getByText('Open Pool')).toBeTruthy()
@@ -297,8 +298,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-5',
         status: 'active',
-        claimed_by: null,
-        assigned_to: null,
+        member_id: null,
       })
       renderPopup({ instance })
       expect(screen.getByText('Claim by')).toBeTruthy()
@@ -308,8 +308,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-5',
         status: 'active',
-        claimed_by: null,
-        assigned_to: null,
+        member_id: null,
       })
       renderPopup({ instance })
       expect(screen.getByText('Assign to')).toBeTruthy()
@@ -320,8 +319,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-5',
         status: 'active',
-        claimed_by: null,
-        assigned_to: null,
+        member_id: null,
       })
       renderPopup({ instance })
       expect(screen.queryByText('Start')).toBeNull()

@@ -35,11 +35,15 @@ describe('ChoresBoard', () => {
         category: { id: 'cat-1', name: 'Kitchen' },
         tags: [],
         difficulty: 3,
-        recurrence_rule: { frequency: 'daily', time: '18:00' },
+        frequency: 'daily',
+        frequency_interval: 1,
+        day_of_week: null,
+        day_of_month: null,
+        week_of_month: null,
+        month: null,
         estimated_minutes: 10,
         due_time: '18:00',
         due_date: null,
-        expiration_behavior: 'stay_visible',
         end_date: null,
         max_occurrences: null,
         occurrence_count: 0,
@@ -57,14 +61,12 @@ describe('ChoresBoard', () => {
       {
         id: 'instance-1',
         master_chore_id: 'master-1',
-        association_id: null,
+        association_id: 'assoc-1',
         status: 'active',
         period_start: '2026-01-15',
         period_end: '2026-01-16',
-        assigned_to: 'faiyaz',
+        member_id: 'faiyaz',
         assigned_by: 'trisha',
-        claimed_by: null,
-        completed_by: null,
         started_at: null,
         completed_at: null,
         created_at: '2026-01-01T00:00:00Z',
@@ -73,14 +75,12 @@ describe('ChoresBoard', () => {
       {
         id: 'instance-2',
         master_chore_id: 'master-1',
-        association_id: null,
+        association_id: 'assoc-2',
         status: 'active',
         period_start: '2026-01-15',
         period_end: '2026-01-16',
-        assigned_to: null,
+        member_id: null,
         assigned_by: null,
-        claimed_by: null,
-        completed_by: null,
         started_at: null,
         completed_at: null,
         created_at: '2026-01-01T00:00:00Z',
@@ -152,16 +152,15 @@ describe('ChoresBoard', () => {
         error={null}
       />
     )
-    // Open Pool column has 3 metrics: Total, Over, Today
+    // Open Pool column has 2 metrics: Avail, Over
     // Member columns have 5 metrics: Asn, Clm, Prog, Done, Over
     // 1 Open Pool + 2 member columns
-    expect(screen.getAllByText('Total').length).toBe(1)
+    expect(screen.getAllByText('Avail').length).toBe(1)
     expect(screen.getAllByText('Asn').length).toBe(2)
     expect(screen.getAllByText('Clm').length).toBe(2)
     expect(screen.getAllByText('Prog').length).toBe(2)
     expect(screen.getAllByText('Done').length).toBe(2)
     expect(screen.getAllByText('Over').length).toBe(3)
-    expect(screen.getAllByText('Today').length).toBe(1)
   })
 
   it('renders null when no data and not loading', () => {
@@ -184,11 +183,15 @@ describe('ChoresBoard', () => {
       category: { id: 'cat-1', name: 'Kitchen' },
       tags: [],
       difficulty: 3,
-      recurrence_rule: { frequency: 'daily', time: '18:00' },
+      frequency: 'daily',
+      frequency_interval: 1,
+      day_of_week: null,
+      day_of_month: null,
+      week_of_month: null,
+      month: null,
       estimated_minutes: 10,
       due_time: '18:00',
       due_date: null,
-      expiration_behavior: 'disappear',
       end_date: null,
       max_occurrences: null,
       occurrence_count: 0,
@@ -209,14 +212,12 @@ describe('ChoresBoard', () => {
         {
           id: 'instance-archived',
           master_chore_id: 'master-archived',
-          association_id: null,
+          association_id: 'assoc-archived',
           status: 'archived',
           period_start: '2026-01-15',
           period_end: '2026-01-16',
-          assigned_to: 'faiyaz',
+          member_id: 'faiyaz',
           assigned_by: 'trisha',
-          claimed_by: null,
-          completed_by: null,
           started_at: null,
           completed_at: null,
           created_at: '2026-01-01T00:00:00Z',

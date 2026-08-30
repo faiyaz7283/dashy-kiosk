@@ -13,12 +13,12 @@ import type {
   ChoreInstance,
   ChoreCategory,
   ChoreTag,
-  InstanceStatus,
   MasterChoreStatus,
   CreateMasterChoreRequest,
   UpdateMasterChoreRequest,
   CreateAssociationRequest,
   AssociationCreateResponse,
+  UpdateInstanceRequest,
 } from '@/types/chores'
 
 const BASE = ENDPOINTS.chores.url
@@ -186,68 +186,23 @@ export async function deleteAssociation(associationId: string): Promise<void> {
 }
 
 /**
- * Claim an open-pool chore instance for a member.
+ * Update a chore instance via the consolidated PATCH endpoint.
  *
- * @param instanceId - The instance to claim.
- * @param memberId - The member claiming it.
+ * Supports claim, assign, revert, reset, and status change actions
+ * through a single endpoint with an action-based request body.
+ *
+ * @param id - The instance ID to update.
+ * @param data - Update request with action, status, member_id, etc.
  * @returns The updated instance.
  */
-export async function claimInstance(
-  instanceId: string,
-  memberId: string,
+export async function updateInstance(
+  id: string,
+  data: UpdateInstanceRequest,
 ): Promise<ChoreInstance> {
-  const response = await fetch(`${BASE}/instances/${instanceId}/claim`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ member_id: memberId }),
-  })
-  if (!response.ok) {
-    throw await parseApiError(response)
-  }
-  return response.json()
-}
-
-/**
- * Assign a chore instance to a member.
- *
- * @param instanceId - The instance to assign.
- * @param assigneeId - The member being assigned.
- * @param assignerId - The parent making the assignment.
- * @returns The updated instance.
- */
-export async function assignInstance(
-  instanceId: string,
-  assigneeId: string,
-  assignerId: string,
-): Promise<ChoreInstance> {
-  const response = await fetch(`${BASE}/instances/${instanceId}/assign`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ assignee_id: assigneeId, assigner_id: assignerId }),
-  })
-  if (!response.ok) {
-    throw await parseApiError(response)
-  }
-  return response.json()
-}
-
-/**
- * Update the status of a chore instance.
- *
- * @param instanceId - The instance to update.
- * @param status - The new status.
- * @param actorId - The member performing the action.
- * @returns The updated instance.
- */
-export async function updateInstanceStatus(
-  instanceId: string,
-  status: InstanceStatus,
-  actorId: string,
-): Promise<ChoreInstance> {
-  const response = await fetch(`${BASE}/instances/${instanceId}/status`, {
+  const response = await fetch(`${BASE}/instances/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, actor_id: actorId }),
+    body: JSON.stringify(data),
   })
   if (!response.ok) {
     throw await parseApiError(response)
@@ -268,46 +223,6 @@ export async function updateInstanceStatus(
 export async function deleteInstance(instanceId: string): Promise<ChoreInstance> {
   const response = await fetch(`${BASE}/instances/${instanceId}`, {
     method: 'DELETE',
-  })
-  if (!response.ok) {
-    throw await parseApiError(response)
-  }
-  return response.json()
-}
-
-/**
- * Revert an instance's status by one step.
- *
- * Status reversal flow:
- * - completed → in_progress (clears completed_at, completed_by)
- * - in_progress → active (clears started_at)
- * - missed → active
- * - overdue → active
- *
- * @param instanceId - Instance identifier.
- * @returns The updated instance.
- */
-export async function revertInstanceStatus(instanceId: string): Promise<ChoreInstance> {
-  const response = await fetch(`${BASE}/instances/${instanceId}/revert`, {
-    method: 'POST',
-  })
-  if (!response.ok) {
-    throw await parseApiError(response)
-  }
-  return response.json()
-}
-
-/**
- * Reset an instance to active status regardless of current status.
- *
- * Clears all progress tracking fields (started_at, completed_at, completed_by).
- *
- * @param instanceId - Instance identifier.
- * @returns The reset instance.
- */
-export async function resetInstance(instanceId: string): Promise<ChoreInstance> {
-  const response = await fetch(`${BASE}/instances/${instanceId}/reset`, {
-    method: 'POST',
   })
   if (!response.ok) {
     throw await parseApiError(response)

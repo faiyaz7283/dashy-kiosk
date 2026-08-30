@@ -350,12 +350,12 @@ function Column({
         </div>
 
         {/* Metric cards — different layout for open pool vs member columns */}
-        {'total' in metrics ? (
-          <div className="grid grid-cols-3 gap-1.5">
+        {'available' in metrics ? (
+          <div className="grid grid-cols-2 gap-1.5">
             <MetricCard
               icon={<User className="h-2.5 w-2.5 text-text-muted" />}
-              label="Total"
-              value={metrics.total}
+              label="Avail"
+              value={metrics.available}
             />
             <MetricCard
               icon={
@@ -364,14 +364,6 @@ function Column({
               label="Over"
               value={metrics.overdue}
               valueClass="text-chores-overdue"
-            />
-            <MetricCard
-              icon={
-                <CheckCircle className="h-2.5 w-2.5 text-chores-active" />
-              }
-              label="Today"
-              value={metrics.dueToday}
-              valueClass="text-chores-active"
             />
           </div>
         ) : (

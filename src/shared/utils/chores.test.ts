@@ -17,21 +17,19 @@ import {
   getColumnMetrics,
   getOpenPoolMetrics,
 } from './chores'
-import type { ChoreInstance, ChoreAssociation, InstanceStatus, RecurrenceRule } from '@/types/chores'
+import type { ChoreInstance, ChoreAssociation, InstanceStatus, MasterChore } from '@/types/chores'
 
 describe('chores utilities', () => {
   // Test instances
   const openPoolInstance: ChoreInstance = {
     id: '1',
     master_chore_id: 'mc1',
-    association_id: null,
+    association_id: 'assoc-open',
     period_start: '2026-01-15',
     period_end: '2026-01-15',
     status: 'active',
-    claimed_by: null,
-    assigned_to: null,
+    member_id: null,
     assigned_by: null,
-    completed_by: null,
     started_at: null,
     completed_at: null,
     created_at: '2026-01-01T00:00:00Z',
@@ -45,10 +43,8 @@ describe('chores utilities', () => {
     period_start: '2026-01-15',
     period_end: '2026-01-15',
     status: 'active',
-    claimed_by: 'alice',
-    assigned_to: null,
+    member_id: 'alice',
     assigned_by: null,
-    completed_by: null,
     started_at: null,
     completed_at: null,
     created_at: '2026-01-01T00:00:00Z',
@@ -62,10 +58,8 @@ describe('chores utilities', () => {
     period_start: '2026-01-15',
     period_end: '2026-01-15',
     status: 'active',
-    claimed_by: null,
-    assigned_to: 'bob',
+    member_id: 'bob',
     assigned_by: 'parent',
-    completed_by: null,
     started_at: null,
     completed_at: null,
     created_at: '2026-01-01T00:00:00Z',
@@ -79,10 +73,8 @@ describe('chores utilities', () => {
     period_start: '2026-01-15',
     period_end: '2026-01-15',
     status: 'completed',
-    claimed_by: 'alice',
-    assigned_to: null,
+    member_id: 'alice',
     assigned_by: null,
-    completed_by: 'alice',
     started_at: '2026-01-15T10:00:00',
     completed_at: '2026-01-15T11:00:00',
     created_at: '2026-01-01T00:00:00Z',
@@ -101,7 +93,6 @@ describe('chores utilities', () => {
     id: 'assoc-1',
     master_chore_id: 'mc1',
     member_id: 'alice',
-    is_open_pool: false,
     created_by: 'parent',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
@@ -112,7 +103,6 @@ describe('chores utilities', () => {
     id: 'assoc-2',
     master_chore_id: 'mc2',
     member_id: null,
-    is_open_pool: true,
     created_by: 'parent',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
@@ -123,7 +113,6 @@ describe('chores utilities', () => {
     id: 'assoc-3',
     master_chore_id: 'mc3',
     member_id: 'bob',
-    is_open_pool: false,
     created_by: 'parent',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
@@ -137,7 +126,7 @@ describe('chores utilities', () => {
   ]
 
   describe('isOpenPoolInstance', () => {
-    it('returns true for unclaimed and unassigned instance', () => {
+    it('returns true for instance with null member_id', () => {
       expect(isOpenPoolInstance(openPoolInstance)).toBe(true)
     })
 
@@ -155,14 +144,14 @@ describe('chores utilities', () => {
   })
 
   describe('getMemberInstances', () => {
-    it('returns instances claimed by member', () => {
+    it('returns instances for member', () => {
       const result = getMemberInstances(instances, 'alice')
       expect(result).toHaveLength(2)
       expect(result).toContainEqual(claimedInstance)
       expect(result).toContainEqual(completedInstance)
     })
 
-    it('returns instances assigned to member', () => {
+    it('returns instances for another member', () => {
       const result = getMemberInstances(instances, 'bob')
       expect(result).toHaveLength(1)
       expect(result).toContainEqual(assignedInstance)
@@ -314,44 +303,77 @@ describe('chores utilities', () => {
     })
   })
 
-  describe('formatRecurrence', () => {
-    it('returns "No recurrence" for null rule', () => {
-      expect(formatRecurrence(null)).toBe('No recurrence')
-    })
+  /** Helper to build a MasterChore for formatRecurrence tests. */
+  function makeMaster(overrides: Partial<MasterChore>): MasterChore {
+    return {
+      id: 'test-master',
+      name: 'Test Chore',
+      category: { id: 'cat-1', name: 'Test' },
+      tags: [],
+      difficulty: 1,
+      frequency: 'once',
+      frequency_interval: 1,
+      day_of_week: null,
+      day_of_month: null,
+      week_of_month: null,
+      month: null,
+      estimated_minutes: null,
+      due_time: null,
+      due_date: null,
+      end_date: null,
+      max_occurrences: null,
+      occurrence_count: 0,
+      conditions: null,
+      is_collaborative: false,
+      created_by: 'parent',
+      status: 'active',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+      deleted_at: null,
+      ...overrides,
+    }
+  }
 
-    it('formats once frequency', () => {
-      const rule: RecurrenceRule = { frequency: 'once', time: '10:00' }
-      expect(formatRecurrence(rule)).toBe('One-time')
+  describe('formatRecurrence', () => {
+    it('returns "One-time" for once frequency', () => {
+      const master = makeMaster({ frequency: 'once' })
+      expect(formatRecurrence(master)).toBe('One-time')
     })
 
     it('formats daily frequency', () => {
-      const rule: RecurrenceRule = { frequency: 'daily', time: '08:00' }
-      expect(formatRecurrence(rule)).toBe('Daily at 8:00 AM')
+      const master = makeMaster({ frequency: 'daily', due_time: '08:00' })
+      expect(formatRecurrence(master)).toBe('Daily at 8:00 AM')
     })
 
     it('formats weekly frequency', () => {
-      const rule: RecurrenceRule = { frequency: 'weekly', time: '09:00', day_of_week: 0 }
-      expect(formatRecurrence(rule)).toBe('Weekly on Monday at 9:00 AM')
+      const master = makeMaster({ frequency: 'weekly', due_time: '09:00', day_of_week: [0] })
+      expect(formatRecurrence(master)).toBe('Weekly on Monday at 9:00 AM')
     })
 
     it('formats monthly frequency with day_of_month', () => {
-      const rule: RecurrenceRule = { frequency: 'monthly', time: '10:00', day_of_month: 3 }
-      expect(formatRecurrence(rule)).toBe('Monthly on the 3rd at 10:00 AM')
+      const master = makeMaster({ frequency: 'monthly', due_time: '10:00', day_of_month: 3 })
+      expect(formatRecurrence(master)).toBe('Monthly on the 3rd at 10:00 AM')
     })
 
     it('formats monthly frequency with nth weekday', () => {
-      const rule: RecurrenceRule = { frequency: 'monthly', time: '08:00', day_of_week: 0, week_of_month: 1 }
-      expect(formatRecurrence(rule)).toBe('Monthly on the first Monday at 8:00 AM')
+      const master = makeMaster({
+        frequency: 'monthly', due_time: '08:00', day_of_week: [0], week_of_month: 1,
+      })
+      expect(formatRecurrence(master)).toBe('Monthly on the first Monday at 8:00 AM')
     })
 
     it('formats yearly frequency with month and day', () => {
-      const rule: RecurrenceRule = { frequency: 'yearly', time: '09:00', month: 1, day_of_month: 15 }
-      expect(formatRecurrence(rule)).toBe('Yearly on January 15th at 9:00 AM')
+      const master = makeMaster({
+        frequency: 'yearly', due_time: '09:00', month: 1, day_of_month: 15,
+      })
+      expect(formatRecurrence(master)).toBe('Yearly on January 15th at 9:00 AM')
     })
 
     it('formats yearly frequency with nth weekday', () => {
-      const rule: RecurrenceRule = { frequency: 'yearly', time: '12:00', month: 11, day_of_week: 3, week_of_month: 4 }
-      expect(formatRecurrence(rule)).toBe('Yearly on the fourth Thursday of November at 12:00 PM')
+      const master = makeMaster({
+        frequency: 'yearly', due_time: '12:00', month: 11, day_of_week: [3], week_of_month: 4,
+      })
+      expect(formatRecurrence(master)).toBe('Yearly on the fourth Thursday of November at 12:00 PM')
     })
   })
 
@@ -369,8 +391,8 @@ describe('chores utilities', () => {
 
     it('counts assigned instances', () => {
       const instances: ChoreInstance[] = [
-        { ...openPoolInstance, assigned_to: 'alice' },
-        { ...openPoolInstance, assigned_to: 'bob' },
+        { ...openPoolInstance, assigned_by: 'parent' },
+        { ...openPoolInstance, assigned_by: 'parent' },
         openPoolInstance,
       ]
       const metrics = getColumnMetrics(instances)
@@ -379,9 +401,9 @@ describe('chores utilities', () => {
 
     it('counts claimed instances', () => {
       const instances: ChoreInstance[] = [
-        { ...openPoolInstance, claimed_by: 'alice' },
-        { ...openPoolInstance, claimed_by: 'bob' },
-        openPoolInstance,
+        { ...openPoolInstance, member_id: 'alice' },
+        { ...openPoolInstance, member_id: 'bob' },
+        { ...openPoolInstance, assigned_by: 'parent' },
       ]
       const metrics = getColumnMetrics(instances)
       expect(metrics.claimed).toBe(2)
@@ -419,16 +441,16 @@ describe('chores utilities', () => {
 
     it('handles mixed instance types', () => {
       const instances: ChoreInstance[] = [
-        { ...openPoolInstance, assigned_to: 'alice', status: 'in_progress' },
-        { ...openPoolInstance, claimed_by: 'bob', status: 'completed' },
-        { ...openPoolInstance, status: 'overdue' },
-        { ...openPoolInstance, assigned_to: 'charlie', status: 'active' },
+        { ...openPoolInstance, member_id: 'alice', assigned_by: 'parent', status: 'in_progress' },
+        { ...openPoolInstance, member_id: 'bob', assigned_by: null, status: 'active' },
+        { ...openPoolInstance, member_id: null, assigned_by: null, status: 'overdue' },
+        { ...openPoolInstance, member_id: 'charlie', assigned_by: 'parent', status: 'active' },
       ]
       const metrics = getColumnMetrics(instances)
-      expect(metrics.assigned).toBe(2)
+      expect(metrics.assigned).toBe(1)
       expect(metrics.claimed).toBe(1)
       expect(metrics.inProgress).toBe(1)
-      expect(metrics.completed).toBe(1)
+      expect(metrics.completed).toBe(0)
       expect(metrics.overdue).toBe(1)
     })
   })
@@ -437,20 +459,19 @@ describe('chores utilities', () => {
     it('returns zero counts for empty array', () => {
       const metrics = getOpenPoolMetrics([])
       expect(metrics).toEqual({
-        total: 0,
+        available: 0,
         overdue: 0,
-        dueToday: 0,
       })
     })
 
-    it('counts total instances', () => {
+    it('counts available instances', () => {
       const instances: ChoreInstance[] = [
         { ...openPoolInstance, id: '1' },
         { ...openPoolInstance, id: '2' },
         { ...openPoolInstance, id: '3' },
       ]
       const metrics = getOpenPoolMetrics(instances)
-      expect(metrics.total).toBe(3)
+      expect(metrics.available).toBe(3)
     })
 
     it('counts overdue instances', () => {
@@ -463,29 +484,16 @@ describe('chores utilities', () => {
       expect(metrics.overdue).toBe(2)
     })
 
-    it('counts instances due today', () => {
-      const todayStr = new Date().toISOString().split('T')[0]!
-      const instances: ChoreInstance[] = [
-        { ...openPoolInstance, id: '1', period_start: todayStr },
-        { ...openPoolInstance, id: '2', period_start: '2026-01-01' },
-        { ...openPoolInstance, id: '3', period_start: todayStr },
-      ]
-      const metrics = getOpenPoolMetrics(instances)
-      expect(metrics.dueToday).toBe(2)
-    })
-
     it('handles mixed instance types', () => {
-      const todayStr = new Date().toISOString().split('T')[0]!
       const instances: ChoreInstance[] = [
-        { ...openPoolInstance, id: '1', period_start: todayStr, status: 'active' },
-        { ...openPoolInstance, id: '2', period_start: '2026-01-01', status: 'overdue' },
-        { ...openPoolInstance, id: '3', period_start: todayStr, status: 'overdue' },
-        { ...openPoolInstance, id: '4', period_start: '2026-12-31', status: 'active' },
+        { ...openPoolInstance, id: '1', status: 'active' },
+        { ...openPoolInstance, id: '2', status: 'overdue' },
+        { ...openPoolInstance, id: '3', status: 'overdue' },
+        { ...openPoolInstance, id: '4', status: 'active' },
       ]
       const metrics = getOpenPoolMetrics(instances)
-      expect(metrics.total).toBe(4)
+      expect(metrics.available).toBe(2)
       expect(metrics.overdue).toBe(2)
-      expect(metrics.dueToday).toBe(2)
     })
   })
 })

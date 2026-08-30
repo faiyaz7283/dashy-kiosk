@@ -31,11 +31,15 @@ describe('ChoreCard', () => {
     category: { id: 'cat-1', name: 'Kitchen' },
     tags: [],
     difficulty: 3,
-    recurrence_rule: { frequency: 'daily', time: '18:00' },
+    frequency: 'daily',
+    frequency_interval: 1,
+    day_of_week: null,
+    day_of_month: null,
+    week_of_month: null,
+    month: null,
     estimated_minutes: 10,
     due_time: '22:00',
     due_date: null,
-    expiration_behavior: 'stay_visible',
     end_date: null,
     max_occurrences: null,
     occurrence_count: 0,
@@ -51,14 +55,12 @@ describe('ChoreCard', () => {
   const mockInstance: ChoreInstance = {
     id: 'instance-1',
     master_chore_id: 'master-1',
-    association_id: null,
-    status: 'active',
+    association_id: 'assoc-1',
     period_start: '2026-01-15',
     period_end: '2026-01-16',
-    assigned_to: null,
+    status: 'active',
+    member_id: null,
     assigned_by: null,
-    claimed_by: null,
-    completed_by: null,
     started_at: null,
     completed_at: null,
     created_at: '2026-01-01T00:00:00Z',
@@ -145,7 +147,7 @@ describe('ChoreCard', () => {
   })
 
   it('renders assignment status for claimed chore', () => {
-    const claimedInstance = { ...mockInstance, claimed_by: 'faiyaz', status: 'active' as const }
+    const claimedInstance = { ...mockInstance, member_id: 'faiyaz', status: 'active' as const }
     render(
       <ChoreCard
         instance={claimedInstance}
@@ -160,7 +162,7 @@ describe('ChoreCard', () => {
   it('renders assignment status for assigned chore', () => {
     const assignedInstance = {
       ...mockInstance,
-      assigned_to: 'trisha',
+      member_id: 'trisha',
       assigned_by: 'faiyaz',
       status: 'active' as const,
     }
@@ -178,7 +180,7 @@ describe('ChoreCard', () => {
   it('renders completion status', () => {
     const completedInstance = {
       ...mockInstance,
-      completed_by: 'trisha',
+      member_id: 'trisha',
       status: 'completed' as const,
     }
     render(

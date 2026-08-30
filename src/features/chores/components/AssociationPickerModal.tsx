@@ -133,7 +133,7 @@ export function AssociationPickerModal({
         .filter((a) => {
           if (a.removed_at !== null) return false
           if (targetKey) return a.member_id === targetKey
-          return a.is_open_pool
+          return a.member_id === null
         })
         .map((a) => a.master_chore_id),
     )
@@ -151,7 +151,7 @@ export function AssociationPickerModal({
           (a) =>
             a.master_chore_id === mc.id &&
             a.removed_at === null &&
-            !a.is_open_pool,
+            a.member_id !== null,
         )
         if (hasMemberAssociation) return false
       }
@@ -162,10 +162,10 @@ export function AssociationPickerModal({
   // Apply group filter
   const groupedMasters = useMemo(() => {
     if (groupFilter === 'recurring') {
-      return availableMasters.filter((mc) => mc.recurrence_rule !== null)
+      return availableMasters.filter((mc) => mc.frequency !== 'once')
     }
     if (groupFilter === 'one-off') {
-      return availableMasters.filter((mc) => mc.recurrence_rule === null)
+      return availableMasters.filter((mc) => mc.frequency === 'once')
     }
     return availableMasters
   }, [availableMasters, groupFilter])
@@ -206,10 +206,10 @@ export function AssociationPickerModal({
 
   // Split into recurring and one-off sections
   const recurringMasters = sortedMasters.filter(
-    (mc) => mc.recurrence_rule !== null,
+    (mc) => mc.frequency !== 'once',
   )
   const oneOffMasters = sortedMasters.filter(
-    (mc) => mc.recurrence_rule === null,
+    (mc) => mc.frequency === 'once',
   )
 
   const showSections = groupFilter === 'all'
@@ -277,7 +277,6 @@ export function AssociationPickerModal({
       const createdBy = members[0]?.key ?? 'unknown'
       await actions.createAssociation({
         master_chore_id: masterChoreId,
-        is_open_pool: true,
         created_by: createdBy,
       })
       addNotification({
@@ -298,10 +297,10 @@ export function AssociationPickerModal({
   /** Render a master chore list item. */
   const renderMasterItem = (master: MasterChore) => {
     const categoryName = categoryMap.get(master.category.id) ?? 'Uncategorized'
-    const isOneOff = master.recurrence_rule === null
+    const isOneOff = master.frequency === 'once'
     const recurrenceSummary = isOneOff
       ? 'No recurrence'
-      : formatRecurrence(master.recurrence_rule, timezone)
+      : formatRecurrence(master, timezone)
 
     return (
       <div

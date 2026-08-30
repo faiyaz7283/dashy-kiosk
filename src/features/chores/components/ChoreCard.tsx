@@ -86,7 +86,7 @@ export function ChoreCard({
   const categoryName = category?.name ?? 'Uncategorized'
 
   // Get member color for left border
-  const memberKey = instance.claimed_by ?? instance.assigned_to
+  const memberKey = instance.member_id
   const paletteKey = getMemberPaletteKey(memberKey, colorMap)
 
   // Difficulty dots (filled = active, empty = inactive)
@@ -95,13 +95,13 @@ export function ChoreCard({
   // Format assignment text
   const getAssignmentText = () => {
     if (instance.status === 'completed') {
-      return `Completed by ${instance.completed_by ?? 'Unknown'}`
+      return `Completed by ${instance.member_id ?? 'Unknown'}`
     }
-    if (instance.claimed_by) {
-      return `Claimed by ${instance.claimed_by}`
+    if (instance.member_id && instance.assigned_by) {
+      return `Assigned by ${instance.assigned_by} to ${instance.member_id}`
     }
-    if (instance.assigned_to) {
-      return `Assigned by ${instance.assigned_by ?? 'Unknown'} to ${instance.assigned_to}`
+    if (instance.member_id) {
+      return `Claimed by ${instance.member_id}`
     }
     return 'Unclaimed'
   }
@@ -204,7 +204,7 @@ export function ChoreCard({
           {categoryName}
         </span>
         <span className="rounded bg-border-light px-1 py-0.5 text-[8px] text-text-muted">
-          {masterChore.recurrence_rule?.frequency ?? 'once'}
+          {masterChore.frequency}
         </span>
       </div>
 

@@ -8,25 +8,6 @@
  * `dashy-api/app/api/models/chores.py`.
  */
 
-/** Recurrence pattern configuration. */
-export interface RecurrenceRule {
-  /** How often the chore recurs. */
-  frequency: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly'
-  /** Time of day in HH:MM 24-hour format (local time, interpreted by backend in configured timezone). */
-  time: string
-  /** Day of week (0=Monday, 6=Sunday). Required for weekly. */
-  day_of_week?: number
-  /** Day of month (1-31). Required for monthly/yearly with fixed date. */
-  day_of_month?: number
-  /** Week of month (1-5). Used with day_of_week for "first Monday" patterns. */
-  week_of_month?: number
-  /** Month (1-12). Required for yearly. */
-  month?: number
-}
-
-/** What happens to an instance when its period expires. */
-export type ExpirationBehavior = 'disappear' | 'stay_visible' | 'convert_to_open'
-
 /** Lifecycle status of a master chore template. */
 export type MasterChoreStatus = 'active' | 'inactive' | 'archived'
 
@@ -69,6 +50,7 @@ export interface ChoreTag {
  *
  * Associations trigger instance generation and track who is responsible
  * for a chore. Soft-deleted by setting removed_at.
+ * Open pool is indicated by member_id being null.
  */
 export interface ChoreAssociation {
   /** Unique identifier. */
@@ -77,8 +59,6 @@ export interface ChoreAssociation {
   master_chore_id: string
   /** FK to the family member (null for open pool). */
   member_id: string | null
-  /** Whether this is an open pool (anyone can claim). */
-  is_open_pool: boolean
   /** Member ID who created this association. */
   created_by: string
   /** ISO datetime when created. */
@@ -93,7 +73,7 @@ export interface ChoreAssociation {
  * Master chore template.
  *
  * Defines the chore definition from which per-period instances are generated.
- * One master can produce many instances over time based on its recurrence_rule.
+ * One master can produce many instances over time based on its recurrence pattern.
  */
 export interface MasterChore {
   /** Unique identifier. */
@@ -106,16 +86,24 @@ export interface MasterChore {
   tags: ChoreTag[]
   /** Difficulty level (1–5). */
   difficulty: number
-  /** Recurrence pattern config, or null for one-off chores. */
-  recurrence_rule: RecurrenceRule | null
+  /** Recurrence frequency: 'once', 'daily', 'weekly', 'monthly', 'yearly'. */
+  frequency: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+  /** Every N days/weeks/months/years (default 1). */
+  frequency_interval: number
+  /** Days of week for weekly/monthly recurrence (0=Monday, 6=Sunday). */
+  day_of_week: number[] | null
+  /** Day of month for monthly/yearly recurrence (1-31). */
+  day_of_month: number | null
+  /** Week of month for monthly recurrence (1-5, e.g. "3rd Tuesday"). */
+  week_of_month: number | null
+  /** Month for yearly recurrence (1-12). */
+  month: number | null
   /** Estimated time in minutes, or null if not set. */
   estimated_minutes: number | null
   /** Optional due time-of-day (ISO time string), or null. */
   due_time: string | null
   /** Optional due date (ISO date string) for one-off chores, or null. */
   due_date: string | null
-  /** What happens when the instance period expires. */
-  expiration_behavior: ExpirationBehavior
   /** Stop generating after this date (ISO date string), or null. */
   end_date: string | null
   /** Stop after N total instances generated, or null. */
@@ -148,22 +136,18 @@ export interface ChoreInstance {
   id: string
   /** ID of the parent master chore template. */
   master_chore_id: string
-  /** FK to the association that generated this instance, or null. */
-  association_id: string | null
-  /** Period start date (ISO string), or null for one-off chores. */
-  period_start: string | null
+  /** FK to the association that generated this instance. */
+  association_id: string
+  /** Period start date (ISO string). */
+  period_start: string
   /** Period end date (ISO string), or null for one-off chores. */
   period_end: string | null
   /** Current lifecycle status. */
   status: InstanceStatus
-  /** Member ID who voluntarily claimed, or null. Mutually exclusive with assigned_to. */
-  claimed_by: string | null
-  /** Member ID who was assigned by a parent, or null. Mutually exclusive with claimed_by. */
-  assigned_to: string | null
+  /** Member ID who owns this instance (null for open pool). */
+  member_id: string | null
   /** Member ID of the parent who made the assignment, or null. */
   assigned_by: string | null
-  /** Member ID who marked it complete, or null. */
-  completed_by: string | null
   /** ISO datetime when work began, or null. */
   started_at: string | null
   /** ISO datetime when marked complete, or null. */
@@ -203,16 +187,24 @@ export interface CreateMasterChoreRequest {
   tag_ids?: string[]
   /** Difficulty level (1–5). */
   difficulty?: number
-  /** Recurrence pattern config. */
-  recurrence_rule?: RecurrenceRule | null
+  /** Recurrence frequency. */
+  frequency?: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+  /** Every N days/weeks/months/years (default 1). */
+  frequency_interval?: number
+  /** Days of week for weekly/monthly recurrence (0=Monday, 6=Sunday). */
+  day_of_week?: number[] | null
+  /** Day of month for monthly/yearly recurrence (1-31). */
+  day_of_month?: number | null
+  /** Week of month for monthly recurrence (1-5). */
+  week_of_month?: number | null
+  /** Month for yearly recurrence (1-12). */
+  month?: number | null
   /** Estimated time in minutes. */
   estimated_minutes?: number | null
   /** Due time-of-day (ISO time string). */
   due_time?: string | null
   /** Due date (ISO date string) for one-off chores. */
   due_date?: string | null
-  /** What happens when the instance period expires. */
-  expiration_behavior?: ExpirationBehavior
   /** Stop generating after this date. */
   end_date?: string | null
   /** Stop after N total instances. */
@@ -235,16 +227,24 @@ export interface UpdateMasterChoreRequest {
   tag_ids?: string[]
   /** Difficulty level (1–5). */
   difficulty?: number
-  /** Recurrence pattern config. */
-  recurrence_rule?: RecurrenceRule | null
+  /** Recurrence frequency. */
+  frequency?: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+  /** Every N days/weeks/months/years (default 1). */
+  frequency_interval?: number
+  /** Days of week for weekly/monthly recurrence (0=Monday, 6=Sunday). */
+  day_of_week?: number[] | null
+  /** Day of month for monthly/yearly recurrence (1-31). */
+  day_of_month?: number | null
+  /** Week of month for monthly recurrence (1-5). */
+  week_of_month?: number | null
+  /** Month for yearly recurrence (1-12). */
+  month?: number | null
   /** Estimated time in minutes. */
   estimated_minutes?: number | null
   /** Due time-of-day (ISO time string). */
   due_time?: string | null
   /** Due date (ISO date string) for one-off chores. */
   due_date?: string | null
-  /** What happens when the instance period expires. */
-  expiration_behavior?: ExpirationBehavior
   /** Stop generating after this date. */
   end_date?: string | null
   /** Stop after N total instances. */
@@ -263,8 +263,6 @@ export interface CreateAssociationRequest {
   master_chore_id: string
   /** Member to associate (null for open pool). */
   member_id?: string
-  /** Whether this is an open pool. */
-  is_open_pool?: boolean
   /** Member ID creating the association. */
   created_by: string
   /** If true, automatically claim the generated instance for member_id. */
@@ -284,8 +282,6 @@ export interface AssociationCreateResponse {
   master_chore_id: string
   /** Member ID (null for open pool). */
   member_id?: string
-  /** Whether this is an open pool. */
-  is_open_pool: boolean
   /** Member ID who created the association. */
   created_by: string
   /** Creation timestamp. */
@@ -296,4 +292,18 @@ export interface AssociationCreateResponse {
   removed_at?: string
   /** The generated instance (null if generation was skipped). */
   instance?: ChoreInstance
+}
+
+/** Request payload for updating a chore instance (claim, assign, revert, reset, or status change). */
+export interface UpdateInstanceRequest {
+  /** Action to perform: 'claim', 'assign', 'revert', 'reset'. */
+  action?: 'claim' | 'assign' | 'revert' | 'reset'
+  /** New status (for generic status updates). */
+  status?: InstanceStatus
+  /** Member ID (for claim/assign actions). */
+  member_id?: string
+  /** Member ID of the assigner (for assign action). */
+  assigned_by?: string
+  /** Member ID performing the action (for revert/reset/status). */
+  actor_id?: string
 }

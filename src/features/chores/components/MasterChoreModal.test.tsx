@@ -48,11 +48,15 @@ function makeMaster(overrides: Partial<MasterChore> & { id: string }): MasterCho
     category: { id: 'cat-1', name: 'Kitchen' },
     tags: [{ id: 'tag-1', name: 'Quick' }],
     difficulty: 3,
-    recurrence_rule: { frequency: 'weekly', time: '18:00', day_of_week: 0 },
+    frequency: 'weekly',
+    frequency_interval: 1,
+    day_of_week: [0],
+    day_of_month: null,
+    week_of_month: null,
+    month: null,
     estimated_minutes: 10,
     due_time: null,
     due_date: null,
-    expiration_behavior: 'stay_visible',
     end_date: null,
     max_occurrences: null,
     occurrence_count: 45,
@@ -155,13 +159,6 @@ describe('MasterChoreModal', () => {
       expect(screen.getByText('Estimated Duration')).toBeTruthy()
     })
 
-    it('renders expiration behavior options', () => {
-      renderModal()
-      expect(screen.getByText('Disappear')).toBeTruthy()
-      expect(screen.getByText('Stay visible')).toBeTruthy()
-      expect(screen.getByText('Convert to open pool')).toBeTruthy()
-    })
-
     it('renders End Date and Max Occurrences inputs', () => {
       renderModal()
       expect(screen.getByText('End Date')).toBeTruthy()
@@ -218,28 +215,30 @@ describe('MasterChoreModal', () => {
   })
 
   describe('conditional recurrence fields', () => {
-    it('shows time field for weekly frequency', () => {
-      renderModal()
-      // Default frequency is weekly — time input with default value "18:00"
-      expect(screen.getByDisplayValue('18:00')).toBeTruthy()
-    })
-
-    it('hides recurrence section for "once" frequency', () => {
+    it('shows due_time field for weekly frequency', () => {
       const master = makeMaster({
-        id: 'mc-once',
-        recurrence_rule: null,
+        id: 'mc-weekly',
+        due_time: '18:00',
       })
       renderModal({ mode: 'edit', master })
-      // "Frequency" label should still exist but no time field in recurrence section
-      // The time field in the recurrence section should not be present
-      // (Due Time is separate and always shown)
+      // Both the recurrence time and due_time fields show '18:00'
+      expect(screen.getAllByDisplayValue('18:00').length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('shows frequency section for "once" frequency', () => {
+      const master = makeMaster({
+        id: 'mc-once',
+        frequency: 'once',
+      })
+      renderModal({ mode: 'edit', master })
       expect(screen.getByText('Frequency')).toBeTruthy()
     })
 
     it('shows monthly pattern fields for monthly frequency', () => {
       const master = makeMaster({
         id: 'mc-monthly',
-        recurrence_rule: { frequency: 'monthly', time: '10:00', day_of_month: 15 },
+        frequency: 'monthly',
+        day_of_month: 15,
       })
       renderModal({ mode: 'edit', master })
       expect(screen.getByText('Monthly Pattern')).toBeTruthy()
@@ -250,7 +249,9 @@ describe('MasterChoreModal', () => {
     it('shows yearly pattern fields for yearly frequency', () => {
       const master = makeMaster({
         id: 'mc-yearly',
-        recurrence_rule: { frequency: 'yearly', time: '09:00', month: 6, day_of_month: 15 },
+        frequency: 'yearly',
+        month: 6,
+        day_of_month: 15,
       })
       renderModal({ mode: 'edit', master })
       expect(screen.getByText('Yearly Pattern')).toBeTruthy()
@@ -268,7 +269,7 @@ describe('MasterChoreModal', () => {
     it('shows Due Time for once frequency', () => {
       const master = makeMaster({
         id: 'mc-once',
-        recurrence_rule: null,
+        frequency: 'once',
       })
       renderModal({ mode: 'edit', master })
       expect(screen.getByText('Due Time')).toBeTruthy()
@@ -277,7 +278,7 @@ describe('MasterChoreModal', () => {
     it('shows Due Date only for once frequency', () => {
       const master = makeMaster({
         id: 'mc-once',
-        recurrence_rule: null,
+        frequency: 'once',
         due_date: '2026-09-01',
       })
       renderModal({ mode: 'edit', master })
@@ -296,13 +297,14 @@ describe('MasterChoreModal', () => {
         due_time: '21:00',
       })
       renderModal({ mode: 'edit', master })
-      expect(screen.getByDisplayValue('21:00')).toBeTruthy()
+      // Both the recurrence time and due_time fields show '21:00'
+      expect(screen.getAllByDisplayValue('21:00').length).toBeGreaterThanOrEqual(1)
     })
 
     it('pre-populates due_date from master for once frequency', () => {
       const master = makeMaster({
         id: 'mc-once',
-        recurrence_rule: null,
+        frequency: 'once',
         due_date: '2026-09-01',
       })
       renderModal({ mode: 'edit', master })
