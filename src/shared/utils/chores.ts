@@ -241,14 +241,15 @@ export function formatRecurrence(master: MasterChore, _timezone?: string): strin
     }
 
     case 'monthly': {
+      const prefix = master.frequency_interval === 1 ? 'Monthly' : `Every ${master.frequency_interval} months`
       if (master.day_of_month != null) {
-        return `Monthly on the ${formatOrdinalDay(master.day_of_month)} at ${timeStr}`
+        return `${prefix} on the ${formatOrdinalDay(master.day_of_month)} at ${timeStr}`
       }
       if (master.day_of_week && master.day_of_week.length > 0 && master.week_of_month != null) {
         const firstDay = master.day_of_week[0]
         const dayName = firstDay != null ? (DAY_NAMES[firstDay] ?? `day ${firstDay}`) : 'unknown day'
         const weekOrd = formatWeekOrdinal(master.week_of_month)
-        return `Monthly on the ${weekOrd} ${dayName} at ${timeStr}`
+        return `${prefix} on the ${weekOrd} ${dayName} at ${timeStr}`
       }
       return `Monthly at ${timeStr}`
     }
@@ -257,15 +258,16 @@ export function formatRecurrence(master: MasterChore, _timezone?: string): strin
       const monthName = master.month != null
         ? MONTH_NAMES[master.month]
         : 'unknown month'
+      const prefix = master.frequency_interval === 1 ? 'Yearly' : `Every ${master.frequency_interval} years`
 
       if (master.day_of_month != null) {
-        return `Yearly on ${monthName} ${formatOrdinalDay(master.day_of_month)} at ${timeStr}`
+        return `${prefix} on ${monthName} ${formatOrdinalDay(master.day_of_month)} at ${timeStr}`
       }
       if (master.day_of_week && master.day_of_week.length > 0 && master.week_of_month != null) {
         const firstDay = master.day_of_week[0]
         const dayName = firstDay != null ? (DAY_NAMES[firstDay] ?? `day ${firstDay}`) : 'unknown day'
         const weekOrd = formatWeekOrdinal(master.week_of_month)
-        return `Yearly on the ${weekOrd} ${dayName} of ${monthName} at ${timeStr}`
+        return `${prefix} on the ${weekOrd} ${dayName} of ${monthName} at ${timeStr}`
       }
       return `Yearly in ${monthName} at ${timeStr}`
     }

@@ -375,6 +375,32 @@ describe('chores utilities', () => {
       })
       expect(formatRecurrence(master)).toBe('Yearly on the fourth Thursday of November at 12:00 PM')
     })
+
+    it('formats daily frequency with interval > 1', () => {
+      const master = makeMaster({ frequency: 'daily', due_time: '08:00', frequency_interval: 2 })
+      expect(formatRecurrence(master)).toBe('Every 2 days at 8:00 AM')
+    })
+
+    it('formats weekly frequency with interval > 1', () => {
+      const master = makeMaster({
+        frequency: 'weekly', due_time: '09:00', day_of_week: [0], frequency_interval: 3,
+      })
+      expect(formatRecurrence(master)).toBe('Every 3 weeks on Monday at 9:00 AM')
+    })
+
+    it('formats monthly frequency with interval > 1', () => {
+      const master = makeMaster({
+        frequency: 'monthly', due_time: '10:00', day_of_month: 15, frequency_interval: 2,
+      })
+      expect(formatRecurrence(master)).toBe('Every 2 months on the 15th at 10:00 AM')
+    })
+
+    it('formats yearly frequency with interval > 1', () => {
+      const master = makeMaster({
+        frequency: 'yearly', due_time: '09:00', month: 1, day_of_month: 15, frequency_interval: 2,
+      })
+      expect(formatRecurrence(master)).toBe('Every 2 years on January 15th at 9:00 AM')
+    })
   })
 
   describe('getColumnMetrics', () => {

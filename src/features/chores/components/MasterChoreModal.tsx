@@ -63,6 +63,7 @@ interface FormState {
   tagIds: string[]
   difficulty: number
   frequency: RecurrenceFrequency
+  frequencyInterval: number
   dayOfWeek: number
   monthlyPattern: MonthlyPattern
   dayOfMonth: string
@@ -85,6 +86,7 @@ const DEFAULT_FORM: FormState = {
   tagIds: [],
   difficulty: 3,
   frequency: 'weekly',
+  frequencyInterval: 1,
   dayOfWeek: 0,
   monthlyPattern: 'dayOfMonth',
   dayOfMonth: '1',
@@ -455,7 +457,7 @@ export function MasterChoreModal({
                 </Tooltip>
               </div>
 
-              {/* Frequency + Time row */}
+              {/* Frequency + Interval row */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="mb-1 flex items-center gap-1.5">
@@ -481,6 +483,26 @@ export function MasterChoreModal({
                     <ChevronDownIcon />
                   </div>
                 </div>
+                {form.frequency !== 'once' && (
+                  <div>
+                    <div className="mb-1 flex items-center gap-1.5">
+                      <label className="text-xs font-medium text-text-muted">
+                        Every
+                      </label>
+                      <Tooltip content={`Repeat every N ${form.frequency === 'daily' ? 'days' : form.frequency === 'weekly' ? 'weeks' : form.frequency === 'monthly' ? 'months' : 'years'}`}>
+                        <Info className="h-3 w-3 text-text-faint" />
+                      </Tooltip>
+                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={form.frequencyInterval}
+                      onChange={(e) => updateField('frequencyInterval', Math.max(1, Number(e.target.value) || 1))}
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Weekly: Day of week toggle */}
@@ -850,11 +872,11 @@ function buildRecurrenceFields(
     case 'once':
       return { frequency: 'once' }
     case 'daily':
-      return { frequency: 'daily', frequency_interval: 1 }
+      return { frequency: 'daily', frequency_interval: form.frequencyInterval }
     case 'weekly':
       return {
         frequency: 'weekly',
-        frequency_interval: 1,
+        frequency_interval: form.frequencyInterval,
         day_of_week: [form.dayOfWeek],
       }
     case 'monthly': {
@@ -863,7 +885,7 @@ function buildRecurrenceFields(
         // Nth weekday pattern (e.g. "3rd Tuesday")
         return {
           frequency: 'monthly',
-          frequency_interval: 1,
+          frequency_interval: form.frequencyInterval,
           week_of_month: form.nthWeekOfMonth,
           day_of_week: [form.nthDayOfWeek],
         }
@@ -872,14 +894,14 @@ function buildRecurrenceFields(
       const dayOfMonth = Number(form.dayOfMonth) || null
       return {
         frequency: 'monthly',
-        frequency_interval: 1,
+        frequency_interval: form.frequencyInterval,
         ...(dayOfMonth ? { day_of_month: dayOfMonth } : {}),
       }
     }
     case 'yearly':
       return {
         frequency: 'yearly',
-        frequency_interval: 1,
+        frequency_interval: form.frequencyInterval,
         month: form.yearMonth,
         day_of_month: Number(form.yearDay) || 1,
       }
@@ -912,6 +934,7 @@ function formFromMaster(master: MasterChore): FormState {
     tagIds: master.tags.map((t) => t.id),
     difficulty: master.difficulty,
     frequency,
+    frequencyInterval: master.frequency_interval ?? 1,
     dayOfWeek: firstDayOfWeek,
     monthlyPattern,
     dayOfMonth: master.day_of_month?.toString() ?? '1',
