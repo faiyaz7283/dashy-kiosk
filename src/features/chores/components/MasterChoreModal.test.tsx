@@ -242,8 +242,8 @@ describe('MasterChoreModal', () => {
       })
       renderModal({ mode: 'edit', master })
       expect(screen.getByText('Monthly Pattern')).toBeTruthy()
-      expect(screen.getByText('Day of Month')).toBeTruthy()
-      expect(screen.getByText('OR Nth Weekday')).toBeTruthy()
+      expect(screen.getByText('On a specific day')).toBeTruthy()
+      expect(screen.getByText('On the Nth weekday')).toBeTruthy()
     })
 
     it('shows yearly pattern fields for yearly frequency', () => {

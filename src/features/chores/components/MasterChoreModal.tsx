@@ -53,6 +53,9 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
+/** Monthly pattern type — mutually exclusive options. */
+type MonthlyPattern = 'dayOfMonth' | 'nthWeekday'
+
 /** Form state for the master chore modal. */
 interface FormState {
   name: string
@@ -61,6 +64,7 @@ interface FormState {
   difficulty: number
   frequency: RecurrenceFrequency
   dayOfWeek: number
+  monthlyPattern: MonthlyPattern
   dayOfMonth: string
   nthWeekOfMonth: number
   nthDayOfWeek: number
@@ -82,6 +86,7 @@ const DEFAULT_FORM: FormState = {
   difficulty: 3,
   frequency: 'weekly',
   dayOfWeek: 0,
+  monthlyPattern: 'dayOfMonth',
   dayOfMonth: '1',
   nthWeekOfMonth: 1,
   nthDayOfWeek: 0,
@@ -503,58 +508,84 @@ export function MasterChoreModal({
                 </div>
               )}
 
-              {/* Monthly: Day of month OR Nth weekday */}
+              {/* Monthly: Day of month OR Nth weekday (mutually exclusive) */}
               {isMonthly && (
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-text-muted">
+                  <label className="mb-2 block text-xs font-medium text-text-muted">
                     Monthly Pattern
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="mb-1 block text-xs text-text-faint">
-                        Day of Month
-                      </label>
+                  <div className="space-y-3">
+                    {/* Option 1: Day of month */}
+                    <label className="flex cursor-pointer items-start gap-2">
                       <input
-                        type="number"
-                        min="1"
-                        max="31"
-                        value={form.dayOfMonth}
-                        onChange={(e) => updateField('dayOfMonth', e.target.value)}
-                        placeholder="1-31"
-                        className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                        type="radio"
+                        name="monthlyPattern"
+                        value="dayOfMonth"
+                        checked={form.monthlyPattern === 'dayOfMonth'}
+                        onChange={() => updateField('monthlyPattern', 'dayOfMonth')}
+                        className="mt-0.5 h-3.5 w-3.5 border-border text-primary focus:ring-primary"
                       />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs text-text-faint">
-                        OR Nth Weekday
-                      </label>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <select
-                            value={form.nthWeekOfMonth}
-                            onChange={(e) => updateField('nthWeekOfMonth', Number(e.target.value))}
-                            className="w-full appearance-none rounded-lg border border-border bg-bg px-2 py-2 text-xs text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                          >
-                            {WEEK_ORDINALS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
-                          <ChevronDownIcon />
+                      <div className="flex-1">
+                        <div className="mb-1 text-xs font-medium text-text-secondary">
+                          On a specific day
                         </div>
-                        <div className="relative flex-1">
-                          <select
-                            value={form.nthDayOfWeek}
-                            onChange={(e) => updateField('nthDayOfWeek', Number(e.target.value))}
-                            className="w-full appearance-none rounded-lg border border-border bg-bg px-2 py-2 text-xs text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                          >
-                            {DAY_ABBRS.map((abbr, index) => (
-                              <option key={abbr} value={index}>{abbr}</option>
-                            ))}
-                          </select>
-                          <ChevronDownIcon />
+                        <input
+                          type="number"
+                          min="1"
+                          max="31"
+                          value={form.dayOfMonth}
+                          onChange={(e) => updateField('dayOfMonth', e.target.value)}
+                          placeholder="1-31"
+                          disabled={form.monthlyPattern !== 'dayOfMonth'}
+                          className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                        />
+                      </div>
+                    </label>
+
+                    {/* Option 2: Nth weekday */}
+                    <label className="flex cursor-pointer items-start gap-2">
+                      <input
+                        type="radio"
+                        name="monthlyPattern"
+                        value="nthWeekday"
+                        checked={form.monthlyPattern === 'nthWeekday'}
+                        onChange={() => updateField('monthlyPattern', 'nthWeekday')}
+                        className="mt-0.5 h-3.5 w-3.5 border-border text-primary focus:ring-primary"
+                      />
+                      <div className="flex-1">
+                        <div className="mb-1 text-xs font-medium text-text-secondary">
+                          On the Nth weekday
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <select
+                              value={form.nthWeekOfMonth}
+                              onChange={(e) => updateField('nthWeekOfMonth', Number(e.target.value))}
+                              disabled={form.monthlyPattern !== 'nthWeekday'}
+                              className="w-full appearance-none rounded-lg border border-border bg-bg px-2 py-2 text-xs text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            >
+                              {WEEK_ORDINALS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                            <ChevronDownIcon />
+                          </div>
+                          <div className="relative flex-1">
+                            <select
+                              value={form.nthDayOfWeek}
+                              onChange={(e) => updateField('nthDayOfWeek', Number(e.target.value))}
+                              disabled={form.monthlyPattern !== 'nthWeekday'}
+                              className="w-full appearance-none rounded-lg border border-border bg-bg px-2 py-2 text-xs text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            >
+                              {DAY_ABBRS.map((abbr, index) => (
+                                <option key={abbr} value={index}>{abbr}</option>
+                              ))}
+                            </select>
+                            <ChevronDownIcon />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </label>
                   </div>
                 </div>
               )}
@@ -827,16 +858,22 @@ function buildRecurrenceFields(
         day_of_week: [form.dayOfWeek],
       }
     case 'monthly': {
+      // Only send the fields for the selected pattern type
+      if (form.monthlyPattern === 'nthWeekday') {
+        // Nth weekday pattern (e.g. "3rd Tuesday")
+        return {
+          frequency: 'monthly',
+          frequency_interval: 1,
+          week_of_month: form.nthWeekOfMonth,
+          day_of_week: [form.nthDayOfWeek],
+        }
+      }
+      // Day of month pattern (e.g. "15th of each month")
       const dayOfMonth = Number(form.dayOfMonth) || null
-      // Nth weekday pattern (e.g. "3rd Tuesday") uses week_of_month + day_of_week
-      const hasNthWeekday = form.nthWeekOfMonth > 0
       return {
         frequency: 'monthly',
         frequency_interval: 1,
         ...(dayOfMonth ? { day_of_month: dayOfMonth } : {}),
-        ...(hasNthWeekday
-          ? { week_of_month: form.nthWeekOfMonth, day_of_week: [form.nthDayOfWeek] }
-          : {}),
       }
     }
     case 'yearly':
@@ -866,6 +903,9 @@ function formFromMaster(master: MasterChore): FormState {
   // Extract first day_of_week for the single-select UI (schema supports arrays)
   const firstDayOfWeek = master.day_of_week?.[0] ?? 0
 
+  // Determine monthly pattern type from backend data
+  const monthlyPattern: MonthlyPattern = master.week_of_month != null ? 'nthWeekday' : 'dayOfMonth'
+
   return {
     name: master.name,
     categoryId: master.category.id,
@@ -873,6 +913,7 @@ function formFromMaster(master: MasterChore): FormState {
     difficulty: master.difficulty,
     frequency,
     dayOfWeek: firstDayOfWeek,
+    monthlyPattern,
     dayOfMonth: master.day_of_month?.toString() ?? '1',
     nthWeekOfMonth: master.week_of_month ?? 1,
     nthDayOfWeek: firstDayOfWeek,
