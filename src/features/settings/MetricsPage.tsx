@@ -80,11 +80,11 @@ export function MetricsPage({ open, onClose }: MetricsPageProps) {
   const { members } = useFamilyData()
   const { timezone } = useConfig()
 
-  // Create a mapping from member ID to name for display
+  // Create a mapping from member key to name for display
   const memberNameMap = useMemo(() => {
     const map = new Map<string, string>()
     members.forEach((member) => {
-      map.set(member.id, member.name)
+      map.set(member.key, member.name)
     })
     return map
   }, [members])
