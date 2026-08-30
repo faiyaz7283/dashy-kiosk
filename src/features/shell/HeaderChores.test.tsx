@@ -11,6 +11,8 @@ const defaultProps = {
   viewMode: 'board' as ChoresViewMode,
   onViewChange: vi.fn(),
   selectedCount: 0,
+  selectableCount: 0,
+  allSelected: false,
   onSelectAll: vi.fn(),
   onPauseSelected: vi.fn(),
   onArchiveSelected: vi.fn(),

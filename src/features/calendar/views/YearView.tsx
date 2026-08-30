@@ -28,6 +28,10 @@ export interface YearViewProps {
   onPrevious: () => void
   /** Callback for next navigation. */
   onNext: () => void
+  /** Callback when a month is clicked. */
+  onMonthClick?: (yearMonth: Temporal.PlainYearMonth) => void
+  /** Callback when a day is clicked. */
+  onDayClick?: (date: Temporal.PlainDate) => void
 }
 
 /**
@@ -36,7 +40,7 @@ export interface YearViewProps {
  * @param props - Date and navigation callbacks.
  * @returns The year view UI.
  */
-export function YearView({ date, onPrevious, onNext }: YearViewProps) {
+export function YearView({ date, onPrevious, onNext, onMonthClick, onDayClick }: YearViewProps) {
   const { events, isLoading, error } = useCalendarData('year', date)
   const { members } = useFamilyData()
   const colorMap = useMemo(() => buildMemberColorMap(members), [members])
@@ -94,6 +98,8 @@ export function YearView({ date, onPrevious, onNext }: YearViewProps) {
                 density={monthDensity}
                 colorMap={colorMap}
                 today={todayDate}
+                onMonthClick={onMonthClick}
+                onDayClick={onDayClick}
               />
             )
           })}
@@ -117,6 +123,10 @@ interface MiniMonthProps {
   colorMap: Map<string, PaletteKey>
   /** Today's date for highlighting. */
   today: Temporal.PlainDate
+  /** Callback when month header is clicked. */
+  onMonthClick?: ((yearMonth: Temporal.PlainYearMonth) => void) | undefined
+  /** Callback when a day is clicked. */
+  onDayClick?: ((date: Temporal.PlainDate) => void) | undefined
 }
 
 /**
@@ -125,7 +135,7 @@ interface MiniMonthProps {
  * Shows month name, event count badge, and a small calendar grid with
  * member-colored triangle indicators for days with events.
  */
-function MiniMonth({ yearMonth, events, eventCount, density, colorMap, today }: MiniMonthProps) {
+function MiniMonth({ yearMonth, events, eventCount, density, colorMap, today, onMonthClick, onDayClick }: MiniMonthProps) {
   const gridDates = getMonthGridDates(yearMonth, 5) // 5 rows for compact view
   const monthName = yearMonth.toLocaleString('en-US-u-ca-iso8601', { month: 'long' })
 
@@ -160,7 +170,10 @@ function MiniMonth({ yearMonth, events, eventCount, density, colorMap, today }: 
   return (
     <section className={`flex flex-col overflow-hidden rounded-md p-2 ${isCurrentMonth ? 'ring-2 ring-primary' : ''}`}>
       {/* Month header */}
-      <div className="mb-2 flex items-center justify-between">
+      <div
+        className="mb-2 flex cursor-pointer items-center justify-between hover:opacity-80"
+        onClick={() => onMonthClick?.(yearMonth)}
+      >
         <h2 className="text-sm font-semibold text-text-primary">{monthName}</h2>
         <span className={`rounded-full ${densityBgClasses[density]} px-2 py-0.5 text-[8px] font-medium text-text-primary`}>
           {eventCount}
@@ -192,6 +205,7 @@ function MiniMonth({ yearMonth, events, eventCount, density, colorMap, today }: 
               key={dayKey}
               type="button"
               className={`relative bg-white py-0.5 ${textColor} first:rounded-tl-lg last:rounded-br-lg hover:bg-bg-hover focus:z-10 dark:bg-bg`}
+              onClick={() => onDayClick?.(dayDate)}
             >
               {/* Member-colored triangle indicator for days with events */}
               {members.length > 0 && members[0] && (

@@ -38,6 +38,8 @@ export interface MonthViewProps {
   onPrevious: () => void
   /** Callback for next navigation. */
   onNext: () => void
+  /** Callback when a day is clicked. */
+  onDayClick?: (date: Temporal.PlainDate) => void
 }
 
 /**
@@ -46,7 +48,7 @@ export interface MonthViewProps {
  * @param props - Date and navigation callbacks.
  * @returns The month view UI.
  */
-export function MonthView({ date, onPrevious, onNext }: MonthViewProps) {
+export function MonthView({ date, onPrevious, onNext, onDayClick }: MonthViewProps) {
   const { events, isLoading, error } = useCalendarData('month', date)
   const { forecast } = useWeatherData()
   const { members } = useFamilyData()
@@ -143,6 +145,7 @@ export function MonthView({ date, onPrevious, onNext }: MonthViewProps) {
                         colorMap={colorMap}
                         members={members}
                         forecast={dayForecast}
+                        onClick={onDayClick}
                       />
                     )
                   })}
@@ -183,15 +186,17 @@ interface DayCellProps {
   members: FamilyMember[]
   /** Weather forecast for this day (optional). */
   forecast?: DailyForecast | undefined
+  /** Click handler (optional). */
+  onClick?: ((date: Temporal.PlainDate) => void) | undefined
 }
 
 /**
  * Single day cell in the month grid.
  *
- * Shows date number, event count badge, and up to 2 event cards.
+ * Shows date number, event count badge, weather icon, and event cards.
  */
-function DayCell({ date, isCurrentMonth, isToday, events, eventCount, colorMap, members, forecast }: DayCellProps) {
-  const dayEvents = getEventsForDate(events, date).slice(0, 2) // Show max 2 events
+function DayCell({ date, isCurrentMonth, isToday, events, eventCount, colorMap, members, forecast, onClick }: DayCellProps) {
+  const dayEvents = getEventsForDate(events, date)
   const textColor = isCurrentMonth ? 'text-text-primary' : 'text-text-disabled'
   const { dayLabel, dateLabel } = formatRelativeDay(date)
 
@@ -206,7 +211,10 @@ function DayCell({ date, isCurrentMonth, isToday, events, eventCount, colorMap, 
   const density = eventCount === 0 ? 'none' : eventCount <= 2 ? 'low' : eventCount <= 5 ? 'medium' : 'high'
 
   return (
-    <div className={`cursor-pointer border-b border-r border-border p-1.5 transition-colors hover:bg-bg-hover ${isToday ? 'ring-2 ring-primary' : ''}`}>
+    <div
+      className={`cursor-pointer border-b border-r border-border p-1.5 transition-colors hover:bg-bg-hover ${isToday ? 'ring-2 ring-primary' : ''}`}
+      onClick={() => onClick?.(date)}
+    >
       {/* Date number and event count */}
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-1">
         {isToday ? (
@@ -216,11 +224,11 @@ function DayCell({ date, isCurrentMonth, isToday, events, eventCount, colorMap, 
         ) : (
           <span className={`text-xs font-medium ${textColor}`}>{date.day}</span>
         )}
-        {forecast && (
-          <div className="flex justify-center">
+        <div className="flex justify-center">
+          {forecast && (
             <DayWeatherBadge forecast={forecast} isToday={isToday} dateLabel={dayLabel} dateSublabel={dateLabel} />
-          </div>
-        )}
+          )}
+        </div>
         {eventCount > 0 && (
           <span
             className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium text-text-primary ${densityBgClasses[density]}`}

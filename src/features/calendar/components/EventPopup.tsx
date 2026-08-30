@@ -21,8 +21,7 @@ import { Clock, MapPin, FileText, RefreshCw, Users } from 'lucide-react'
 import type { CalendarEvent, Attendee } from '@/types/calendar'
 import { formatTime } from '@/shared/date/format'
 import { isTimedEvent } from '@/types/calendar'
-import { buildMemberColorMap, paletteBgClasses, getMemberPaletteKey } from '@/shared/utils/memberColors'
-import type { PaletteKey } from '@/shared/utils/memberColors'
+import { buildMemberColorMap, paletteBgClasses, getMemberPaletteKey, resolvePaletteKey } from '@/shared/utils/memberColors'
 
 /** Props for the EventPopup component. */
 export interface EventPopupProps {
@@ -106,7 +105,7 @@ export function EventPopup({ event }: EventPopupProps) {
             <Users className="mt-0.5 h-4 w-4 flex-shrink-0 text-text-faint" />
             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
               {event.attendees.map((attendee, idx) => (
-                <AttendeeRow key={idx} attendee={attendee} colorMap={colorMap} />
+                <AttendeeRow key={idx} attendee={attendee} />
               ))}
             </div>
           </div>
@@ -119,10 +118,8 @@ export function EventPopup({ event }: EventPopupProps) {
 /**
  * Single attendee row with avatar and status.
  */
-function AttendeeRow({ attendee, colorMap }: { attendee: Attendee; colorMap: Map<string, PaletteKey> }) {
-  const paletteKey = attendee.color_key && attendee.color_key in paletteBgClasses
-    ? attendee.color_key as PaletteKey
-    : getMemberPaletteKey(attendee.member_key, colorMap)
+function AttendeeRow({ attendee }: { attendee: Attendee }) {
+  const paletteKey = resolvePaletteKey(attendee)
   const memberInitial = attendee.display_name[0]?.toUpperCase() ?? '?'
 
   const statusColor = getStatusColor(attendee.status)

@@ -127,18 +127,93 @@ export const paletteRingClasses: Record<PaletteKey, string> = {
 } as const
 
 /**
+ * Hex values for each palette key (Tailwind -500 shades).
+ * Used for nearest-color matching when only a hex `color` is available.
+ */
+const PALETTE_HEX_COLORS: Record<PaletteKey, string> = {
+  blue: '#3B82F6',
+  pink: '#EC4899',
+  green: '#22C55E',
+  amber: '#F59E0B',
+  purple: '#A855F7',
+  teal: '#14B8A6',
+  red: '#EF4444',
+  indigo: '#6366F1',
+} as const
+
+/**
+ * Parses a hex color string to RGB components.
+ *
+ * @param hex - Hex color string (e.g. "#4A90E2" or "#4A9").
+ * @returns Tuple of [r, g, b] values (0-255), or null if invalid.
+ */
+function hexToRgb(hex: string): [number, number, number] | null {
+  const cleaned = hex.replace('#', '')
+  if (cleaned.length === 3) {
+    const c0 = cleaned[0]
+    const c1 = cleaned[1]
+    const c2 = cleaned[2]
+    if (!c0 || !c1 || !c2) return null
+    const r = parseInt(c0 + c0, 16)
+    const g = parseInt(c1 + c1, 16)
+    const b = parseInt(c2 + c2, 16)
+    return [r, g, b]
+  }
+  if (cleaned.length === 6) {
+    const r = parseInt(cleaned.slice(0, 2), 16)
+    const g = parseInt(cleaned.slice(2, 4), 16)
+    const b = parseInt(cleaned.slice(4, 6), 16)
+    return [r, g, b]
+  }
+  return null
+}
+
+/**
+ * Finds the nearest palette key for a given hex color using Euclidean distance in RGB space.
+ *
+ * @param hex - Hex color string to match.
+ * @returns The closest matching PaletteKey.
+ */
+export function hexToPaletteKey(hex: string): PaletteKey {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return DEFAULT_PALETTE_KEY
+
+  const [r, g, b] = rgb
+  let closestKey: PaletteKey = DEFAULT_PALETTE_KEY
+  let minDistance = Infinity
+
+  for (const [key, paletteHex] of Object.entries(PALETTE_HEX_COLORS) as Array<[PaletteKey, string]>) {
+    const paletteRgb = hexToRgb(paletteHex)
+    if (!paletteRgb) continue
+    const [pr, pg, pb] = paletteRgb
+    const distance =
+      Math.pow(r - pr, 2) +
+      Math.pow(g - pg, 2) +
+      Math.pow(b - pb, 2)
+    if (distance < minDistance) {
+      minDistance = distance
+      closestKey = key
+    }
+  }
+
+  return closestKey
+}
+
+/**
  * Builds a lookup map from member keys to palette keys.
+ *
+ * Prefers `color_key` if present and valid. Falls back to matching the hex `color`
+ * against the palette via Euclidean distance in RGB space.
  *
  * @param members - Array of FamilyMember objects from the API.
  * @returns Map of member.key → palette key.
  */
 export function buildMemberColorMap(
-  members: Array<{ key: string; color_key: string }>
+  members: Array<{ key: string; color_key?: string; color?: string }>
 ): Map<string, PaletteKey> {
   const map = new Map<string, PaletteKey>()
   for (const member of members) {
-    const paletteKey = isValidPaletteKey(member.color_key) ? member.color_key : DEFAULT_PALETTE_KEY
-    map.set(member.key, paletteKey)
+    map.set(member.key, resolvePaletteKey(member))
   }
   return map
 }
@@ -163,4 +238,28 @@ export function getMemberPaletteKey(
 ): PaletteKey {
   if (!memberKey) return DEFAULT_PALETTE_KEY
   return colorMap.get(memberKey) ?? DEFAULT_PALETTE_KEY
+}
+
+/**
+ * Resolves a palette key from an object with optional `color_key` and `color` fields.
+ *
+ * Single source of truth for the resolution order:
+ * 1. `color_key` if present and valid
+ * 2. Nearest palette match from hex `color`
+ * 3. DEFAULT_PALETTE_KEY
+ *
+ * @param source - Object with optional `color_key` and `color` fields.
+ * @returns The resolved PaletteKey.
+ */
+export function resolvePaletteKey(source: {
+  color_key?: string | null
+  color?: string | null
+}): PaletteKey {
+  if (source.color_key && isValidPaletteKey(source.color_key)) {
+    return source.color_key
+  }
+  if (source.color) {
+    return hexToPaletteKey(source.color)
+  }
+  return DEFAULT_PALETTE_KEY
 }

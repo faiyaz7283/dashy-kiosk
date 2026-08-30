@@ -51,11 +51,11 @@ export default function AppShell() {
 
   const [activeFeature, setActiveFeature] = useState<Feature>('calendar')
   const { isExpanded: isSidebarExpanded, toggle: toggleSidebar } = useSidebarState()
-  const { mode: themeMode, cycleMode } = useTheme()
-  const { currentView, setCurrentView, currentDate, navigatePrevious, navigateNext, navigateToday } = useViewNavigation()
+  const { currentView, setCurrentView, currentDate, navigatePrevious, navigateNext, navigateToday, handleDayClick, handleMonthClick } = useViewNavigation()
 
   const { members } = useFamilyData()
-  const { lastRefresh: weatherLastRefresh } = useWeatherData()
+  const { current: currentWeather, lastRefresh: weatherLastRefresh } = useWeatherData()
+  const { mode: themeMode, cycleMode } = useTheme(currentWeather?.sunrise ?? null, currentWeather?.sunset ?? null)
   const { data: choresData, isLoading: choresLoading, refetch: refetchChores } = useChoresData()
 
   return (
@@ -73,6 +73,8 @@ export default function AppShell() {
         navigatePrevious={navigatePrevious}
         navigateNext={navigateNext}
         navigateToday={navigateToday}
+        handleDayClick={handleDayClick}
+        handleMonthClick={handleMonthClick}
         members={members}
         weatherLastRefresh={weatherLastRefresh}
         choresData={choresData}
@@ -101,6 +103,8 @@ interface AppShellContentProps {
   navigatePrevious: () => void
   navigateNext: () => void
   navigateToday: () => void
+  handleDayClick: (date: Temporal.PlainDate) => void
+  handleMonthClick: (yearMonth: Temporal.PlainYearMonth) => void
   members: FamilyMember[]
   weatherLastRefresh: number | null
   choresData: ReturnType<typeof useChoresData>['data']
@@ -121,6 +125,8 @@ function AppShellContent({
   navigatePrevious,
   navigateNext,
   navigateToday,
+  handleDayClick,
+  handleMonthClick,
   members,
   weatherLastRefresh,
   choresData,
@@ -207,19 +213,19 @@ function AppShellContent({
     [choreActions],
   )
 
-  const handleViewTemplate = useCallback(
-    (master: MasterChore) => {
-      setEditingMaster(master)
-      setShowMasterModal(true)
-    },
-    [],
-  )
-
   // Chores view state
   const [choresViewMode, setChoresViewMode] = useState<ChoresViewMode>('board')
   const [selectedMasterIds, setSelectedMasterIds] = useState<Set<string>>(new Set())
   const [showMasterModal, setShowMasterModal] = useState(false)
   const [editingMaster, setEditingMaster] = useState<MasterChore | null>(null)
+
+  const handleViewTemplate = useCallback(
+    (master: MasterChore) => {
+      setEditingMaster(master)
+      setShowMasterModal(true)
+    },
+    [setEditingMaster, setShowMasterModal],
+  )
 
   // Confirmation dialog state
   type PendingAction =
@@ -351,22 +357,22 @@ function AppShellContent({
   const handleCreateMaster = useCallback(() => {
     setEditingMaster(null)
     setShowMasterModal(true)
-  }, [])
+  }, [setEditingMaster, setShowMasterModal])
 
   const handleEditMaster = useCallback((master: MasterChore) => {
     setEditingMaster(master)
     setShowMasterModal(true)
-  }, [])
+  }, [setEditingMaster, setShowMasterModal])
 
   const handleCloseMasterModal = useCallback(() => {
     setShowMasterModal(false)
     setEditingMaster(null)
-  }, [])
+  }, [setShowMasterModal, setEditingMaster])
 
   const handleMasterSuccess = useCallback(() => {
     setShowMasterModal(false)
     setEditingMaster(null)
-  }, [])
+  }, [setShowMasterModal, setEditingMaster])
 
   // Per-card actions (for manage views)
   const handleToggleStatus = useCallback(
@@ -417,6 +423,8 @@ function AppShellContent({
           choresViewMode={choresViewMode}
           onChoresViewChange={handleViewChange}
           selectedMasterCount={selectedMasterIds.size}
+          selectableMasterCount={selectableIds.length}
+          allMastersSelected={selectableIds.length > 0 && selectableIds.every((id) => selectedMasterIds.has(id))}
           onSelectAll={handleSelectAll}
           onPauseSelected={handlePauseSelected}
           onArchiveSelected={handleArchiveSelected}
@@ -471,13 +479,13 @@ function AppShellContent({
               <DayView date={currentDate} onPrevious={navigatePrevious} onNext={navigateNext} />
             )}
             {currentView === 'week' && (
-              <WeekView date={currentDate} onPrevious={navigatePrevious} onNext={navigateNext} />
+              <WeekView date={currentDate} onPrevious={navigatePrevious} onNext={navigateNext} onDayClick={handleDayClick} />
             )}
             {currentView === 'month' && (
-              <MonthView date={currentDate} onPrevious={navigatePrevious} onNext={navigateNext} />
+              <MonthView date={currentDate} onPrevious={navigatePrevious} onNext={navigateNext} onDayClick={handleDayClick} />
             )}
             {currentView === 'year' && (
-              <YearView date={currentDate} onPrevious={navigatePrevious} onNext={navigateNext} />
+              <YearView date={currentDate} onPrevious={navigatePrevious} onNext={navigateNext} onMonthClick={handleMonthClick} onDayClick={handleDayClick} />
             )}
           </>
         )}

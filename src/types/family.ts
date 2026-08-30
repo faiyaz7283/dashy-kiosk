@@ -17,8 +17,8 @@ export interface FamilyMember {
   email: string
   /** Theme color for this member's events and indicators (hex). */
   color: string
-  /** Palette key for Tailwind class mapping (e.g., 'blue', 'pink'). */
-  color_key: string
+  /** Palette key for Tailwind class mapping (e.g., 'blue', 'pink'). Optional — derived from hex color if not provided. */
+  color_key?: string
   /** Single character used for avatar/initial display. */
   initial: string
   /** Date of birth (ISO date string), or null if not set. */

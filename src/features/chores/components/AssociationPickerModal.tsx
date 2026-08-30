@@ -25,7 +25,7 @@ import {
   paletteBgClasses,
   paletteRingClasses,
   getMemberPaletteKey,
-  isValidPaletteKey,
+  resolvePaletteKey,
   type PaletteKey,
 } from '@/shared/utils/memberColors'
 import { formatRecurrence, formatDifficulty } from '@/shared/utils/chores'
@@ -114,10 +114,7 @@ export function AssociationPickerModal({
   const colorMap = useMemo(() => {
     const map = new Map<string, PaletteKey>()
     if (targetMember) {
-      const key = isValidPaletteKey(targetMember.color_key)
-        ? targetMember.color_key
-        : 'blue'
-      map.set(targetMember.key, key)
+      map.set(targetMember.key, resolvePaletteKey(targetMember))
     }
     return map
   }, [targetMember])

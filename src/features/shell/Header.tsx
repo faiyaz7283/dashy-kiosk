@@ -17,15 +17,14 @@ import { HeaderChores, type ChoresViewMode } from './HeaderChores'
 import type { CalendarView } from '@/types/calendar'
 import type { CalendarEvent } from '@/types/calendar'
 import type { Feature } from './Sidebar'
-import { getEventsForDate } from '@/shared/utils/calendar'
 import {
   paletteBgClasses,
   paletteBgOpacityClasses,
   paletteTextClasses,
   paletteRingClasses,
+  resolvePaletteKey,
 } from '@/shared/utils/memberColors'
 import type { FamilyMember } from '@/types/family'
-import type { PaletteKey } from '@/shared/utils/memberColors'
 
 /** Props for the Header component. */
 export interface HeaderProps {
@@ -47,6 +46,10 @@ export interface HeaderProps {
   onChoresViewChange: (mode: ChoresViewMode) => void
   /** Number of selected master chores. */
   selectedMasterCount: number
+  /** Number of selectable master chores in current view. */
+  selectableMasterCount: number
+  /** Whether all selectable masters are currently selected. */
+  allMastersSelected: boolean
   /** Callback when Select All is clicked. */
   onSelectAll: () => void
   /** Callback when Pause Selected is clicked. */
@@ -77,6 +80,8 @@ export function Header({
   choresViewMode,
   onChoresViewChange,
   selectedMasterCount,
+  selectableMasterCount,
+  allMastersSelected,
   onSelectAll,
   onPauseSelected,
   onArchiveSelected,
@@ -84,9 +89,8 @@ export function Header({
   onDeleteSelected,
   onCreateMaster,
 }: HeaderProps) {
-  const today = Temporal.Now.plainDateISO()
-  const dayEvents = getEventsForDate(events, today)
-  const totalEvents = dayEvents.length
+  // Count events in the current view's date range (not just today)
+  const totalEvents = events.length
 
   return (
     <header
@@ -103,7 +107,7 @@ export function Header({
             {/* CENTER: Family pills with event counts */}
             <div className="flex items-center gap-2">
               {members.map((member) => {
-                const memberEvents = dayEvents.filter((e) =>
+                const memberEvents = events.filter((e) =>
                   e.members.includes(member.key),
                 )
                 return (
@@ -146,6 +150,8 @@ export function Header({
               viewMode={choresViewMode}
               onViewChange={onChoresViewChange}
               selectedCount={selectedMasterCount}
+              selectableCount={selectableMasterCount}
+              allSelected={allMastersSelected}
               onSelectAll={onSelectAll}
               onPauseSelected={onPauseSelected}
               onArchiveSelected={onArchiveSelected}
@@ -175,11 +181,7 @@ interface FamilyPillProps {
  * the event count. Dimmed when count is 0.
  */
 function FamilyPill({ member, count }: FamilyPillProps) {
-  const paletteKey = (
-    member.color_key && member.color_key in paletteBgClasses
-      ? member.color_key
-      : 'blue'
-  ) as PaletteKey
+  const paletteKey = resolvePaletteKey(member)
 
   return (
     <div

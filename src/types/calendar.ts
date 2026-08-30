@@ -30,8 +30,8 @@ export interface Attendee {
   status: AttendeeStatus
   /** Member color (hex) or default grey for external guests. */
   color: string
-  /** Palette key for Tailwind class mapping, or null for guests. */
-  color_key: string | null
+  /** Palette key for Tailwind class mapping, or null/undefined for guests. Derived from hex color if not provided. */
+  color_key?: string | null
 }
 
 /** Common fields shared by all calendar events. */

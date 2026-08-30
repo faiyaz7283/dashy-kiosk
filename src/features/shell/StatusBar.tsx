@@ -99,31 +99,21 @@ export function StatusBar({ activeFeature, themeMode, onThemeCycle, calendarLast
  * @returns Formatted countdown string (e.g., "1:45", "0:30", "—").
  */
 function useRefreshCountdown(lastRefresh: number | null, intervalMs: number): string {
-  const [countdown, setCountdown] = useState('—')
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    if (lastRefresh === null || intervalMs <= 0) {
-      setCountdown('—')
-      return
-    }
-
-    function updateCountdown() {
-      const elapsed = Date.now() - (lastRefresh ?? 0)
-      const remaining = Math.max(0, intervalMs - elapsed)
-      const totalSeconds = Math.ceil(remaining / 1000)
-      const minutes = Math.floor(totalSeconds / 60)
-      const seconds = totalSeconds % 60
-      setCountdown(
-        minutes > 0 ? `${minutes}:${String(seconds).padStart(2, '0')}` : `${seconds}`,
-      )
-    }
-
-    updateCountdown()
-    const interval = setInterval(updateCountdown, 1000)
+    if (lastRefresh === null || intervalMs <= 0) return
+    const interval = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(interval)
   }, [lastRefresh, intervalMs])
 
-  return countdown
+  if (lastRefresh === null || intervalMs <= 0) return '—'
+  const elapsed = now - lastRefresh
+  const remaining = Math.max(0, intervalMs - elapsed)
+  const totalSeconds = Math.ceil(remaining / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return minutes > 0 ? `${minutes}:${String(seconds).padStart(2, '0')}` : `${seconds}`
 }
 
 /** Props for the theme icon. */

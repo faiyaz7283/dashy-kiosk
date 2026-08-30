@@ -41,6 +41,8 @@ export interface WeekViewProps {
   onPrevious: () => void
   /** Callback for next navigation. */
   onNext: () => void
+  /** Callback when a day is clicked. */
+  onDayClick?: (date: Temporal.PlainDate) => void
 }
 
 /**
@@ -49,7 +51,7 @@ export interface WeekViewProps {
  * @param props - Date and navigation callbacks.
  * @returns The week view UI.
  */
-export function WeekView({ date, onPrevious, onNext }: WeekViewProps) {
+export function WeekView({ date, onPrevious, onNext, onDayClick }: WeekViewProps) {
   const { events, isLoading, error } = useCalendarData('week', date)
   const { forecast } = useWeatherData()
   const { members } = useFamilyData()
@@ -67,18 +69,17 @@ export function WeekView({ date, onPrevious, onNext }: WeekViewProps) {
   const sunday = weekDays[6]
   const nextWeekMonday = sunday?.add({ days: 1 })
   const nextWeekSunday = nextWeekMonday?.add({ days: 6 })
-  const nextWeekEvents = useMemo(() => {
-    if (!events || !nextWeekMonday || !nextWeekSunday) return []
-    return events.filter((event) => {
-      const eventDate = event.start instanceof Temporal.PlainDate
-        ? event.start
-        : event.start.toPlainDate()
-      return (
-        Temporal.PlainDate.compare(eventDate, nextWeekMonday) >= 0 &&
-        Temporal.PlainDate.compare(eventDate, nextWeekSunday) <= 0
-      )
-    })
-  }, [events, nextWeekMonday, nextWeekSunday])
+  const nextWeekEvents =
+    events && nextWeekMonday && nextWeekSunday
+      ? events.filter((event) => {
+          const eventDate =
+            event.start instanceof Temporal.PlainDate ? event.start : event.start.toPlainDate()
+          return (
+            Temporal.PlainDate.compare(eventDate, nextWeekMonday) >= 0 &&
+            Temporal.PlainDate.compare(eventDate, nextWeekSunday) <= 0
+          )
+        })
+      : []
 
   if (isLoading || !events) {
     return (
@@ -120,7 +121,7 @@ export function WeekView({ date, onPrevious, onNext }: WeekViewProps) {
             const dayForecast = forecastByDate.get(dayKey)
 
             return (
-              <DayCard key={dayKey} date={day} events={events} density={density} colorMap={colorMap} members={members} isToday={isToday} forecast={dayForecast} />
+              <DayCard key={dayKey} date={day} events={events} density={density} colorMap={colorMap} members={members} isToday={isToday} forecast={dayForecast} onClick={onDayClick} />
             )
           })}
           <NextWeekCard
@@ -165,9 +166,11 @@ interface DayCardProps {
   isToday: boolean
   /** Weather forecast for this day (optional). */
   forecast?: DailyForecast | undefined
+  /** Click handler (optional). */
+  onClick?: ((date: Temporal.PlainDate) => void) | undefined
 }
 
-function DayCard({ date, events, density, colorMap, members, isToday, forecast }: DayCardProps) {
+function DayCard({ date, events, density, colorMap, members, isToday, forecast, onClick }: DayCardProps) {
   const dayEvents = getEventsForDate(events, date)
   const timedEvents = getTimedEventsForDate(dayEvents, date).filter(isTimedEvent)
   const weekday = getShortWeekday(date)
@@ -183,7 +186,8 @@ function DayCard({ date, events, density, colorMap, members, isToday, forecast }
 
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-lg bg-white ring-1 ring-border dark:bg-bg border-t-4 ${densityBorderClasses[density]} ${isToday ? 'ring-2 ring-primary' : ''}`}
+      className={`flex flex-col overflow-hidden rounded-lg bg-white ring-1 ring-border dark:bg-bg border-t-4 ${densityBorderClasses[density]} ${isToday ? 'ring-2 ring-primary' : ''} ${onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all' : ''}`}
+      onClick={() => onClick?.(date)}
     >
       {/* Day header */}
       <div className="flex items-center justify-between px-3 pb-2 pt-3">

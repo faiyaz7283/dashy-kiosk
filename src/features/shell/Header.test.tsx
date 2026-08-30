@@ -70,6 +70,8 @@ describe('Header', () => {
     choresViewMode: 'board' as const,
     onChoresViewChange: vi.fn(),
     selectedMasterCount: 0,
+    selectableMasterCount: 0,
+    allMastersSelected: false,
     onSelectAll: vi.fn(),
     onPauseSelected: vi.fn(),
     onArchiveSelected: vi.fn(),

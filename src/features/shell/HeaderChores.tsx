@@ -30,6 +30,10 @@ export interface HeaderChoresProps {
   onViewChange: (mode: ChoresViewMode) => void
   /** Number of currently selected master chores. */
   selectedCount: number
+  /** Number of selectable items in current view. */
+  selectableCount: number
+  /** Whether all selectable items are currently selected. */
+  allSelected: boolean
   /** Callback when Select All is clicked. */
   onSelectAll: () => void
   /** Callback when Pause Selected is clicked. */
@@ -54,6 +58,8 @@ export function HeaderChores({
   viewMode,
   onViewChange,
   selectedCount,
+  selectableCount,
+  allSelected,
   onSelectAll,
   onPauseSelected,
   onArchiveSelected,
@@ -63,6 +69,7 @@ export function HeaderChores({
 }: HeaderChoresProps) {
   const hasSelection = selectedCount > 0
   const isManageView = viewMode !== 'board'
+  const hasSelectableItems = selectableCount > 0
 
   return (
     <div className="flex items-center gap-3">
@@ -83,13 +90,18 @@ export function HeaderChores({
         ))}
       </div>
 
-      {/* Select All — manage views only */}
+      {/* Select All / Deselect All — manage views only */}
       {isManageView && (
         <button
           onClick={onSelectAll}
-          className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-hover"
+          disabled={!hasSelectableItems}
+          className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            !hasSelectableItems
+              ? 'cursor-not-allowed border-border text-text-disabled opacity-50'
+              : 'border-border text-text-secondary hover:bg-bg-hover'
+          }`}
         >
-          Select All
+          {allSelected ? 'Deselect All' : 'Select All'}
         </button>
       )}
 

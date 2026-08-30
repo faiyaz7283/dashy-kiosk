@@ -10,7 +10,7 @@
  * Calls createMaster/updateMaster via useChoreActions on submit.
  */
 
-import { useState, useEffect, useMemo, type FormEvent } from 'react'
+import { useState, useMemo, type FormEvent } from 'react'
 import { X, RotateCw, Info, Trash2, Users, UserPlus } from 'lucide-react'
 import type {
   MasterChore,
@@ -138,12 +138,9 @@ export function MasterChoreModal({
   onClose,
   onSuccess,
 }: MasterChoreModalProps) {
-  const [form, setForm] = useState<FormState>(() => {
-    if (mode === 'edit' && master) {
-      return formFromMaster(master)
-    }
-    return { ...DEFAULT_FORM }
-  })
+  const [form, setForm] = useState<FormState>(() =>
+    mode === 'edit' && master ? formFromMaster(master) : { ...DEFAULT_FORM },
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<'template' | 'associations'>('template')
 
@@ -179,13 +176,6 @@ export function MasterChoreModal({
     () => masterAssociations.some((a) => a.member_id === null),
     [masterAssociations],
   )
-
-  // Sync form when master changes (edit mode)
-  useEffect(() => {
-    if (mode === 'edit' && master) {
-      setForm(formFromMaster(master))
-    }
-  }, [mode, master])
 
   const updateField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))

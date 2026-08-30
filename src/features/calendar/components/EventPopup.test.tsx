@@ -56,7 +56,7 @@ describe('EventPopup', () => {
   })
 
   it('does not show location if not present', () => {
-    const { location, ...eventWithoutLocation } = mockEvent
+    const { location: _location, ...eventWithoutLocation } = mockEvent
     render(<EventPopup event={eventWithoutLocation} />, { wrapper: createQueryClientWrapper(queryClient) })
     expect(screen.queryByText('Conference Room A')).not.toBeInTheDocument()
   })
