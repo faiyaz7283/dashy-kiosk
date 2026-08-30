@@ -274,7 +274,10 @@ export function AssociationPickerModal({
 
   const handleAddToPool = async (masterChoreId: string) => {
     try {
-      const createdBy = members[0]?.key ?? 'unknown'
+      const createdBy = members[0]?.key
+      if (!createdBy) {
+        throw new Error('No family members available')
+      }
       await actions.createAssociation({
         master_chore_id: masterChoreId,
         created_by: createdBy,

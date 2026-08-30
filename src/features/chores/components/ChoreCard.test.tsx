@@ -8,6 +8,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChoreCard } from './ChoreCard'
 import type { ChoreInstance, MasterChore, ChoreCategory } from '@/types/chores'
+import type { FamilyMember } from '@/types/family'
 import type { PaletteKey } from '@/shared/utils/memberColors'
 
 // Mock useConfig to return a fixed timezone
@@ -23,6 +24,31 @@ describe('ChoreCard', () => {
   const mockCategories: ChoreCategory[] = [
     { id: 'cat-1', name: 'Kitchen' },
     { id: 'cat-2', name: 'Bathroom' },
+  ]
+
+  const mockMembers: FamilyMember[] = [
+    {
+      key: 'faiyaz',
+      name: 'Faiyaz',
+      calendar_id: 'faiyaz@example.com',
+      email: 'faiyaz@example.com',
+      color: '#3b82f6',
+      color_key: 'blue',
+      initial: 'F',
+      date_of_birth: null,
+      relation: null,
+    },
+    {
+      key: 'trisha',
+      name: 'Trisha',
+      calendar_id: 'trisha@example.com',
+      email: 'trisha@example.com',
+      color: '#ec4899',
+      color_key: 'pink',
+      initial: 'T',
+      date_of_birth: null,
+      relation: null,
+    },
   ]
 
   const mockMasterChore: MasterChore = {
@@ -78,6 +104,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -90,6 +117,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -102,6 +130,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -114,6 +143,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -128,6 +158,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -140,6 +171,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -153,10 +185,11 @@ describe('ChoreCard', () => {
         instance={claimedInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
-    expect(screen.getByText('Claimed by faiyaz')).toBeInTheDocument()
+    expect(screen.getByText('Claimed by Faiyaz')).toBeInTheDocument()
   })
 
   it('renders assignment status for assigned chore', () => {
@@ -171,10 +204,11 @@ describe('ChoreCard', () => {
         instance={assignedInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
-    expect(screen.getByText('Assigned by faiyaz to trisha')).toBeInTheDocument()
+    expect(screen.getByText('Assigned by Faiyaz to Trisha')).toBeInTheDocument()
   })
 
   it('renders completion status', () => {
@@ -188,10 +222,11 @@ describe('ChoreCard', () => {
         instance={completedInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
-    expect(screen.getByText('Completed by trisha')).toBeInTheDocument()
+    expect(screen.getByText('Completed by Trisha')).toBeInTheDocument()
   })
 
   it('shows "Uncategorized" when category not found', () => {
@@ -204,6 +239,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={masterWithUnknownCategory}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -216,6 +252,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -229,6 +266,7 @@ describe('ChoreCard', () => {
         instance={inProgressInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -242,6 +280,7 @@ describe('ChoreCard', () => {
         instance={completedInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
       />
     )
@@ -256,6 +295,7 @@ describe('ChoreCard', () => {
         instance={mockInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
         onStart={onStart}
       />
@@ -272,6 +312,7 @@ describe('ChoreCard', () => {
         instance={inProgressInstance}
         masterChore={mockMasterChore}
         categories={mockCategories}
+        members={mockMembers}
         colorMap={mockColorMap}
         onComplete={onComplete}
       />

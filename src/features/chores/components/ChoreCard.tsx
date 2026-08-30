@@ -8,6 +8,7 @@
 
 import { Clock, AlertTriangle, CheckCircle, Play, Archive, Undo2 } from 'lucide-react'
 import type { ChoreInstance, MasterChore, ChoreCategory, InstanceStatus } from '@/types/chores'
+import type { FamilyMember } from '@/types/family'
 import { paletteBorderClasses, getMemberPaletteKey, type PaletteKey } from '@/shared/utils/memberColors'
 import { formatTime } from '@/shared/date'
 import { getStatusLabel } from '@/shared/utils/chores'
@@ -21,6 +22,8 @@ export interface ChoreCardProps {
   masterChore: MasterChore
   /** All available categories. */
   categories: ChoreCategory[]
+  /** All family members for name resolution. */
+  members: FamilyMember[]
   /** Member color map. */
   colorMap: Map<string, PaletteKey>
   /** Callback when the card is clicked. */
@@ -74,6 +77,7 @@ export function ChoreCard({
   instance,
   masterChore,
   categories,
+  members,
   colorMap,
   onClick,
   onStart,
@@ -89,19 +93,25 @@ export function ChoreCard({
   const memberKey = instance.member_id
   const paletteKey = getMemberPaletteKey(memberKey, colorMap)
 
+  // Helper to resolve member key to name
+  const getMemberName = (key: string | null): string => {
+    if (!key) return 'Unknown'
+    return members.find((m) => m.key === key)?.name ?? key
+  }
+
   // Difficulty dots (filled = active, empty = inactive)
   const difficultyDots = <DifficultyDots level={masterChore.difficulty} size="sm" />
 
   // Format assignment text
   const getAssignmentText = () => {
     if (instance.status === 'completed') {
-      return `Completed by ${instance.member_id ?? 'Unknown'}`
+      return `Completed by ${getMemberName(instance.member_id)}`
     }
     if (instance.member_id && instance.assigned_by) {
-      return `Assigned by ${instance.assigned_by} to ${instance.member_id}`
+      return `Assigned by ${getMemberName(instance.assigned_by)} to ${getMemberName(instance.member_id)}`
     }
     if (instance.member_id) {
-      return `Claimed by ${instance.member_id}`
+      return `Claimed by ${getMemberName(instance.member_id)}`
     }
     return 'Unclaimed'
   }

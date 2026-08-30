@@ -179,6 +179,7 @@ export function ChoresBoard({
                   instance={instance}
                   masterChore={master}
                   categories={categories}
+                  members={members}
                   colorMap={colorMap}
                   onClick={() => setSelectedInstance(instance)}
                   onStart={() => onStartInstance?.(instance)}
@@ -212,6 +213,7 @@ export function ChoresBoard({
                       instance={instance}
                       masterChore={master}
                       categories={categories}
+                      members={members}
                       colorMap={colorMap}
                       onClick={() => setSelectedInstance(instance)}
                       onStart={() => onStartInstance?.(instance)}

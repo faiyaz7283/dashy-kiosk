@@ -60,7 +60,6 @@ interface FormState {
   tagIds: string[]
   difficulty: number
   frequency: RecurrenceFrequency
-  time: string
   dayOfWeek: number
   dayOfMonth: string
   nthWeekOfMonth: number
@@ -82,7 +81,6 @@ const DEFAULT_FORM: FormState = {
   tagIds: [],
   difficulty: 3,
   frequency: 'weekly',
-  time: '18:00',
   dayOfWeek: 0,
   dayOfMonth: '1',
   nthWeekOfMonth: 1,
@@ -206,7 +204,10 @@ export function MasterChoreModal({
       // Template creation has no UI context (no column/instance), so use first adult as default creator.
       // This is metadata about who created the template, not an action actor.
       const adult = findFirstAdult(members)
-      const createdBy = adult?.key ?? members[0]?.key ?? 'unknown'
+      const createdBy = adult?.key ?? members[0]?.key
+      if (!createdBy) {
+        throw new Error('No family members available to create chore template')
+      }
       const estimatedMinutes = form.estimatedDuration.value
         ? toMinutes(Number(form.estimatedDuration.value), form.estimatedDuration.unit)
         : null
@@ -475,24 +476,6 @@ export function MasterChoreModal({
                     <ChevronDownIcon />
                   </div>
                 </div>
-                {showRecurrenceSection && (
-                  <div>
-                    <div className="mb-1 flex items-center gap-1.5">
-                      <label className="text-xs font-medium text-text-muted">
-                        Time
-                      </label>
-                      <Tooltip content="What time this chore is typically done">
-                        <Info className="h-3 w-3 text-text-faint" />
-                      </Tooltip>
-                    </div>
-                    <input
-                      type="time"
-                      value={form.time}
-                      onChange={(e) => updateField('time', e.target.value)}
-                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                )}
               </div>
 
               {/* Weekly: Day of week toggle */}
@@ -889,7 +872,6 @@ function formFromMaster(master: MasterChore): FormState {
     tagIds: master.tags.map((t) => t.id),
     difficulty: master.difficulty,
     frequency,
-    time: master.due_time ?? '18:00',
     dayOfWeek: firstDayOfWeek,
     dayOfMonth: master.day_of_month?.toString() ?? '1',
     nthWeekOfMonth: master.week_of_month ?? 1,
@@ -965,7 +947,10 @@ function AssociationsTab({
       // Remove the member association
       await actions.deleteAssociation(associationId)
       // Create open pool association (member_id omitted = open pool)
-      const createdBy = members[0]?.key ?? 'unknown'
+      const createdBy = members[0]?.key
+      if (!createdBy) {
+        throw new Error('No family members available')
+      }
       await actions.createAssociation({
         master_chore_id: master.id,
         created_by: createdBy,
@@ -989,7 +974,10 @@ function AssociationsTab({
       // Remove old association
       await actions.deleteAssociation(oldAssociationId)
       // Create new association with new member
-      const createdBy = members[0]?.key ?? 'unknown'
+      const createdBy = members[0]?.key
+      if (!createdBy) {
+        throw new Error('No family members available')
+      }
       await actions.createAssociation({
         master_chore_id: master.id,
         member_id: newMemberKey,
@@ -1012,7 +1000,10 @@ function AssociationsTab({
 
   const handleAddMember = async (memberKey: string) => {
     try {
-      const createdBy = members[0]?.key ?? 'unknown'
+      const createdBy = members[0]?.key
+      if (!createdBy) {
+        throw new Error('No family members available')
+      }
       await actions.createAssociation({
         master_chore_id: master.id,
         member_id: memberKey,
@@ -1036,7 +1027,10 @@ function AssociationsTab({
 
   const handleAddToOpenPool = async () => {
     try {
-      const createdBy = members[0]?.key ?? 'unknown'
+      const createdBy = members[0]?.key
+      if (!createdBy) {
+        throw new Error('No family members available')
+      }
       await actions.createAssociation({
         master_chore_id: master.id,
         created_by: createdBy,
