@@ -13,6 +13,7 @@ describe('StatusBar', () => {
     activeFeature: 'calendar' as const,
     themeMode: 'light' as const,
     onThemeCycle: vi.fn(),
+    onOpenSettings: vi.fn(),
     calendarLastRefresh: Date.now(),
     weatherLastRefresh: Date.now(),
   }

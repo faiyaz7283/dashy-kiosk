@@ -6,6 +6,7 @@
 
 export * from './useAutoHide'
 export * from './useFamilyData'
+export * from './useMetrics'
 export * from './useSidebarState'
 export * from './useTheme'
 export * from './useUiScale'

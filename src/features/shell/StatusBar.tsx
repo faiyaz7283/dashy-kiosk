@@ -25,6 +25,8 @@ export interface StatusBarProps {
   themeMode: ThemeMode
   /** Callback to cycle the theme. */
   onThemeCycle: () => void
+  /** Callback to open the settings panel. */
+  onOpenSettings: () => void
   /** Timestamp (ms) of the last successful calendar data refresh. */
   calendarLastRefresh: number | null
   /** Timestamp (ms) of the last successful weather data refresh. */
@@ -37,7 +39,7 @@ export interface StatusBarProps {
  * @param props - Status bar configuration and callbacks.
  * @returns The status bar UI.
  */
-export function StatusBar({ activeFeature, themeMode, onThemeCycle, calendarLastRefresh, weatherLastRefresh }: StatusBarProps) {
+export function StatusBar({ activeFeature, themeMode, onThemeCycle, onOpenSettings, calendarLastRefresh, weatherLastRefresh }: StatusBarProps) {
   const calendarCountdown = useRefreshCountdown(calendarLastRefresh, ENDPOINTS.calendar.refreshInterval)
   const weatherCountdown = useRefreshCountdown(weatherLastRefresh, ENDPOINTS.weather.refreshInterval)
 
@@ -49,6 +51,7 @@ export function StatusBar({ activeFeature, themeMode, onThemeCycle, calendarLast
       <div className="flex h-full items-center justify-between px-4 py-2">
         {/* Left: Settings */}
         <button
+          onClick={onOpenSettings}
           className="rounded-md p-2 text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
           title="Settings"
         >

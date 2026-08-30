@@ -27,6 +27,8 @@ import { CalendarDataProvider, useCalendarContext } from '@/features/calendar/co
 import { Header } from './Header'
 import { Sidebar, type Feature } from './Sidebar'
 import { StatusBar } from './StatusBar'
+import { SettingsPanel } from '@/features/settings/SettingsPanel'
+import { MetricsPage } from '@/features/settings/MetricsPage'
 import type { ChoresViewMode } from './HeaderChores'
 import { DayView } from '@/features/calendar/views/DayView'
 import { WeekView } from '@/features/calendar/views/WeekView'
@@ -135,6 +137,27 @@ function AppShellContent({
 }: AppShellContentProps) {
   const { events, lastRefresh: calendarLastRefresh, refetch: refetchCalendar } = useCalendarContext()
   const choreActions = useChoreActions()
+
+  // Settings and metrics panel state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isMetricsOpen, setIsMetricsOpen] = useState(false)
+
+  const handleOpenSettings = useCallback(() => {
+    setIsSettingsOpen(true)
+  }, [])
+
+  const handleCloseSettings = useCallback(() => {
+    setIsSettingsOpen(false)
+  }, [])
+
+  const handleOpenMetrics = useCallback(() => {
+    setIsSettingsOpen(false)
+    setIsMetricsOpen(true)
+  }, [])
+
+  const handleCloseMetrics = useCallback(() => {
+    setIsMetricsOpen(false)
+  }, [])
 
   // Instance action handlers — actor derived from instance context
   const handleStartInstance = useCallback(
@@ -466,6 +489,7 @@ function AppShellContent({
           activeFeature={activeFeature}
           themeMode={themeMode}
           onThemeCycle={cycleMode}
+          onOpenSettings={handleOpenSettings}
           calendarLastRefresh={calendarLastRefresh}
           weatherLastRefresh={weatherLastRefresh}
         />
@@ -556,6 +580,14 @@ function AppShellContent({
         onCancel={handleCancelAction}
         isConfirming={isConfirming}
       />
+
+      {/* Settings and metrics panels */}
+      <SettingsPanel
+        open={isSettingsOpen}
+        onClose={handleCloseSettings}
+        onOpenMetrics={handleOpenMetrics}
+      />
+      <MetricsPage open={isMetricsOpen} onClose={handleCloseMetrics} />
     </div>
   )
 }
