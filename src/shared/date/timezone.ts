@@ -150,7 +150,14 @@ export function formatUtcDate(
     ...options,
   })
 
-  const date = new Date(zoned.year, zoned.month - 1, zoned.day)
+  const date = new Date(
+    zoned.year,
+    zoned.month - 1,
+    zoned.day,
+    zoned.hour,
+    zoned.minute,
+    zoned.second
+  )
   return formatter.format(date)
 }
 
