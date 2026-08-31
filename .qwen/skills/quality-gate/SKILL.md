@@ -27,7 +27,7 @@ Do not proceed to automated checks until the code review gate passes.
 ### 1. Lint
 
 ```bash
-make lint-kiosk-v2
+make lint-kiosk
 ```
 
 Checks oxlint rules across all source files. oxlint has 865+ built-in rules covering ESLint core, TypeScript, React hooks, and JSDoc/TSDoc.
@@ -35,7 +35,7 @@ Checks oxlint rules across all source files. oxlint has 865+ built-in rules cove
 To auto-fix issues:
 
 ```bash
-make format-kiosk-v2
+make format-kiosk
 ```
 
 This runs oxfmt (30x faster than Prettier, 100% Prettier conformance).
@@ -43,7 +43,7 @@ This runs oxfmt (30x faster than Prettier, 100% Prettier conformance).
 ### 2. Type check
 
 ```bash
-make typecheck-kiosk-v2
+make typecheck-kiosk
 ```
 
 Runs the TypeScript compiler in check-only mode (`tsc --noEmit`). Catches type errors without producing output files.
@@ -51,7 +51,7 @@ Runs the TypeScript compiler in check-only mode (`tsc --noEmit`). Catches type e
 ### 3. Test
 
 ```bash
-make test-kiosk-v2
+make test-kiosk
 ```
 
 Runs the Vitest test suite. Includes coverage reporting.
@@ -60,13 +60,13 @@ Run a specific test file:
 
 ```bash
 # From orchestrator root
-docker compose -f compose/docker-compose.dev-v2.yml exec kiosk-v2 pnpm vitest run src/path/to/file.test.ts
+docker compose -f compose/docker-compose.dev.yml exec kiosk pnpm vitest run src/path/to/file.test.ts
 ```
 
 ### 4. Build
 
 ```bash
-make build-kiosk-v2
+make build-kiosk
 ```
 
 Produces the production bundle via Vite. Catches build-time errors, missing imports, and bundle issues.
@@ -78,7 +78,7 @@ All steps (code review + four automated checks) must pass. If any step fails, fi
 ## Notes
 
 - All commands run inside Docker containers via Makefile targets — never run pnpm directly on the host.
-- The orchestrator's `make lint-kiosk-v2`, `make typecheck-kiosk-v2`, etc. targets run these commands inside the Docker container.
+- The orchestrator's `make lint-kiosk`, `make typecheck-kiosk`, etc. targets run these commands inside the Docker container.
 - Coverage targets: 80% for utils/hooks, 70% for components.
 - Uses oxlint (not ESLint) and oxfmt (not Prettier) — see AGENTS.md section 1 for tech stack.
 - Future: When `vite-plus` reaches stable version, migrate to unified toolchain.

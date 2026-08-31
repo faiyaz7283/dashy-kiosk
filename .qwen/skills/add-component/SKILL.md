@@ -1,6 +1,6 @@
 ---
 name: add-component
-description: Create a new React component following Dashy's conventions — directory structure, TSDoc, inline styles with tokens, barrel exports, and co-located tests.
+description: Create a new React component following Dashy's conventions — directory structure, TSDoc, Tailwind utility classes, barrel exports, and co-located tests.
 ---
 
 # Add Component
@@ -58,7 +58,6 @@ src/shared/components/<ComponentName>/
 
 import { useState } from 'react'
 import type { SomeType } from '@/types'
-import { colors, spacing, radii } from '@/theme/tokens'
 
 interface <ComponentName>Props {
   /** Description of prop. */
@@ -82,17 +81,13 @@ export function <ComponentName>({ prop1, prop2 = 10, onAction }: <ComponentName>
     onAction?.(prop1)
   }
 
-  const rootStyle: React.CSSProperties = {
-    padding: `${spacing.md}px`,
-    borderRadius: `${radii.lg}px`,
-    background: colors.bg,
-    // ... more styles using tokens
-  }
-
   return (
-    <div style={rootStyle}>
-      <span style={{ color: colors.textPrimary }}>{prop1}</span>
-      <button onClick={handleClick} style={{ /* ... */ }}>
+    <div className="rounded-lg bg-bg p-4">
+      <span className="text-text-primary">{prop1}</span>
+      <button
+        onClick={handleClick}
+        className="rounded-md bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-hover"
+      >
         Action
       </button>
     </div>
@@ -105,8 +100,8 @@ export function <ComponentName>({ prop1, prop2 = 10, onAction }: <ComponentName>
 - **PascalCase** for component name and filename
 - **Props interface** named `<ComponentName>Props` with JSDoc on each prop
 - **TSDoc** on the component with `@param` and `@returns`
-- **Inline styles** using design tokens from `@/theme/tokens` — no hardcoded hex/px values
-- **No Tailwind utility classes** in components (Tailwind is for CSS custom properties integration, not utility-first styling)
+- **Tailwind utility classes** for all styling — use design tokens via Tailwind classes (`bg-bg`, `text-text-primary`, etc.)
+- **No inline styles** — never use `style={{}}` with hardcoded values
 - **Import types** using `import type` syntax
 - **Path aliases** (`@/`) for all imports
 
@@ -217,7 +212,7 @@ make build-kiosk
 - [ ] Component file created with TSDoc
 - [ ] Props interface defined with JSDoc on each prop
 - [ ] Named export (not default)
-- [ ] Inline styles use design tokens (no hardcoded values)
+- [ ] Tailwind utility classes used for styling (no inline styles)
 - [ ] Barrel export (`index.ts`) created
 - [ ] Test file created with co-located tests
 - [ ] Tests follow AAA pattern
@@ -244,7 +239,6 @@ src/features/calendar/components/TaskItem/
  */
 
 import { useState } from 'react'
-import { colors, spacing, radii } from '@/theme/tokens'
 
 interface TaskItemProps {
   /** Task title. */
@@ -270,29 +264,17 @@ export function TaskItem({ title, completed = false, onToggle }: TaskItemProps) 
     onToggle?.(newState)
   }
 
-  const rootStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: `${spacing.sm}px`,
-    padding: `${spacing.sm}px ${spacing.md}px`,
-    borderRadius: `${radii.md}px`,
-    background: colors.bgHover,
-  }
-
-  const titleStyle: React.CSSProperties = {
-    color: isChecked ? colors.textMuted : colors.textPrimary,
-    textDecoration: isChecked ? 'line-through' : 'none',
-  }
-
   return (
-    <div style={rootStyle}>
+    <div className="flex items-center gap-2 rounded-md bg-bg-hover px-3 py-2">
       <input
         type="checkbox"
         checked={isChecked}
         onChange={handleToggle}
-        style={{ cursor: 'pointer' }}
+        className="cursor-pointer"
       />
-      <span style={titleStyle}>{title}</span>
+      <span className={isChecked ? 'text-text-muted line-through' : 'text-text-primary'}>
+        {title}
+      </span>
     </div>
   )
 }
@@ -333,8 +315,8 @@ describe('TaskItem', () => {
 ## Notes
 
 - **No default exports** — always use named exports
-- **No Tailwind utilities** — use inline styles with tokens
+- **Tailwind only** — use utility classes for all styling, no inline styles
 - **TSDoc is mandatory** — every exported symbol needs documentation
 - **Co-locate tests** — `ComponentName.test.tsx` lives next to `ComponentName.tsx`
 - **Barrel exports** — every component folder has an `index.ts`
-- **Design tokens only** — no hardcoded colors, spacing, or sizing values
+- **Design tokens via Tailwind** — use classes like `bg-bg`, `text-text-primary`, not hardcoded values

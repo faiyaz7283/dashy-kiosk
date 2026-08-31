@@ -125,10 +125,10 @@ grep -r "onMouseEnter.*onMouseEnter" src/
 
 For any frontend change (run from the orchestrator `dashy/` directory):
 
-1. `make lint-kiosk-v2`
-2. `make typecheck-kiosk-v2`
-3. `make test-kiosk-v2`
-4. `make build-kiosk-v2`
+1. `make lint-kiosk`
+2. `make typecheck-kiosk`
+3. `make test-kiosk`
+4. `make build-kiosk`
 
 All four must pass before you tell the user the task is complete.
 

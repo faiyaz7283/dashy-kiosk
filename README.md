@@ -16,7 +16,7 @@ Dashy Kiosk is a React + Vite single-page application designed for full-viewport
 - **Icons:** Lucide React (UI icons), Custom SVG (weather/data visualizations)
 - **Package Manager:** pnpm
 - **Testing:** Vitest + React Testing Library
-- **Linting:** ESLint + Prettier
+- **Linting:** Oxlint + Oxfmt
 - **Deployment:** Docker (Vite build → nginx)
 
 ## Development
@@ -45,8 +45,8 @@ pnpm run dev
 ### Code Quality
 
 ```bash
-make lint        # ESLint
-make format      # Prettier
+make lint        # Oxlint
+make format      # Oxfmt
 make typecheck   # TypeScript type check
 make test        # Run vitest
 make build       # Production build
@@ -61,7 +61,7 @@ src/
 ├── index.css             # Global styles
 ├── temporal.d.ts         # Global Temporal type declarations
 ├── domain/               # Domain types, utilities (calendar, family, weather, chores)
-├── features/             # Feature modules (weather, calendar, chores, navigation, dashboard, kiosk)
+├── features/             # Feature modules (weather, calendar, chores, navigation, dashboard, kiosk, settings)
 ├── shared/
 │   ├── components/       # Shared UI components
 │   ├── hooks/            # Shared React hooks
