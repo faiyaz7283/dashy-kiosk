@@ -1,6 +1,8 @@
 ---
 name: add-hook
 description: Create a custom React hook following Dashy's conventions — placement, TSDoc, explicit return types, co-located tests, and feature vs shared decision logic.
+metadata:
+  origin: community
 ---
 
 # Add Hook

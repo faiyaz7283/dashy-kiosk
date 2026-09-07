@@ -1,6 +1,8 @@
 ---
 name: add-api-contract
 description: Wire a new backend API endpoint into the frontend — add response types, endpoint config, fetch function, and consume via useApi hook.
+metadata:
+  origin: community
 ---
 
 # Add API Contract

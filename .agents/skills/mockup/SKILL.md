@@ -1,6 +1,8 @@
 ---
 name: mockup
 description: Create a static HTML + Tailwind CDN mockup for design exploration before implementing in React. Follows the mockup-first workflow with Catalyst UI patterns and Dashy design tokens.
+metadata:
+  origin: community
 ---
 
 # Mockup-First Workflow

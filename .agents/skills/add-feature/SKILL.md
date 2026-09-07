@@ -1,6 +1,8 @@
 ---
 name: add-feature
 description: Scaffold a complete new feature module following Dashy's architecture — directory structure, components, hooks, views, barrel exports, and integration with AppShell.
+metadata:
+  origin: community
 ---
 
 # Add Feature

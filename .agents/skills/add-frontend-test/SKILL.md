@@ -1,6 +1,8 @@
 ---
 name: add-frontend-test
 description: Workflow for adding frontend tests following Dashy's "test the code, not the browser" philosophy.
+metadata:
+  origin: community
 ---
 
 # Add Frontend Test

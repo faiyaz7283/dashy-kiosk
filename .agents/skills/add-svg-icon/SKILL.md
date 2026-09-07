@@ -1,6 +1,8 @@
 ---
 name: add-svg-icon
 description: Create custom SVG icon components for domain-specific illustrations — check lucide-react first, then build inline SVG with value-aware coloring.
+metadata:
+  origin: community
 ---
 
 # Add SVG Icon

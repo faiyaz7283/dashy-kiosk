@@ -1,6 +1,8 @@
 ---
 name: add-domain-utility
 description: Add domain types and utility functions to the frontend domain layer — types, pure business logic, barrel re-exports, and tests.
+metadata:
+  origin: community
 ---
 
 # Add Domain Utility

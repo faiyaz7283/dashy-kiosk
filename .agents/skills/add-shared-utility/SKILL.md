@@ -1,6 +1,8 @@
 ---
 name: add-shared-utility
 description: Add a shared utility function used across multiple features — pure functions with TSDoc, co-located tests, and proper placement in the dependency graph.
+metadata:
+  origin: community
 ---
 
 # Add Shared Utility

@@ -1,6 +1,8 @@
 ---
 name: quality-gate
 description: Run the frontend quality gate — code review, lint, typecheck, test, build — all must pass before declaring any change complete.
+metadata:
+  origin: community
 ---
 
 # Frontend Quality Gate

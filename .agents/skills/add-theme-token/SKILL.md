@@ -1,6 +1,8 @@
 ---
 name: add-theme-token
 description: Add a new design token to the theme system — update tokens.ts, config.ts (if semantic), and use in components with no hardcoded values.
+metadata:
+  origin: community
 ---
 
 # Add Theme Token

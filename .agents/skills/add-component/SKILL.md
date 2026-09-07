@@ -1,6 +1,8 @@
 ---
 name: add-component
 description: Create a new React component following Dashy's conventions — directory structure, TSDoc, Tailwind utility classes, barrel exports, and co-located tests.
+metadata:
+  origin: community
 ---
 
 # Add Component
