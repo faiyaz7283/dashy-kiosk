@@ -23,6 +23,7 @@ afterEach(() => {
 
 const mockFamilyMembers: FamilyMember[] = [
   {
+    id: '00000000-0000-0000-0000-000000000001',
     name: 'Alice',
     key: 'alice',
     calendar_id: 'alice@example.com',
@@ -34,6 +35,7 @@ const mockFamilyMembers: FamilyMember[] = [
     relation: null,
   },
   {
+    id: '00000000-0000-0000-0000-000000000002',
     name: 'Bob',
     key: 'bob',
     calendar_id: 'bob@example.com',

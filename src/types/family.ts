@@ -7,6 +7,8 @@
 
 /** A family member with calendar and display configuration. */
 export interface FamilyMember {
+  /** Database UUID primary key (used as FK in chores/rewards APIs). */
+  id: string
   /** Display name for the family member. */
   name: string
   /** Unique identifier used in calendar event member arrays. */

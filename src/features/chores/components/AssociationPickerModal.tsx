@@ -101,7 +101,7 @@ export function AssociationPickerModal({
   }, [sortOpen, assignDropdownOpen])
 
   const targetName = targetMember?.name ?? 'Open Pool'
-  const targetKey = targetMember?.key ?? null
+  const targetId = targetMember?.id ?? null
   const isMemberTarget = targetMember !== null
 
   // Category lookup map
@@ -129,7 +129,7 @@ export function AssociationPickerModal({
       associations
         .filter((a) => {
           if (a.removed_at !== null) return false
-          if (targetKey) return a.member_id === targetKey
+          if (targetId) return a.member_id === targetId
           return a.member_id === null
         })
         .map((a) => a.master_chore_id),
@@ -154,7 +154,7 @@ export function AssociationPickerModal({
       }
       return true
     })
-  }, [masterChores, associations, targetKey])
+  }, [masterChores, associations, targetId])
 
   // Apply group filter
   const groupedMasters = useMemo(() => {
@@ -213,18 +213,18 @@ export function AssociationPickerModal({
 
   // Members available for "Assign by" dropdown (exclude target member)
   const assignerMembers = useMemo(
-    () => members.filter((m) => m.key !== targetKey),
-    [members, targetKey],
+    () => members.filter((m) => m.id !== targetId),
+    [members, targetId],
   )
 
   const handleClaim = async (masterChoreId: string) => {
-    if (!targetKey) return
+    if (!targetId) return
 
     try {
       await actions.createAssociation({
         master_chore_id: masterChoreId,
-        member_id: targetKey,
-        created_by: targetKey,
+        member_id: targetId,
+        created_by: targetId,
         auto_claim: true,
       })
       addNotification({
@@ -243,16 +243,16 @@ export function AssociationPickerModal({
   }
 
   const handleAssign = async (masterChoreId: string, assignerId: string) => {
-    if (!targetKey) return
+    if (!targetId) return
 
     try {
       await actions.createAssociation({
         master_chore_id: masterChoreId,
-        member_id: targetKey,
-        created_by: targetKey,
+        member_id: targetId,
+        created_by: targetId,
         auto_assign: { assigner_id: assignerId },
       })
-      const assigner = members.find((m) => m.key === assignerId)
+      const assigner = members.find((m) => m.id === assignerId)
       addNotification({
         type: 'success',
         title: 'Chore assigned',
@@ -271,7 +271,7 @@ export function AssociationPickerModal({
 
   const handleAddToPool = async (masterChoreId: string) => {
     try {
-      const createdBy = members[0]?.key
+      const createdBy = members[0]?.id
       if (!createdBy) {
         throw new Error('No family members available')
       }
@@ -374,7 +374,7 @@ export function AssociationPickerModal({
                       {assignerMembers.map((member) => (
                         <button
                           key={member.key}
-                          onClick={() => handleAssign(master.id, member.key)}
+                          onClick={() => handleAssign(master.id, member.id)}
                           className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-bg-hover"
                         >
                           {member.name}

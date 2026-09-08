@@ -21,8 +21,8 @@ vi.mock('@/shared/date', async () => {
 
 describe('ChoresBoard', () => {
   const mockMembers: FamilyMember[] = [
-    { key: 'faiyaz', name: 'Faiyaz', color: 'blue', initial: 'F', calendar_id: 'cal1', color_key: 'blue', email: 'faiyaz@test.com', date_of_birth: '1990-01-01', relation: 'father' },
-    { key: 'trisha', name: 'Trisha', color: 'pink', initial: 'T', calendar_id: 'cal2', color_key: 'pink', email: 'trisha@test.com', date_of_birth: '1992-01-01', relation: 'mother' },
+    { id: '00000000-0000-0000-0000-000000000001', key: 'faiyaz', name: 'Faiyaz', color: 'blue', initial: 'F', calendar_id: 'cal1', color_key: 'blue', email: 'faiyaz@test.com', date_of_birth: '1990-01-01', relation: 'father' },
+    { id: '00000000-0000-0000-0000-000000000002', key: 'trisha', name: 'Trisha', color: 'pink', initial: 'T', calendar_id: 'cal2', color_key: 'pink', email: 'trisha@test.com', date_of_birth: '1992-01-01', relation: 'mother' },
   ]
 
   const mockData: ChoresData = {
@@ -49,7 +49,7 @@ describe('ChoresBoard', () => {
         occurrence_count: 0,
         conditions: null,
         is_collaborative: false,
-        created_by: 'faiyaz',
+        created_by: '00000000-0000-0000-0000-000000000001',
         status: 'active',
         created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T00:00:00Z',
@@ -65,8 +65,8 @@ describe('ChoresBoard', () => {
         status: 'active',
         period_start: '2026-01-15',
         period_end: '2026-01-16',
-        member_id: 'faiyaz',
-        assigned_by: 'trisha',
+        member_id: '00000000-0000-0000-0000-000000000001',
+        assigned_by: '00000000-0000-0000-0000-000000000002',
         started_at: null,
         completed_at: null,
         created_at: '2026-01-01T00:00:00Z',
@@ -197,7 +197,7 @@ describe('ChoresBoard', () => {
       occurrence_count: 0,
       conditions: null,
       is_collaborative: false,
-      created_by: 'faiyaz',
+      created_by: '00000000-0000-0000-0000-000000000001',
       status: 'active',
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
@@ -216,8 +216,8 @@ describe('ChoresBoard', () => {
           status: 'archived',
           period_start: '2026-01-15',
           period_end: '2026-01-16',
-          member_id: 'faiyaz',
-          assigned_by: 'trisha',
+          member_id: '00000000-0000-0000-0000-000000000001',
+          assigned_by: '00000000-0000-0000-0000-000000000002',
           started_at: null,
           completed_at: null,
           created_at: '2026-01-01T00:00:00Z',

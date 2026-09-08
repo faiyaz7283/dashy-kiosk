@@ -142,10 +142,10 @@ export function InstanceInteraction({
 
   // Get member info for avatar
   const memberInfo = useMemo(() => {
-    const memberKey = instance.member_id
-    if (!memberKey) return null
+    const memberId = instance.member_id
+    if (!memberId) return null
 
-    const member = members.find((m) => m.key === memberKey)
+    const member = members.find((m) => m.id === memberId)
     if (!member) return null
 
     const paletteKey = getMemberPaletteKey(member.key, colorMap)
@@ -178,12 +178,12 @@ export function InstanceInteraction({
   // Attribution text
   const attributionText = useMemo(() => {
     if (instance.member_id && instance.assigned_by) {
-      const assignee = members.find((m) => m.key === instance.member_id)
-      const assigner = members.find((m) => m.key === instance.assigned_by)
+      const assignee = members.find((m) => m.id === instance.member_id)
+      const assigner = members.find((m) => m.id === instance.assigned_by)
       return `Assigned by ${assigner?.name ?? instance.assigned_by} to ${assignee?.name ?? instance.member_id}`
     }
     if (instance.member_id) {
-      const member = members.find((m) => m.key === instance.member_id)
+      const member = members.find((m) => m.id === instance.member_id)
       return `Claimed by ${member?.name ?? instance.member_id}`
     }
     return null
@@ -193,7 +193,7 @@ export function InstanceInteraction({
   const handleClaim = (memberId: string) => {
     if (onClaim) {
       onClaim(memberId)
-      const member = members.find((m) => m.key === memberId)
+      const member = members.find((m) => m.id === memberId)
       addNotification({
         type: 'success',
         title: 'Instance claimed',
@@ -397,7 +397,7 @@ export function InstanceInteraction({
                     {members.map((member) => (
                       <button
                         key={member.key}
-                        onClick={() => handleClaim(member.key)}
+                        onClick={() => handleClaim(member.id)}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-bg-hover"
                       >
                         <div
@@ -423,7 +423,7 @@ export function InstanceInteraction({
                   >
                     <option value="">Select member</option>
                     {members.map((member) => (
-                      <option key={member.key} value={member.key}>
+                      <option key={member.key} value={member.id}>
                         {member.name}
                       </option>
                     ))}
@@ -439,9 +439,9 @@ export function InstanceInteraction({
                   >
                     <option value="">Select member</option>
                     {members
-                      .filter((m) => m.key !== assignTo)
+                      .filter((m) => m.id !== assignTo)
                       .map((member) => (
-                        <option key={member.key} value={member.key}>
+                        <option key={member.key} value={member.id}>
                           {member.name}
                         </option>
                       ))}

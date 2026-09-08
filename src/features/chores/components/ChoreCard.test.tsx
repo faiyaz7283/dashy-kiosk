@@ -28,6 +28,7 @@ describe('ChoreCard', () => {
 
   const mockMembers: FamilyMember[] = [
     {
+      id: '00000000-0000-0000-0000-000000000001',
       key: 'faiyaz',
       name: 'Faiyaz',
       calendar_id: 'faiyaz@example.com',
@@ -39,6 +40,7 @@ describe('ChoreCard', () => {
       relation: null,
     },
     {
+      id: '00000000-0000-0000-0000-000000000002',
       key: 'trisha',
       name: 'Trisha',
       calendar_id: 'trisha@example.com',
@@ -71,7 +73,7 @@ describe('ChoreCard', () => {
     occurrence_count: 0,
     conditions: null,
     is_collaborative: false,
-    created_by: 'faiyaz',
+    created_by: '00000000-0000-0000-0000-000000000001',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
@@ -179,7 +181,7 @@ describe('ChoreCard', () => {
   })
 
   it('renders assignment status for claimed chore', () => {
-    const claimedInstance = { ...mockInstance, member_id: 'faiyaz', status: 'active' as const }
+    const claimedInstance = { ...mockInstance, member_id: '00000000-0000-0000-0000-000000000001', status: 'active' as const }
     render(
       <ChoreCard
         instance={claimedInstance}
@@ -195,8 +197,8 @@ describe('ChoreCard', () => {
   it('renders assignment status for assigned chore', () => {
     const assignedInstance = {
       ...mockInstance,
-      member_id: 'trisha',
-      assigned_by: 'faiyaz',
+      member_id: '00000000-0000-0000-0000-000000000002',
+      assigned_by: '00000000-0000-0000-0000-000000000001',
       status: 'active' as const,
     }
     render(
@@ -214,7 +216,7 @@ describe('ChoreCard', () => {
   it('renders completion status', () => {
     const completedInstance = {
       ...mockInstance,
-      member_id: 'trisha',
+      member_id: '00000000-0000-0000-0000-000000000002',
       status: 'completed' as const,
     }
     render(

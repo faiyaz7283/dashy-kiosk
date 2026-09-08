@@ -63,8 +63,8 @@ describe('Header', () => {
     onViewChange: vi.fn(),
     onToday: vi.fn(),
     members: [
-      { key: 'faiyaz', name: 'Faiyaz', initial: 'F', color_key: 'blue', calendar_id: 'cal1', email: 'faiyaz@test.com', color: 'blue', date_of_birth: '1990-01-01', relation: 'father' },
-      { key: 'trisha', name: 'Trisha', initial: 'T', color_key: 'pink', calendar_id: 'cal2', email: 'trisha@test.com', color: 'pink', date_of_birth: '1992-01-01', relation: 'mother' },
+      { id: '00000000-0000-0000-0000-000000000001', key: 'faiyaz', name: 'Faiyaz', initial: 'F', color_key: 'blue', calendar_id: 'cal1', email: 'faiyaz@test.com', color: 'blue', date_of_birth: '1990-01-01', relation: 'father' },
+      { id: '00000000-0000-0000-0000-000000000002', key: 'trisha', name: 'Trisha', initial: 'T', color_key: 'pink', calendar_id: 'cal2', email: 'trisha@test.com', color: 'pink', date_of_birth: '1992-01-01', relation: 'mother' },
     ],
     events: [],
     choresViewMode: 'board' as const,

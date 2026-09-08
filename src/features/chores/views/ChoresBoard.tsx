@@ -193,7 +193,7 @@ export function ChoresBoard({
 
           {/* Member columns */}
           {members.map((member) => {
-            const memberInstances = getMemberInstances(visibleInstances, member.key)
+            const memberInstances = getMemberInstances(visibleInstances, member.id)
             const paletteKey = getMemberPaletteKey(member.key, colorMap)
 
             return (

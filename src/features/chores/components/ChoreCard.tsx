@@ -96,7 +96,7 @@ export function ChoreCard({
   // Helper to resolve member key to name
   const getMemberName = (key: string | null): string => {
     if (!key) return 'Unknown'
-    return members.find((m) => m.key === key)?.name ?? key
+    return members.find((m) => m.id === key)?.name ?? key
   }
 
   // Difficulty dots (filled = active, empty = inactive)

@@ -10,6 +10,7 @@ import type { FamilyMember } from '@/types/family'
 
 describe('family utilities', () => {
   const adultMember: FamilyMember = {
+    id: '00000000-0000-0000-0000-000000000001',
     key: 'faiyaz',
     name: 'Faiyaz',
     calendar_id: 'cal1',
@@ -22,6 +23,7 @@ describe('family utilities', () => {
   }
 
   const childMember: FamilyMember = {
+    id: '00000000-0000-0000-0000-000000000003',
     key: 'arya',
     name: 'Arya',
     calendar_id: 'cal3',
@@ -34,6 +36,7 @@ describe('family utilities', () => {
   }
 
   const noDobMember: FamilyMember = {
+    id: '00000000-0000-0000-0000-000000000004',
     key: 'unknown',
     name: 'Unknown',
     calendar_id: 'cal4',

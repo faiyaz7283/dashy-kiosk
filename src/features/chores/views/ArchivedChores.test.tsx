@@ -17,7 +17,7 @@ vi.mock('@/shared/date', async () => {
 })
 
 const mockMembers: FamilyMember[] = [
-  { key: 'faiyaz', name: 'Faiyaz', color_key: 'blue', color: '#3b82f6', initial: 'F', calendar_id: 'cal1', email: 'faiyaz@test.com', date_of_birth: '1990-01-01', relation: 'father' },
+  { id: '00000000-0000-0000-0000-000000000001', key: 'faiyaz', name: 'Faiyaz', color_key: 'blue', color: '#3b82f6', initial: 'F', calendar_id: 'cal1', email: 'faiyaz@test.com', date_of_birth: '1990-01-01', relation: 'father' },
 ]
 
 const mockData: ChoresData = {

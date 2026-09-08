@@ -201,7 +201,7 @@ export function MasterChoreModal({
       // Template creation has no UI context (no column/instance), so use first adult as default creator.
       // This is metadata about who created the template, not an action actor.
       const adult = findFirstAdult(members)
-      const createdBy = adult?.key ?? members[0]?.key
+      const createdBy = adult?.id ?? members[0]?.id
       if (!createdBy) {
         throw new Error('No family members available to create chore template')
       }
@@ -1001,7 +1001,7 @@ function AssociationsTab({
       // Remove the member association
       await actions.deleteAssociation(associationId)
       // Create open pool association (member_id omitted = open pool)
-      const createdBy = members[0]?.key
+      const createdBy = members[0]?.id
       if (!createdBy) {
         throw new Error('No family members available')
       }
@@ -1023,21 +1023,21 @@ function AssociationsTab({
     }
   }
 
-  const handleReassignMember = async (oldAssociationId: string, newMemberKey: string) => {
+  const handleReassignMember = async (oldAssociationId: string, newMemberId: string) => {
     try {
       // Remove old association
       await actions.deleteAssociation(oldAssociationId)
       // Create new association with new member
-      const createdBy = members[0]?.key
+      const createdBy = members[0]?.id
       if (!createdBy) {
         throw new Error('No family members available')
       }
       await actions.createAssociation({
         master_chore_id: master.id,
-        member_id: newMemberKey,
+        member_id: newMemberId,
         created_by: createdBy,
       })
-      const newMemberName = memberMap.get(newMemberKey) ?? 'Unknown'
+      const newMemberName = members.find((m) => m.id === newMemberId)?.name ?? 'Unknown'
       addNotification({
         type: 'success',
         title: 'Member reassigned',
@@ -1052,18 +1052,18 @@ function AssociationsTab({
     }
   }
 
-  const handleAddMember = async (memberKey: string) => {
+  const handleAddMember = async (memberId: string) => {
     try {
-      const createdBy = members[0]?.key
+      const createdBy = members[0]?.id
       if (!createdBy) {
         throw new Error('No family members available')
       }
       await actions.createAssociation({
         master_chore_id: master.id,
-        member_id: memberKey,
+        member_id: memberId,
         created_by: createdBy,
       })
-      const memberName = memberMap.get(memberKey) ?? 'Unknown'
+      const memberName = members.find((m) => m.id === memberId)?.name ?? 'Unknown'
       addNotification({
         type: 'success',
         title: 'Member added',
@@ -1081,7 +1081,7 @@ function AssociationsTab({
 
   const handleAddToOpenPool = async () => {
     try {
-      const createdBy = members[0]?.key
+      const createdBy = members[0]?.id
       if (!createdBy) {
         throw new Error('No family members available')
       }
@@ -1136,7 +1136,7 @@ function AssociationsTab({
               <button
                 key={member.key}
                 type="button"
-                onClick={() => handleAddMember(member.key)}
+                onClick={() => handleAddMember(member.id)}
                 className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-text-primary transition-colors hover:bg-bg-hover"
               >
                 <span>{member.name}</span>
@@ -1206,7 +1206,7 @@ function AssociationsTab({
                         Reassign to...
                       </option>
                       {availableMembers.map((m) => (
-                        <option key={m.key} value={m.key}>
+                        <option key={m.key} value={m.id}>
                           {m.name}
                         </option>
                       ))}

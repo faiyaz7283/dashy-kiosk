@@ -30,8 +30,8 @@ const mockCategories: ChoreCategory[] = [
 ]
 
 const mockMembers: FamilyMember[] = [
-  { key: 'faiyaz', name: 'Faiyaz', color_key: 'blue', color: '#3b82f6', initial: 'F', calendar_id: 'cal1', email: 'faiyaz@test.com', date_of_birth: '1990-01-01', relation: 'father' },
-  { key: 'trisha', name: 'Trisha', color_key: 'pink', color: '#ec4899', initial: 'T', calendar_id: 'cal2', email: 'trisha@test.com', date_of_birth: '1990-01-01', relation: 'mother' },
+  { id: '00000000-0000-0000-0000-000000000001', key: 'faiyaz', name: 'Faiyaz', color_key: 'blue', color: '#3b82f6', initial: 'F', calendar_id: 'cal1', email: 'faiyaz@test.com', date_of_birth: '1990-01-01', relation: 'father' },
+  { id: '00000000-0000-0000-0000-000000000002', key: 'trisha', name: 'Trisha', color_key: 'pink', color: '#ec4899', initial: 'T', calendar_id: 'cal2', email: 'trisha@test.com', date_of_birth: '1990-01-01', relation: 'mother' },
 ]
 
 const mockColorMap = new Map<string, PaletteKey>([
@@ -76,7 +76,7 @@ function makeMaster(overrides: Partial<MasterChore> = {}): MasterChore {
     occurrence_count: 45,
     conditions: null,
     is_collaborative: false,
-    created_by: 'faiyaz',
+    created_by: '00000000-0000-0000-0000-000000000001',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
@@ -86,7 +86,7 @@ function makeMaster(overrides: Partial<MasterChore> = {}): MasterChore {
 }
 
 const defaultProps = {
-  instance: makeInstance({ id: 'inst-1', status: 'active', member_id: 'faiyaz', assigned_by: 'trisha' }),
+  instance: makeInstance({ id: 'inst-1', status: 'active', member_id: '00000000-0000-0000-0000-000000000001', assigned_by: '00000000-0000-0000-0000-000000000002' }),
   masterChore: makeMaster(),
   categories: mockCategories,
   members: mockMembers,
@@ -168,7 +168,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        member_id: 'faiyaz',
+        member_id: '00000000-0000-0000-0000-000000000001',
         started_at: '2026-08-25T18:45:00Z',
       })
       renderPopup({ instance })
@@ -179,7 +179,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        member_id: 'faiyaz',
+        member_id: '00000000-0000-0000-0000-000000000001',
       })
       renderPopup({ instance })
       expect(screen.getByText('Complete')).toBeTruthy()
@@ -189,7 +189,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        member_id: 'faiyaz',
+        member_id: '00000000-0000-0000-0000-000000000001',
         started_at: '2026-08-25T18:45:00Z',
       })
       renderPopup({ instance })
@@ -200,7 +200,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-2',
         status: 'in_progress',
-        member_id: 'faiyaz',
+        member_id: '00000000-0000-0000-0000-000000000001',
       })
       renderPopup({ instance })
       expect(screen.getByText(/Claimed/)).toBeTruthy()
@@ -212,7 +212,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-3',
         status: 'overdue',
-        member_id: 'faiyaz',
+        member_id: '00000000-0000-0000-0000-000000000001',
       })
       renderPopup({ instance })
       expect(screen.getByText('Overdue')).toBeTruthy()
@@ -222,7 +222,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-3',
         status: 'overdue',
-        member_id: 'faiyaz',
+        member_id: '00000000-0000-0000-0000-000000000001',
       })
       renderPopup({ instance })
       expect(screen.getByText('Complete Now')).toBeTruthy()
@@ -232,7 +232,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-3',
         status: 'overdue',
-        member_id: 'faiyaz',
+        member_id: '00000000-0000-0000-0000-000000000001',
       })
       renderPopup({ instance })
       expect(screen.getByText(/Due by.*Late/)).toBeTruthy()
@@ -244,7 +244,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        member_id: 'trisha',
+        member_id: '00000000-0000-0000-0000-000000000002',
       })
       renderPopup({ instance })
       expect(screen.getByText('Missed')).toBeTruthy()
@@ -254,7 +254,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        member_id: 'trisha',
+        member_id: '00000000-0000-0000-0000-000000000002',
       })
       renderPopup({ instance })
       const button = screen.getByText('Cannot Complete (Missed)')
@@ -265,7 +265,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        member_id: 'trisha',
+        member_id: '00000000-0000-0000-0000-000000000002',
       })
       renderPopup({ instance })
       expect(screen.getByText(/Due by.*Period ended/)).toBeTruthy()
@@ -275,7 +275,7 @@ describe('InstanceInteraction', () => {
       const instance = makeInstance({
         id: 'inst-4',
         status: 'missed',
-        member_id: 'trisha',
+        member_id: '00000000-0000-0000-0000-000000000002',
       })
       const { container } = renderPopup({ instance })
       const popup = container.querySelector('.opacity-75')
