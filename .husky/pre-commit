@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Fast gate: lint-staged only. Full typecheck/test/build runs on pre-push.
+# Docker-first: routes through the running kiosk container, never bare pnpm on host.
+COMPOSE="../compose/docker-compose.dev.yml"
+
+if ! docker compose -f "$COMPOSE" ps kiosk 2>/dev/null | grep -q "Up"; then
+  echo "dashy-dev-kiosk container not running - skipping lint-staged (run 'make dev-up' to enable this check)" >&2
+  exit 0
+fi
+
+docker compose -f "$COMPOSE" exec -T kiosk pnpm exec lint-staged
