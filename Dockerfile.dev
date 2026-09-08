@@ -3,7 +3,18 @@ FROM node:24-alpine
 WORKDIR /app
 
 # Install pnpm (corepack in Node 24+ no longer creates PATH shims)
-RUN npm install -g pnpm@latest
+#
+# TEMPORARY PIN (2026-09-08): `pnpm@latest` now resolves to v12.3.4, which
+# silently fails on node:24-alpine — `pnpm --version` exits 1 with no output,
+# so `pnpm install` produces no node_modules and the image build fails.
+# pnpm 12's `engines.node` is `>=18`, so this is NOT a Node-version mismatch;
+# it's a pnpm v12 musl/alpine native-binary issue. Pin to the same version
+# declared in package.json (`packageManager: pnpm@11.22.0`) to unblock builds.
+#
+# TODO (prefer latest stable): restore `pnpm@latest` once v12 works on
+# alpine/musl — after a pnpm fix or by switching to the corepack/standalone
+# installer. Keep this version in sync with package.json's `packageManager`.
+RUN npm install -g pnpm@11.22.0
 
 # Copy only package files for dependency installation
 COPY package.json ./
