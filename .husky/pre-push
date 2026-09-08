@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# Full gate mirroring AGENTS.md section 3 (lint/typecheck/test/build) for the kiosk side.
+# Docker-first: routes through the running kiosk container, never bare pnpm on host.
+COMPOSE="../compose/docker-compose.dev.yml"
+
+if ! docker compose -f "$COMPOSE" ps kiosk 2>/dev/null | grep -q "Up"; then
+  echo "dashy-dev-kiosk container not running - skipping full quality gate (run 'make dev-up' to enable this check)" >&2
+  exit 0
+fi
+
+set -e
+docker compose -f "$COMPOSE" exec -T kiosk pnpm run typecheck
+docker compose -f "$COMPOSE" exec -T kiosk pnpm run test
+docker compose -f "$COMPOSE" exec -T kiosk pnpm run build
